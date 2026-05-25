@@ -1,0 +1,563 @@
+<template>
+  <div class="collection-manage">
+    <div class="page-header">
+      <h2>合集管理</h2>
+      <button class="btn-primary btn-sm" @click="openCreateDialog">
+        <EmojiIcon name="plus" :size="16" class="icon-inline" /> 新建合集
+      </button>
+    </div>
+
+    <!-- 合集列表表格 -->
+    <div class="table-container">
+      <table class="data-table" v-if="collections.length > 0">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>名称</th>
+            <th>照片数</th>
+            <th>排序</th>
+            <th>状态</th>
+            <th>创建时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="col in collections" :key="col.id">
+            <td>{{ col.id }}</td>
+            <td class="name-cell">{{ col.name }}</td>
+            <td>{{ col.photoCount || 0 }}</td>
+            <td>{{ col.sortOrder }}</td>
+            <td>
+              <span :class="col.isPublished === 1 ? 'status-published' : 'status-draft'">
+                {{ col.isPublished === 1 ? '已发布' : '草稿' }}
+              </span>
+            </td>
+            <td>{{ formatDate(col.createdAt) }}</td>
+            <td class="action-cell">
+              <button class="action-btn" @click="managePhotos(col)" title="管理照片">
+                <EmojiIcon name="framed-picture" :size="16" />
+              </button>
+              <button class="action-btn" @click="openEditDialog(col)" title="编辑">
+                <EmojiIcon name="pencil" :size="16" />
+              </button>
+              <button class="action-btn danger" @click="confirmDelete(col)" title="删除">
+                <EmojiIcon name="wastebasket" :size="16" />
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-table">
+        <p>暂无合集，点击"新建合集"开始创建</p>
+      </div>
+    </div>
+
+    <!-- 新建/编辑弹窗 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="isEditing ? '编辑合集' : '新建合集'"
+      width="520px"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="formData" label-position="top">
+        <el-form-item label="合集名称" required>
+          <el-input v-model="formData.name" placeholder="请输入合集名称" maxlength="100" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input
+            v-model="formData.description"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入合集描述（选填）"
+            maxlength="500"
+          />
+        </el-form-item>
+        <el-form-item label="排序序号">
+          <el-input-number v-model="formData.sortOrder" :min="0" :max="999" />
+        </el-form-item>
+        <el-form-item label="发布状态">
+          <el-switch
+            v-model="formData.isPublishedBool"
+            active-text="发布"
+            inactive-text="草稿"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSave" :loading="saving">
+          {{ isEditing ? '保存修改' : '创建合集' }}
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 删除确认弹窗 -->
+    <el-dialog v-model="deleteDialogVisible" title="确认删除" width="400px">
+      <p style="text-align:center; font-size:15px;">
+        确定要删除合集「{{ deleteTarget?.name }}」吗？<br />
+        <span style="color:#888; font-size:13px;">此操作不可撤销</span>
+      </p>
+      <template #footer>
+        <el-button @click="deleteDialogVisible = false">取消</el-button>
+        <el-button type="danger" @click="handleDelete" :loading="deleting">确认删除</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 管理照片弹窗 -->
+    <el-dialog
+      v-model="photoDialogVisible"
+      :title="`管理照片 - ${manageTarget?.name}`"
+      width="700px"
+      :close-on-click-modal="false"
+    >
+      <!-- 已添加的照片 -->
+      <div class="photo-manage-section">
+        <h4>已添加的照片（{{ collectionPhotos.length }}）</h4>
+        <div class="photo-thumb-grid" v-if="collectionPhotos.length > 0">
+          <div v-for="photo in collectionPhotos" :key="photo.id" class="photo-thumb-item">
+            <img :src="photo.thumbnailUrl || photo.url" :alt="photo.title" class="thumb-img" />
+            <span class="thumb-title">{{ photo.title }}</span>
+            <button class="thumb-remove" @click="removePhoto(photo.id)" title="移除">
+              <EmojiIcon name="cross-mark" :size="14" />
+            </button>
+          </div>
+        </div>
+        <p v-else class="no-photos-hint">暂无照片</p>
+      </div>
+
+      <!-- 添加照片区域 -->
+      <div class="photo-manage-section" style="margin-top:20px;">
+        <h4>添加照片</h4>
+        <div class="add-photo-controls">
+          <el-select
+            v-model="selectedPhotoId"
+            placeholder="选择照片"
+            filterable
+            style="flex:1;"
+          >
+            <el-option
+              v-for="photo in availablePhotos"
+              :key="photo.id"
+              :label="`#${photo.id} ${photo.title}`"
+              :value="photo.id"
+            />
+          </el-select>
+          <el-button type="primary" @click="addPhoto" :loading="addingPhoto" :disabled="!selectedPhotoId">
+            添加
+          </el-button>
+        </div>
+      </div>
+
+      <template #footer>
+        <el-button @click="photoDialogVisible = false">完成</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, onMounted, computed } from 'vue'
+import {
+  getAdminCollectionsApi,
+  createCollectionApi,
+  updateCollectionApi,
+  deleteCollectionApi,
+  addPhotoToCollectionApi,
+  removePhotoFromCollectionApi,
+  getCollectionDetailApi
+} from '../../api/collection'
+import { getPhotoListApi } from '../../api/photo'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import EmojiIcon from '../../components/EmojiIcon.vue'
+
+// ===== 合集列表 =====
+const collections = ref([])
+
+async function loadCollections() {
+  try {
+    const res = await getAdminCollectionsApi()
+    if (res.code === 200 && res.data) {
+      collections.value = res.data
+    }
+  } catch (err) {
+    console.error('加载合集列表失败:', err)
+    collections.value = []
+  }
+}
+
+// ===== 新建/编辑弹窗 =====
+const dialogVisible = ref(false)
+const isEditing = ref(false)
+const editingId = ref(null)
+const saving = ref(false)
+
+const formData = reactive({
+  name: '',
+  description: '',
+  sortOrder: 0,
+  isPublishedBool: true
+})
+
+function openCreateDialog() {
+  isEditing.value = false
+  editingId.value = null
+  formData.name = ''
+  formData.description = ''
+  formData.sortOrder = 0
+  formData.isPublishedBool = true
+  dialogVisible.value = true
+}
+
+function openEditDialog(col) {
+  isEditing.value = true
+  editingId.value = col.id
+  formData.name = col.name || ''
+  formData.description = col.description || ''
+  formData.sortOrder = col.sortOrder || 0
+  formData.isPublishedBool = col.isPublished === 1
+  dialogVisible.value = true
+}
+
+async function handleSave() {
+  if (!formData.name.trim()) {
+    ElMessage.warning('请输入合集名称')
+    return
+  }
+
+  saving.value = true
+  try {
+    const data = {
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      sortOrder: formData.sortOrder,
+      isPublished: formData.isPublishedBool ? 1 : 0
+    }
+
+    let res
+    if (isEditing.value) {
+      res = await updateCollectionApi(editingId.value, data)
+    } else {
+      res = await createCollectionApi(data)
+    }
+
+    if (res.code === 200) {
+      ElMessage.success(isEditing.value ? '合集已更新' : '合集已创建')
+      dialogVisible.value = false
+      await loadCollections()
+    } else {
+      ElMessage.error(res.message || '操作失败')
+    }
+  } catch (err) {
+    console.error('保存合集失败:', err)
+    ElMessage.error('操作失败，请重试')
+  } finally {
+    saving.value = false
+  }
+}
+
+// ===== 删除 =====
+const deleteDialogVisible = ref(false)
+const deleteTarget = ref(null)
+const deleting = ref(false)
+
+function confirmDelete(col) {
+  deleteTarget.value = col
+  deleteDialogVisible.value = true
+}
+
+async function handleDelete() {
+  if (!deleteTarget.value) return
+  deleting.value = true
+  try {
+    const res = await deleteCollectionApi(deleteTarget.value.id)
+    if (res.code === 200) {
+      ElMessage.success('合集已删除')
+      deleteDialogVisible.value = false
+      deleteTarget.value = null
+      await loadCollections()
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } catch (err) {
+    console.error('删除合集失败:', err)
+    ElMessage.error('删除失败，请重试')
+  } finally {
+    deleting.value = false
+  }
+}
+
+// ===== 管理照片弹窗 =====
+const photoDialogVisible = ref(false)
+const manageTarget = ref(null)
+const collectionPhotos = ref([])
+const allPhotos = ref([])
+const selectedPhotoId = ref(null)
+const addingPhoto = ref(false)
+
+// 可添加的照片（排除已在合集中的）
+const availablePhotos = computed(() => {
+  const existingIds = new Set(collectionPhotos.value.map(p => p.id))
+  return allPhotos.value.filter(p => !existingIds.has(p.id))
+})
+
+async function managePhotos(col) {
+  manageTarget.value = col
+  photoDialogVisible.value = true
+  selectedPhotoId.value = null
+
+  // 加载合集照片
+  try {
+    const res = await getCollectionDetailApi(col.id)
+    if (res.code === 200 && res.data) {
+      collectionPhotos.value = res.data
+    } else {
+      collectionPhotos.value = []
+    }
+  } catch {
+    collectionPhotos.value = []
+  }
+
+  // 加载全部照片（用于选择器）
+  try {
+    const res = await getPhotoListApi({ pageSize: 500 })
+    if (res.code === 200 && res.data) {
+      allPhotos.value = res.data.list || []
+    }
+  } catch {
+    allPhotos.value = []
+  }
+}
+
+async function addPhoto() {
+  if (!selectedPhotoId.value || !manageTarget.value) return
+  addingPhoto.value = true
+  try {
+    const res = await addPhotoToCollectionApi(manageTarget.value.id, selectedPhotoId.value)
+    if (res.code === 200) {
+      ElMessage.success('照片已添加')
+      selectedPhotoId.value = null
+      // 刷新合集照片
+      const detailRes = await getCollectionDetailApi(manageTarget.value.id)
+      if (detailRes.code === 200 && detailRes.data) {
+        collectionPhotos.value = detailRes.data
+      }
+    } else {
+      ElMessage.error(res.message || '添加失败')
+    }
+  } catch (err) {
+    console.error('添加照片失败:', err)
+    ElMessage.error('添加失败，请重试')
+  } finally {
+    addingPhoto.value = false
+  }
+}
+
+async function removePhoto(photoId) {
+  if (!manageTarget.value) return
+  try {
+    const res = await removePhotoFromCollectionApi(manageTarget.value.id, photoId)
+    if (res.code === 200) {
+      ElMessage.success('照片已移除')
+      collectionPhotos.value = collectionPhotos.value.filter(p => p.id !== photoId)
+    } else {
+      ElMessage.error(res.message || '移除失败')
+    }
+  } catch (err) {
+    console.error('移除照片失败:', err)
+    ElMessage.error('移除失败，请重试')
+  }
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  if (dateStr.length >= 10) return dateStr.substring(0, 10)
+  return dateStr
+}
+
+onMounted(() => {
+  loadCollections()
+})
+</script>
+
+<style scoped>
+.collection-manage {
+  /* admin layout handles padding */
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  font-size: 18px;
+  color: var(--text-primary, #333);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* 表格样式 */
+.table-container {
+  background: var(--bg-card, #fff);
+  border-radius: 10px;
+  border: 0.5px solid var(--border-light, #eee);
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.data-table th {
+  background: var(--bg-secondary, #f0f2f5);
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 500;
+  color: var(--text-regular, #555);
+  font-size: 13px;
+  border-bottom: 0.5px solid var(--border-light, #eee);
+}
+
+.data-table td {
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--border-lighter, #f5f5f5);
+  color: var(--text-secondary, #333);
+}
+
+.name-cell {
+  font-weight: 500;
+}
+
+.status-published {
+  display: inline-block;
+  padding: 2px 10px;
+  background: var(--color-primary-light, #E6F1FB);
+  color: var(--color-primary-dark, #185FA5);
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.status-draft {
+  display: inline-block;
+  padding: 2px 10px;
+  background: #f0f0f0;
+  color: #888;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.action-cell {
+  display: flex;
+  gap: 6px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: 0.5px solid var(--border-color, #ddd);
+  border-radius: 6px;
+  background: var(--bg-card, #fff);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  border-color: var(--color-primary, #378ADD);
+  background: var(--color-primary-light, #F5FAFF);
+}
+
+.action-btn.danger:hover {
+  border-color: var(--color-danger, #E24B4A);
+  background: #FDF0F0;
+}
+
+.empty-table {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text-placeholder, #aaa);
+  font-size: 14px;
+}
+
+/* 照片管理弹窗 */
+.photo-manage-section h4 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-regular, #555);
+  margin: 0 0 12px;
+}
+
+.photo-thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.photo-thumb-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-hover, #f5f5f5);
+  border: 0.5px solid var(--border-light, #eee);
+}
+
+.thumb-img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  display: block;
+}
+
+.thumb-title {
+  display: block;
+  padding: 4px 6px;
+  font-size: 11px;
+  color: var(--text-regular, #555);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.thumb-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.photo-thumb-item:hover .thumb-remove {
+  opacity: 1;
+}
+
+.no-photos-hint {
+  color: var(--text-placeholder, #aaa);
+  font-size: 13px;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.add-photo-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+</style>

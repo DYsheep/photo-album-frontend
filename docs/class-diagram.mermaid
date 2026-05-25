@@ -1,0 +1,76 @@
+classDiagram
+    class Collection {
+        +Long id
+        +String name
+        +String description
+        +Long coverPhotoId
+        +Integer sortOrder
+        +Boolean isPublished
+        +LocalDateTime createdAt
+        +LocalDateTime updatedAt
+    }
+
+    class CollectionPhoto {
+        +Long id
+        +Long collectionId
+        +Long photoId
+        +Integer sortOrder
+    }
+
+    class Photo {
+        +Long id
+        +String title
+        +String description
+        +Long categoryId
+        +String url
+        +String thumbnailUrl
+        +String fileName
+        +Long fileSize
+        +String tags
+        +Integer viewCount
+        +String exifInfo
+        +String cameraModel
+        +String aperture
+        +String shutterSpeed
+        +String iso
+        +String focalLength
+        +String dateTaken
+        +Double gpsLatitude
+        +Double gpsLongitude
+        +LocalDateTime createdAt
+        +LocalDateTime updatedAt
+    }
+
+    class CollectionDTO {
+        +Long id
+        +String name
+        +String description
+        +Long coverPhotoId
+        +Integer sortOrder
+        +Boolean isPublished
+        +String coverThumbnailUrl
+        +Integer photoCount
+        +LocalDateTime createdAt
+        +Integer pageNum
+        +Integer pageSize
+    }
+
+    class CollectionPhotoDTO {
+        +Long id
+        +Long collectionId
+        +Long photoId
+        +Integer sortOrder
+        +String title
+        +String thumbnailUrl
+    }
+
+    class GpsPhotoVO {
+        +Long id
+        +String title
+        +String thumbnailUrl
+        +Double latitude
+        +Double longitude
+    }
+
+    Collection "1" -- "n" CollectionPhoto : 包含
+    CollectionPhoto "n" -- "1" Photo : 关联

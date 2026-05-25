@@ -1,0 +1,93 @@
+sequenceDiagram
+    actor User
+    participant ThemeToggle as ThemeToggle.vue
+    participant ThemeStore as theme.js (Pinia)
+    participant DOM as document.documentElement
+    participant LS as localStorage
+
+    Note over ThemeStore: 初始化时
+    ThemeStore->>LS: 读取 theme-preference
+    alt 无存储值
+        ThemeStore->>ThemeStore: preference = 'system'
+        ThemeStore->>DOM: matchMedia('prefers-color-scheme: dark')
+        ThemeStore->>ThemeStore: resolvedTheme = 系统结果
+    else 有存储值
+        ThemeStore->>ThemeStore: preference = 存储值
+    end
+    ThemeStore->>DOM: classList.toggle('dark', resolvedTheme==='dark')
+
+    User->>ThemeToggle: 点击切换按钮
+    ThemeToggle->>ThemeStore: toggleTheme('dark')
+    ThemeStore->>LS: setItem('theme-preference', 'dark')
+    ThemeStore->>DOM: classList.add('dark')
+    Note over DOM: CSS 变量切换 + 0.3s transition
+
+    ---
+
+    actor Admin
+    participant AdminCollection as CollectionManageView.vue
+    participant Api as collection.js
+    participant Controller as AdminCollectionController
+    participant Service as CollectionServiceImpl
+    participant DB as MySQL
+
+    Admin->>AdminCollection: 点击「新建合集」
+    AdminCollection->>AdminCollection: el-dialog 表单
+    Admin->>AdminCollection: 填写 name/description，提交
+    AdminCollection->>Api: POST /api/admin/collections {name,description}
+    Api->>Controller: create()
+    Controller->>Service: createCollection(dto)
+    Service->>DB: INSERT t_collection
+    DB-->>Service: OK
+    Service-->>Controller: CollectionDTO
+    Controller-->>Api: Result~CollectionDTO~
+    Api-->>AdminCollection: {code:200, data: {...}}
+    AdminCollection->>AdminCollection: 刷新列表
+
+    ---
+
+    actor Visitor
+    participant ColList as CollectionListView.vue
+    Visitor->>ColList: 访问 /collections
+    ColList->>Api: GET /api/collections
+    Api->>Controller: Controller.list() [前台]
+    Controller->>Service: listPublished()
+    Service->>DB: SELECT * FROM t_collection WHERE is_published=1
+    Service->>DB: LEFT JOIN t_collection_photos + t_photo (count + cover)
+    DB-->>Service: 结果集
+    Service-->>Controller: List~CollectionDTO~
+    Controller-->>Api: Result
+    Api-->>ColList: 渲染合集卡片
+
+    ---
+
+    actor MapUser
+    participant MapView as MapView.vue
+    participant PhotoApi as photo.js
+    participant PhotoCtrl as PhotoController
+    participant PhotoSvc as PhotoServiceImpl
+    participant Leaflet as Leaflet + MarkerCluster
+
+    MapUser->>MapView: 访问 /map
+    MapView->>MapView: onMounted → 初始化 L.map()
+    MapView->>Leaflet: L.tileLayer(OpenStreetMap)
+    MapView->>PhotoApi: GET /api/photos/gps
+    PhotoApi->>PhotoCtrl: gpsPhotos()
+    PhotoCtrl->>PhotoSvc: listPhotosWithGps()
+    PhotoSvc->>DB: SELECT id,title,thumbnail_url,gps_latitude,gps_longitude FROM t_photo WHERE gps_latitude IS NOT NULL
+    DB-->>PhotoSvc: List~Photo~
+    PhotoSvc-->>PhotoCtrl: List~GpsPhotoVO~
+    PhotoCtrl-->>PhotoApi: Result
+    PhotoApi-->>MapView: [{id,title,thumbnailUrl,latitude,longitude}, ...]
+
+    MapView->>Leaflet: new L.MarkerClusterGroup()
+    loop 每张照片
+        MapView->>Leaflet: L.marker([lat,lng]).bindPopup(缩略图+标题)
+        MapView->>Leaflet: clusterGroup.addLayer(marker)
+    end
+    MapView->>Leaflet: map.fitBounds(clusterGroup.getBounds())
+    MapView->>Leaflet: map.addLayer(clusterGroup)
+
+    MapUser->>MapView: 点击标记
+    Leaflet->>MapView: popup 展示缩略图 + 链接
+    MapUser->>MapView: 点击链接 → router.push(/photo/:id)
