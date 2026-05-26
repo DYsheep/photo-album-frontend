@@ -52,8 +52,8 @@
         >
           <div class="mini-cover">
             <img
-              v-if="colCoverMap[col.id]"
-              :src="colCoverMap[col.id]"
+              v-if="col.coverUrl"
+              :src="col.coverUrl"
               :alt="col.name"
               class="mini-cover-img"
             />
@@ -96,7 +96,6 @@ import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAlbumStore } from '../stores/album'
 import { getCollectionsApi } from '../api/collection'
-import { getPhotoDetailApi } from '../api/photo'
 import { ArrowRight } from 'lucide-vue-next'
 import PhotoCard from '../components/PhotoCard.vue'
 import Lightbox from '../components/Lightbox.vue'
@@ -122,27 +121,12 @@ const lightboxInitialIndex = ref(0)
 
 // 精选合集
 const recentCollections = ref([])
-const colCoverMap = ref({})
 
 async function loadRecentCollections() {
   try {
     const res = await getCollectionsApi()
     if (res.code === 200 && res.data) {
-      // 取前 4 个合集
       recentCollections.value = (res.data || []).slice(0, 4)
-      // 加载封面图
-      for (const col of recentCollections.value) {
-        if (col.coverPhotoId) {
-          try {
-            const photoRes = await getPhotoDetailApi(col.coverPhotoId)
-            if (photoRes.code === 200 && photoRes.data) {
-              colCoverMap.value[col.id] = photoRes.data.thumbnailUrl || photoRes.data.url || ''
-            }
-          } catch {
-            // 封面加载失败
-          }
-        }
-      }
     }
   } catch {
     recentCollections.value = []

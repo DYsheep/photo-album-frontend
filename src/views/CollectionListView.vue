@@ -13,8 +13,8 @@
       >
         <div class="card-cover">
           <img
-            v-if="coverPhotoMap[collection.id]"
-            :src="coverPhotoMap[collection.id]"
+            v-if="collection.coverUrl"
+            :src="collection.coverUrl"
             :alt="collection.name"
             class="cover-img"
           />
@@ -50,13 +50,11 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getCollectionsApi } from '../api/collection'
-import { getPhotoDetailApi } from '../api/photo'
 import EmojiIcon from '../components/EmojiIcon.vue'
 
 const router = useRouter()
 const collections = ref([])
 const loading = ref(true)
-const coverPhotoMap = ref({})
 
 async function loadCollections() {
   loading.value = true
@@ -64,19 +62,6 @@ async function loadCollections() {
     const res = await getCollectionsApi()
     if (res.code === 200 && res.data) {
       collections.value = res.data
-      // 加载封面图
-      for (const col of collections.value) {
-        if (col.coverPhotoId) {
-          try {
-            const photoRes = await getPhotoDetailApi(col.coverPhotoId)
-            if (photoRes.code === 200 && photoRes.data) {
-              coverPhotoMap.value[col.id] = photoRes.data.thumbnailUrl || photoRes.data.url || ''
-            }
-          } catch {
-            // 封面加载失败，使用占位图
-          }
-        }
-      }
     }
   } catch (err) {
     console.error('加载合集列表失败:', err)
