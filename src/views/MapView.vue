@@ -98,7 +98,7 @@ function initMap() {
           <h4>${escapeHtml(photo.title || '未命名')}</h4>
           ${photo.categoryName ? `<span class="popup-category">${escapeHtml(photo.categoryName)}</span>` : ''}
         </div>
-        <a href="/photo/${photo.id}" class="popup-link">查看详情 →</a>
+        <a href="/photo/${photo.id}" class="popup-link">查看详情 &rarr;</a>
       </div>
     `
 

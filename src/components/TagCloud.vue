@@ -2,7 +2,10 @@
   <div class="tag-cloud" v-if="tags.length > 0">
     <div class="tag-cloud-header" @click="isExpanded = !isExpanded">
       <span class="tag-cloud-title">标签云</span>
-      <span class="tag-cloud-toggle">{{ isExpanded ? '▲' : '▼' }}</span>
+      <span class="tag-cloud-toggle">
+        <ChevronDown v-if="!isExpanded" :size="14" />
+        <ChevronUp v-else :size="14" />
+      </span>
     </div>
     <div class="tag-cloud-body" v-show="isExpanded">
       <span
@@ -25,6 +28,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { ChevronDown, ChevronUp } from 'lucide-vue-next'
 
 defineProps({
   tags: {

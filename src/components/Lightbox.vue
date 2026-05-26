@@ -9,7 +9,7 @@
         ref="lightboxEl"
       >
         <!-- 关闭按钮 -->
-        <button class="lightbox-close" @click="close" aria-label="关闭">&times;</button>
+        <button class="lightbox-close" @click="close" aria-label="关闭"><X :size="28" /></button>
 
         <!-- 上一张 -->
         <button
@@ -64,7 +64,7 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, X } from 'lucide-vue-next'
 
 
 const router = useRouter()

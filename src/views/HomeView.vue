@@ -41,7 +41,7 @@
     <div class="featured-collections" v-if="recentCollections.length > 0">
       <div class="section-header">
         <h2 class="section-title">精选合集</h2>
-        <router-link to="/collections" class="view-all">查看全部 →</router-link>
+        <router-link to="/collections" class="view-all">查看全部 <ArrowRight :size="14" class="inline-icon" /></router-link>
       </div>
       <div class="collection-row">
         <div
@@ -97,6 +97,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAlbumStore } from '../stores/album'
 import { getCollectionsApi } from '../api/collection'
 import { getPhotoDetailApi } from '../api/photo'
+import { ArrowRight } from 'lucide-vue-next'
 import PhotoCard from '../components/PhotoCard.vue'
 import Lightbox from '../components/Lightbox.vue'
 import TagCloud from '../components/TagCloud.vue'
