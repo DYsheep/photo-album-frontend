@@ -150,3 +150,129 @@ button {
 .icon-inline {
   vertical-align: -0.15em;
 }
+
+/* ========== 移动端响应式 ========== */
+
+/* 平板 */
+@media (max-width: 1024px) {
+  .photo-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+    padding: 0 12px;
+  }
+  .collection-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* 手机 */
+@media (max-width: 768px) {
+  html { font-size: 15px; }
+  body { line-height: 1.5; }
+
+  /* 网格单列 */
+  .photo-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+    padding: 0 8px;
+  }
+  .collection-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .collection-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* 照片详情全宽 */
+  .detail-body {
+    flex-direction: column !important;
+  }
+  .detail-panel {
+    width: 100% !important;
+    padding: 12px 16px !important;
+  }
+  .detail-image {
+    max-height: 50vh !important;
+    border-radius: 0 !important;
+  }
+
+  /* 导航键更小 */
+  .photo-nav-btn {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+  }
+
+  /* 灯箱 */
+  .lightbox-close {
+    top: 8px !important;
+    right: 8px !important;
+  }
+  .lightbox-arrow {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* 表格横向滚动 */
+  .admin-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-table-wrap table {
+    min-width: 600px;
+  }
+
+  /* 仪表盘统计卡片 */
+  .stat-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+  }
+
+  /* 弹窗 */
+  .modal-content {
+    width: 95vw !important;
+    padding: 20px 16px !important;
+    border-radius: 12px !important;
+  }
+
+  /* 按钮缩小 */
+  .btn-sm {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  /* Section 标题 */
+  .section-header {
+    padding: 0 8px;
+  }
+  .section-title {
+    font-size: 18px !important;
+  }
+
+  /* 合集详情头部 */
+  .collection-header {
+    padding: 16px 12px !important;
+  }
+
+  /* 分享页面 */
+  .share-container {
+    padding: 12px 8px !important;
+  }
+
+  /* 管理后台 */
+  .admin-content {
+    padding: 12px 8px !important;
+  }
+
+  /* 表单行堆叠 */
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* 地图 */
+  .map-container {
+    height: calc(100vh - 120px) !important;
+  }
+}

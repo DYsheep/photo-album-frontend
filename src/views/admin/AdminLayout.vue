@@ -1,7 +1,11 @@
 <template>
   <div class="admin-layout">
+    <!-- 手机遮罩 -->
+    <Transition name="fade">
+      <div v-if="mobileMenuOpen" class="mobile-overlay" @click="mobileMenuOpen = false"></div>
+    </Transition>
     <!-- 侧边栏 -->
-    <aside class="sidebar" :class="{ collapsed: isCollapsed }">
+    <aside class="sidebar" :class="{ collapsed: isCollapsed, 'mobile-open': mobileMenuOpen }">
       <div class="sidebar-header">
         <EmojiIcon name="camera" :size="22" />
         <span v-show="!isCollapsed" class="sidebar-title">相册管理</span>
@@ -54,6 +58,9 @@
     <div class="main-area">
       <!-- 顶栏 -->
       <header class="topbar">
+        <button class="mobile-menu-btn" @click="mobileMenuOpen = !mobileMenuOpen" aria-label="菜单">
+          <span></span><span></span><span></span>
+        </button>
         <div class="breadcrumb">
           <h2>{{ currentTitle }}</h2>
         </div>
@@ -85,6 +92,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const isCollapsed = ref(false)
+const mobileMenuOpen = ref(false)
 
 const currentTitle = computed(() => {
   const titleMap = {
@@ -274,5 +282,58 @@ function handleLogout() {
   flex: 1;
   padding: 24px 28px;
   overflow-y: auto;
+}
+
+/* 手机汉堡按钮 */
+.mobile-menu-btn {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  margin-right: 12px;
+}
+.mobile-menu-btn span {
+  width: 20px;
+  height: 2px;
+  background: var(--text-regular, #555);
+  border-radius: 2px;
+}
+
+/* 遮罩 */
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 98;
+}
+
+/* 过渡 */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* 手机适配 */
+@media (max-width: 768px) {
+  .mobile-menu-btn { display: flex; }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 99;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .sidebar.collapsed { width: 220px; }
+  .mobile-overlay { display: block; }
+  .collapse-btn { display: none; }
+  .topbar { padding: 0 12px; }
+  .content-area { padding: 12px 10px; }
 }
 </style>
