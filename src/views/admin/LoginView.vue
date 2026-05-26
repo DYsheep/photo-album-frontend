@@ -43,7 +43,6 @@
         <p class="login-hint">
           请使用管理员账号登录
         </p>
-        </p>
       </form>
     </div>
   </div>
