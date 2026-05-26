@@ -54,3 +54,8 @@ export function batchUpdatePhotosApi(data) {
 export function getGpsPhotosApi() {
   return request.get('/photos/gps')
 }
+
+/** 获取相邻照片 ID（上一张/下一张） */
+export function getAdjacentPhotosApi(id) {
+  return request.get(`/photos/${id}/adjacent`)
+}

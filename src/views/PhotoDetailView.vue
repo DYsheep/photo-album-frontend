@@ -112,7 +112,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPhotoDetailApi, getPhotoListApi } from '../api/photo'
+import { getPhotoDetailApi, getAdjacentPhotosApi } from '../api/photo'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { formatDate, formatFileSize } from '../utils/format'
 import EmojiIcon from '../components/EmojiIcon.vue'
@@ -163,13 +163,11 @@ const navIndex = computed(() => {
 const navTotal = computed(() => adjacentIds.value.length)
 
 const canPrev = computed(() => {
-  const idx = adjacentIds.value.indexOf(currentId.value)
-  return idx > 0
+  return adjacentIds.value[0] !== currentId.value && adjacentIds.value.length > 1
 })
 
 const canNext = computed(() => {
-  const idx = adjacentIds.value.indexOf(currentId.value)
-  return idx >= 0 && idx < adjacentIds.value.length - 1
+  return adjacentIds.value[adjacentIds.value.length - 1] !== currentId.value
 })
 
 // 加载照片详情和相邻照片列表
@@ -193,17 +191,21 @@ async function loadPhoto() {
   }
 }
 
-// 获取所有照片 ID（按创建时间排序）
+// 获取相邻照片 ID（上一张/下一张）
 async function loadAdjacentIds() {
   try {
-    const res = await getPhotoListApi({ pageSize: 500 })
+    const res = await getAdjacentPhotosApi(currentId.value)
     if (res.code === 200 && res.data) {
-      const list = res.data.list || []
-      adjacentIds.value = list.map(p => p.id)
+      const { prevId, nextId } = res.data
+      adjacentIds.value = [
+        ...(prevId ? [prevId] : []),
+        currentId.value,
+        ...(nextId ? [nextId] : [])
+      ]
     }
   } catch (err) {
-    console.error('加载照片列表失败:', err)
-    adjacentIds.value = []
+    console.error('加载相邻照片失败:', err)
+    adjacentIds.value = [currentId.value]
   }
 }
 
