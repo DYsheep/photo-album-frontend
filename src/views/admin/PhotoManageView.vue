@@ -53,7 +53,7 @@
             <td><input type="checkbox" :value="photo.id" v-model="selectedIds" /></td>
             <td>
               <div class="thumb-cell">
-                <img v-if="photo.url" :src="photo.url" alt="" class="thumb-img" />
+                <img v-if="photo.url" :src="photo.thumbnailUrl || photo.url" alt="" class="thumb-img" />
                 <EmojiIcon v-else name="camera" :size="20" />
               </div>
             </td>

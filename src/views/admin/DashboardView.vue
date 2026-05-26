@@ -38,7 +38,7 @@
       <div class="recent-list" v-if="stats.recentPhotos.length > 0">
         <div v-for="photo in stats.recentPhotos" :key="photo.id" class="recent-item">
           <div class="recent-thumb">
-            <img v-if="photo.url" :src="photo.url" alt="" class="recent-img" />
+            <img v-if="photo.url" :src="photo.thumbnailUrl || photo.url" alt="" class="recent-img" />
             <EmojiIcon v-else name="camera" :size="20" />
           </div>
           <div class="recent-info">
