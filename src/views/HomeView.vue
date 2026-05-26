@@ -287,14 +287,27 @@ onMounted(async () => {
   color: #fff;
 }
 
+/* 瀑布流布局 */
 .photo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  column-count: 4;
+  column-gap: 16px;
+}
+
+.photo-grid > * {
+  break-inside: avoid;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 1024px) {
+  .photo-grid { column-count: 2; }
+}
+
+@media (max-width: 600px) {
+  .photo-grid { column-count: 1; }
 }
 
 .empty-hint {
-  grid-column: 1 / -1;
+  column-span: all;
   text-align: center;
   padding: 60px 0;
   color: var(--text-placeholder, #aaa);

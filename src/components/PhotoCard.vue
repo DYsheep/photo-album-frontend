@@ -68,15 +68,14 @@ function onImageError(e) {
 }
 
 .photo-img-wrapper {
-  height: 200px;
   background: linear-gradient(135deg, var(--bg-hover, #f5f5f5), var(--border-light, #e8e8e8));
   overflow: hidden;
+  min-height: 150px;
 }
 
 .photo-img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  display: block;
   transition: transform 0.3s ease, opacity 0.4s ease;
   opacity: 0;
 }
