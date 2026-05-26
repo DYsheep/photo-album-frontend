@@ -2,9 +2,9 @@ import request from './request'
 
 // ========== 分享链接相关 API ==========
 
-/** 为照片创建分享链接 */
+/** 为照片创建分享链接（公开，无需登录） */
 export function createShareLinkApi(photoId) {
-  return request.post(`/admin/share/photo/${photoId}`)
+  return request.post(`/share/photo/${photoId}`)
 }
 
 /** 根据分享码获取分享数据（公开访问，无需 token） */
