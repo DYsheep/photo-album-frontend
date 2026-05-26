@@ -197,18 +197,7 @@ button {
     border-radius: 0 !important;
   }
 
-  /* 导航键更小 */
-  .photo-nav-btn {
-    width: 36px !important;
-    height: 36px !important;
-    border-radius: 50% !important;
-  }
-
-  /* 灯箱 */
-  .lightbox-close {
-    top: 8px !important;
-    right: 8px !important;
-  }
+  /* 灯箱箭头 */
   .lightbox-arrow {
     width: 36px !important;
     height: 36px !important;

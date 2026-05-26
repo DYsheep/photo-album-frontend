@@ -576,22 +576,76 @@ onMounted(() => {
 
 /* 响应式：小屏上下排列 */
 @media (max-width: 768px) {
+  .photo-detail {
+    padding: 12px 8px;
+  }
+
+  .back-bar {
+    margin-bottom: 10px;
+  }
+
+  .back-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+
   .detail-body {
     flex-direction: column;
+    gap: 12px;
   }
 
   .detail-image-area {
-    min-height: 300px;
+    min-height: 260px;
+    border-radius: 0;
+    margin: 0 -8px;
   }
 
   .detail-image {
-    max-width: 100%;
-    max-height: 50vh;
-    cursor: zoom-in;
+    max-width: 100vw;
+    max-height: 55vh;
+    border-radius: 0;
   }
+
+  /* 手机端侧边导航缩小并靠边 */
+  .side-nav {
+    width: 32px;
+    height: 32px;
+  }
+  .side-prev { left: 6px; }
+  .side-next { right: 6px; }
 
   .detail-panel {
     width: 100%;
+    border-radius: 12px;
+    padding: 18px 14px;
+  }
+
+  .detail-title {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  /* 底部导航全宽大按钮 */
+  .bottom-nav {
+    gap: 12px;
+    margin-top: 20px;
+    padding: 12px 0;
+    flex-wrap: nowrap;
+  }
+
+  .nav-btn-large {
+    flex: 1;
+    padding: 14px 12px;
+    font-size: 14px;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .nav-position {
+    min-width: 50px;
+    font-size: 12px;
   }
 }
 </style>

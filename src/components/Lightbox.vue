@@ -21,8 +21,15 @@
           <ChevronLeft class="lightbox-arrow-icon" />
         </button>
 
-        <!-- 图片区域（滚轮缩放 + 拖拽平移） -->
-        <div class="lightbox-content" @click.stop @wheel.prevent="onWheelZoom">
+        <!-- 图片区域（滚轮缩放 + 拖拽 + 移动端滑动） -->
+        <div
+          class="lightbox-content"
+          @click.stop
+          @wheel.prevent="onWheelZoom"
+          @touchstart="onTouchStart"
+          @touchmove="onTouchMove"
+          @touchend="onTouchEnd"
+        >
           <img
             :src="currentPhoto.url"
             :alt="currentPhoto.title"
@@ -97,6 +104,11 @@ const dragStartY = ref(0)
 const dragOrigX = ref(0)
 const dragOrigY = ref(0)
 
+// 移动端滑动手势
+const touchStartX = ref(0)
+const touchStartY = ref(0)
+const touchMoved = ref(false)
+
 const ZOOM_STEP = 0.15
 const ZOOM_MIN = 1
 const ZOOM_MAX = 5
@@ -117,18 +129,15 @@ const canPrev = computed(() => currentIndex.value > 0)
 const canNext = computed(() => currentIndex.value < totalPhotos.value - 1)
 
 // 解析 EXIF 信息为展示字符串
-// 优先使用后端传来的结构化字段，fallback 到 JSON 解析（兼容旧数据）
 const exifDisplay = computed(() => {
   const p = currentPhoto.value
   if (!p) return ''
   const parts = []
-  // 优先使用结构化字段
   if (p.cameraModel) parts.push(p.cameraModel)
   if (p.aperture) parts.push(p.aperture)
   if (p.shutterSpeed) parts.push(p.shutterSpeed)
   if (p.iso) parts.push('ISO ' + p.iso)
   if (p.focalLength) parts.push(p.focalLength)
-  // 如果结构化字段全为空，fallback 到 JSON 解析（兼容旧数据）
   if (parts.length === 0 && p.exifInfo) {
     try {
       const obj = typeof p.exifInfo === 'string' ? JSON.parse(p.exifInfo) : p.exifInfo
@@ -137,9 +146,7 @@ const exifDisplay = computed(() => {
       if (obj['快门速度']) parts.push(obj['快门速度'])
       if (obj['ISO']) parts.push('ISO ' + obj['ISO'])
       if (obj['焦距']) parts.push(obj['焦距'])
-    } catch {
-      // JSON 解析失败，忽略
-    }
+    } catch { /* */ }
   }
   return parts.join('  ·  ')
 })
@@ -158,49 +165,43 @@ watch(visible, (val) => {
   }
 })
 
-// 关闭
 function close() {
   visible.value = false
   resetImageTransform()
 }
 
-// 上一张
 function prevPhoto() {
   if (!canPrev.value) return
   currentIndex.value--
   resetImageTransform()
 }
 
-// 下一张
 function nextPhoto() {
   if (!canNext.value) return
   currentIndex.value++
   resetImageTransform()
 }
 
-// 重置图片变换
 function resetImageTransform() {
   imgScale.value = 1
   imgTranslateX.value = 0
   imgTranslateY.value = 0
   isDragging.value = false
+  touchMoved.value = false
 }
 
-// 滚轮缩放
 function onWheelZoom(e) {
   if (e.deltaY < 0) {
     imgScale.value = Math.min(imgScale.value + ZOOM_STEP, ZOOM_MAX)
   } else if (e.deltaY > 0) {
     imgScale.value = Math.max(imgScale.value - ZOOM_STEP, ZOOM_MIN)
   }
-  // 缩小回原始大小时归位
   if (imgScale.value <= ZOOM_MIN) {
     imgTranslateX.value = 0
     imgTranslateY.value = 0
   }
 }
 
-// 拖拽开始
 function onDragStart(e) {
   if (imgScale.value <= ZOOM_MIN) return
   isDragging.value = true
@@ -210,7 +211,6 @@ function onDragStart(e) {
   dragOrigY.value = imgTranslateY.value
 }
 
-// 拖拽移动
 function onDragMove(e) {
   if (!isDragging.value) return
   const dx = (e.clientX - dragStartX.value) / imgScale.value
@@ -219,12 +219,32 @@ function onDragMove(e) {
   imgTranslateY.value = dragOrigY.value + dy
 }
 
-// 拖拽结束
 function onDragEnd() {
   isDragging.value = false
 }
 
-// 键盘事件
+// 移动端触摸手势
+function onTouchStart(e) {
+  touchStartX.value = e.touches[0].clientX
+  touchStartY.value = e.touches[0].clientY
+  touchMoved.value = false
+}
+
+function onTouchMove(e) {
+  if (imgScale.value > ZOOM_MIN) return // 缩放模式下不处理滑动
+  touchMoved.value = true
+}
+
+function onTouchEnd(e) {
+  if (!touchMoved.value || imgScale.value > ZOOM_MIN) return
+  const dx = e.changedTouches[0].clientX - touchStartX.value
+  const dy = e.changedTouches[0].clientY - touchStartY.value
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
+    if (dx > 0) prevPhoto()
+    else nextPhoto()
+  }
+}
+
 function onKeydown(e) {
   if (!visible.value) return
   if (e.key === 'ArrowLeft') prevPhoto()
@@ -232,13 +252,8 @@ function onKeydown(e) {
   if (e.key === 'Escape') close()
 }
 
-function onLightboxImgLoad() {
-  // 大图加载完成
-}
-
-function onLightboxImgError() {
-  console.warn('大图加载失败')
-}
+function onLightboxImgLoad() {}
+function onLightboxImgError() { console.warn('大图加载失败') }
 
 function goToDetail() {
   if (currentPhoto.value && currentPhoto.value.id) {
@@ -453,5 +468,63 @@ onUnmounted(() => {
 .lightbox-fade-enter-from,
 .lightbox-fade-leave-to {
   opacity: 0;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .lightbox-close {
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .lightbox-arrow {
+    width: 36px;
+    height: 36px;
+  }
+  .lightbox-arrow-icon {
+    width: 22px;
+    height: 22px;
+  }
+  .lightbox-prev { left: 8px; }
+  .lightbox-next { right: 8px; }
+
+  .lightbox-img {
+    max-width: 96vw;
+    max-height: 75vh;
+  }
+
+  /* 底部信息栏移动端优化 */
+  .lightbox-info {
+    padding: 10px 12px 14px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .lightbox-title {
+    font-size: 14px;
+    width: 100%;
+  }
+  .lightbox-tag {
+    font-size: 11px;
+  }
+  .lightbox-exif {
+    font-size: 11px;
+    display: none;
+  }
+  .lightbox-desc {
+    font-size: 12px;
+    flex: 0;
+    width: 100%;
+    order: 10;
+  }
+  .lightbox-detail-link {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+  .lightbox-index {
+    font-size: 11px;
+    margin-left: auto;
+  }
 }
 </style>
