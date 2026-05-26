@@ -36,7 +36,6 @@
             class="lightbox-img"
             :class="{ 'is-draggable': imgScale > 1, 'is-dragging': isDragging }"
             :style="{ transform: `scale(${imgScale}) translate(${imgTranslateX}px, ${imgTranslateY}px)` }"
-            @load="onLightboxImgLoad"
             @error="onLightboxImgError"
             @mousedown.prevent="onDragStart"
           />
@@ -252,7 +251,6 @@ function onKeydown(e) {
   if (e.key === 'Escape') close()
 }
 
-function onLightboxImgLoad() {}
 function onLightboxImgError() { console.warn('大图加载失败') }
 
 function goToDetail() {

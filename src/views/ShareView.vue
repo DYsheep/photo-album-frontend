@@ -84,6 +84,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getShareLinkApi } from '../api/share'
+import { formatDate } from '../utils/format'
 import EmojiIcon from '../components/EmojiIcon.vue'
 
 const route = useRoute()
@@ -98,19 +99,6 @@ const hasExif = computed(() => {
   return !!(shareData.value.cameraModel || shareData.value.aperture ||
     shareData.value.shutterSpeed || shareData.value.iso || shareData.value.focalLength)
 })
-
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const cleaned = dateStr.replace(/:/g, '-').replace(' ', 'T')
-  try {
-    const d = new Date(cleaned)
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
-    }
-  } catch { /* ignore */ }
-  if (dateStr.length >= 10) return dateStr.substring(0, 10)
-  return dateStr
-}
 
 async function loadShare() {
   loading.value = true

@@ -114,6 +114,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPhotoDetailApi, getPhotoListApi } from '../api/photo'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { formatDate, formatFileSize } from '../utils/format'
 import EmojiIcon from '../components/EmojiIcon.vue'
 import Lightbox from '../components/Lightbox.vue'
 import ShareButton from '../components/ShareButton.vue'
@@ -222,30 +223,6 @@ function goNext() {
     const nextId = adjacentIds.value[idx + 1]
     router.push({ name: 'photoDetail', params: { id: nextId } })
   }
-}
-
-// 格式化日期
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  // 支持 "2024:10:15 14:30:00" 格式
-  const cleaned = dateStr.replace(/:/g, '-').replace(' ', 'T')
-  try {
-    const d = new Date(cleaned)
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
-    }
-  } catch { /* ignore */ }
-  // 尝试简单截取
-  if (dateStr.length >= 10) return dateStr.substring(0, 10)
-  return dateStr
-}
-
-// 格式化文件大小
-function formatFileSize(bytes) {
-  if (!bytes) return '未知'
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
 // 监听路由参数变化
@@ -484,28 +461,6 @@ onMounted(() => {
 .stat-item {
   font-size: 13px;
   color: var(--text-muted, #888);
-}
-
-.stat-icon {
-  margin-right: 3px;
-}
-
-/* 分享按钮 */
-.share-btn {
-  width: 100%;
-  padding: 10px 0;
-  border: 1.5px solid var(--color-primary, #378ADD);
-  border-radius: 8px;
-  background: var(--bg-card, #fff);
-  color: var(--color-primary, #378ADD);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.share-btn:hover {
-  background: var(--color-primary, #378ADD);
-  color: var(--text-inverse, #fff);
 }
 
 /* 底部导航 */

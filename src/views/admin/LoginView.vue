@@ -41,7 +41,8 @@
         </button>
 
         <p class="login-hint">
-          提示：开发阶段默认账号 <strong>admin</strong> / 密码 <strong>123456</strong>
+          请使用管理员账号登录
+        </p>
         </p>
       </form>
     </div>

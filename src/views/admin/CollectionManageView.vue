@@ -32,7 +32,7 @@
                 {{ col.isPublished === 1 ? '已发布' : '草稿' }}
               </span>
             </td>
-            <td>{{ formatDate(col.createdAt) }}</td>
+            <td>{{ formatDateShort(col.createdAt) }}</td>
             <td class="action-cell">
               <button class="action-btn" @click="managePhotos(col)" title="管理照片">
                 <EmojiIcon name="framed-picture" :size="16" />
@@ -168,6 +168,7 @@ import {
 } from '../../api/collection'
 import { getPhotoListApi } from '../../api/photo'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { formatDateShort } from '../../utils/format'
 import EmojiIcon from '../../components/EmojiIcon.vue'
 
 // ===== 合集列表 =====
@@ -366,12 +367,6 @@ async function removePhoto(photoId) {
     console.error('移除照片失败:', err)
     ElMessage.error('移除失败，请重试')
   }
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  if (dateStr.length >= 10) return dateStr.substring(0, 10)
-  return dateStr
 }
 
 onMounted(() => {

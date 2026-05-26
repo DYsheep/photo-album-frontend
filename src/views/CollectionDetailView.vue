@@ -82,17 +82,11 @@ async function loadDetail() {
         }
       }
     } catch {
-      // 如果前台接口返回空，尝试后台接口
+      /* ignore - collection metadata may not be loaded */
     }
 
-    // 如果仍没有名称，尝试后台接口
     if (!collectionName.value) {
-      try {
-        // 直接使用默认名称
-        collectionName.value = '合集详情'
-      } catch {
-        collectionName.value = '合集详情'
-      }
+      collectionName.value = '合集详情'
     }
   } catch (err) {
     console.error('加载合集详情失败:', err)

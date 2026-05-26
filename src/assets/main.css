@@ -12,6 +12,8 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-primary, #fafafa);
+  transition: background-color 0.3s ease;
 }
 
 body {
@@ -22,11 +24,6 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-html {
-  background-color: var(--bg-primary, #fafafa);
-  transition: background-color 0.3s ease;
 }
 
 a {
@@ -253,4 +250,24 @@ button {
   .map-container {
     height: calc(100vh - 120px) !important;
   }
+}
+
+/* ========== 全局共享组件样式 ========== */
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text-placeholder, #aaa);
+  font-size: 14px;
+}
+
+/* 管理后台工具栏 */
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
 }

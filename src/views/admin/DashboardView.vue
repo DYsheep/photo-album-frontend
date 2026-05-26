@@ -266,11 +266,6 @@ onMounted(async () => {
   justify-content: center;
 }
 
-.photo-icon { background: #E6F1FB; }
-.cat-icon { background: #EAF3DE; }
-.view-icon { background: #FAEEDA; }
-.size-icon { background: #EEEDFE; }
-
 .stat-info {
   display: flex;
   flex-direction: column;
