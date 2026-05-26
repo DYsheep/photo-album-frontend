@@ -84,9 +84,7 @@
         </div>
 
         <!-- 分享按钮 -->
-        <button class="share-btn" @click="shareUrl">
-          <EmojiIcon name="link" :size="15" class="icon-inline" /> 分享链接
-        </button>
+        <ShareButton :photo-id="photo.id" />
       </div>
     </div>
 
@@ -115,10 +113,10 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPhotoDetailApi, getPhotoListApi } from '../api/photo'
-import { ElMessage } from 'element-plus'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import EmojiIcon from '../components/EmojiIcon.vue'
 import Lightbox from '../components/Lightbox.vue'
+import ShareButton from '../components/ShareButton.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -224,16 +222,6 @@ function goNext() {
     const nextId = adjacentIds.value[idx + 1]
     router.push({ name: 'photoDetail', params: { id: nextId } })
   }
-}
-
-// 分享链接
-function shareUrl() {
-  const url = window.location.href
-  navigator.clipboard.writeText(url).then(() => {
-    ElMessage.success('链接已复制到剪贴板')
-  }).catch(() => {
-    ElMessage.info('当前页面地址: ' + url)
-  })
 }
 
 // 格式化日期

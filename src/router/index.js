@@ -18,6 +18,10 @@ import PhotoManageView from '../views/admin/PhotoManageView.vue'
 import CategoryView from '../views/admin/CategoryView.vue'
 import TagManageView from '../views/admin/TagManageView.vue'
 import CollectionManageView from '../views/admin/CollectionManageView.vue'
+import ShareManageView from '../views/admin/ShareManageView.vue'
+
+// 公开分享页面
+import ShareView from '../views/ShareView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -52,6 +56,11 @@ const router = createRouter({
       path: '/map',
       name: 'map',
       component: MapView
+    },
+    {
+      path: '/share/:code',
+      name: 'shareView',
+      component: ShareView
     },
 
     // ===== 管理员路由 =====
@@ -102,6 +111,12 @@ const router = createRouter({
           name: 'adminCollections',
           component: CollectionManageView,
           meta: { title: '合集管理', requiresAuth: true }
+        },
+        {
+          path: 'share',
+          name: 'adminShare',
+          component: ShareManageView,
+          meta: { title: '分享管理', requiresAuth: true }
         }
       ]
     },
