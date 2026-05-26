@@ -26,6 +26,13 @@
         </button>
         <button
           v-if="selectedIds.length > 0"
+          class="btn-primary btn-sm"
+          @click="openAddToCollection"
+        >
+          加入合集 ({{ selectedIds.length }})
+        </button>
+        <button
+          v-if="selectedIds.length > 0"
           class="btn-danger btn-sm"
           @click="handleBatchDelete"
         >
@@ -126,6 +133,21 @@
         </div>
       </div>
     </div>
+
+    <!-- 加入合集弹窗 -->
+    <div v-if="showCollectionDialog" class="modal-overlay" @click.self="showCollectionDialog = false">
+      <div class="modal-content">
+        <h3>选择合集</h3>
+        <select v-model="targetCollectionId" class="filter-select" style="width:100%;">
+          <option :value="null" disabled>请选择合集</option>
+          <option v-for="col in collectionList" :key="col.id" :value="col.id">{{ col.name }}</option>
+        </select>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="showCollectionDialog = false">取消</button>
+          <button class="btn-primary" @click="saveAddToCollection" :disabled="!targetCollectionId || collectionSaving">确定加入</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -134,6 +156,7 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import { getPhotoListApi, updatePhotoApi, deletePhotoApi, batchDeletePhotosApi, batchUpdatePhotosApi } from '../../api/photo'
 import EmojiIcon from '../../components/EmojiIcon.vue'
 import { getCategoryListApi } from '../../api/category'
+import { getAdminCollectionsApi, addPhotoToCollectionApi } from '../../api/collection'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 // 搜索和筛选
@@ -194,6 +217,37 @@ function goPage(page) {
   currentPage.value = page
   selectedIds.value = []
   loadPhotos()
+}
+
+// ===== 加入合集 =====
+const showCollectionDialog = ref(false)
+const targetCollectionId = ref(null)
+const collectionList = ref([])
+const collectionSaving = ref(false)
+
+async function openAddToCollection() {
+  targetCollectionId.value = null
+  showCollectionDialog.value = true
+  try {
+    const res = await getAdminCollectionsApi()
+    if (res.code === 200) collectionList.value = res.data || []
+  } catch { collectionList.value = [] }
+}
+
+async function saveAddToCollection() {
+  if (!targetCollectionId.value || selectedIds.value.length === 0) return
+  collectionSaving.value = true
+  let success = 0
+  for (const photoId of selectedIds.value) {
+    try {
+      const res = await addPhotoToCollectionApi(targetCollectionId.value, photoId)
+      if (res.code === 200) success++
+    } catch { /* skip duplicates */ }
+  }
+  ElMessage.success(`已将 ${success} 张照片加入合集`)
+  showCollectionDialog.value = false
+  selectedIds.value = []
+  collectionSaving.value = false
 }
 
 onMounted(async () => {
