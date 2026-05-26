@@ -598,12 +598,16 @@ onMounted(() => {
     min-height: 260px;
     border-radius: 0;
     margin: 0 -8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .detail-image {
-    max-width: 100vw;
+    max-width: 100%;
     max-height: 55vh;
     border-radius: 0;
+    object-fit: contain;
   }
 
   /* 手机端侧边导航缩小并靠边 */

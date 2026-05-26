@@ -26,9 +26,9 @@
           class="lightbox-content"
           @click.stop
           @wheel.prevent="onWheelZoom"
-          @touchstart="onTouchStart"
-          @touchmove="onTouchMove"
-          @touchend="onTouchEnd"
+          @touchstart.prevent="onTouchStart"
+          @touchmove.prevent="onTouchMove"
+          @touchend.prevent="onTouchEnd"
         >
           <img
             :src="currentPhoto.url"
@@ -287,6 +287,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   outline: none;
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 .lightbox-content {
