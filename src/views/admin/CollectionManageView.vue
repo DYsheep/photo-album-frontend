@@ -156,7 +156,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import {
   getAdminCollectionsApi,
   createCollectionApi,
@@ -244,7 +244,6 @@ async function handleSave() {
     if (res.code === 200) {
       ElMessage.success(isEditing.value ? '合集已更新' : '合集已创建')
       dialogVisible.value = false
-      await loadCollections()
     } else {
       ElMessage.error(res.message || '操作失败')
     }
@@ -253,6 +252,8 @@ async function handleSave() {
     ElMessage.error('操作失败，请重试')
   } finally {
     saving.value = false
+    await nextTick()
+    await loadCollections()
   }
 }
 
@@ -275,7 +276,6 @@ async function handleDelete() {
       ElMessage.success('合集已删除')
       deleteDialogVisible.value = false
       deleteTarget.value = null
-      await loadCollections()
     } else {
       ElMessage.error(res.message || '删除失败')
     }
@@ -284,6 +284,8 @@ async function handleDelete() {
     ElMessage.error('删除失败，请重试')
   } finally {
     deleting.value = false
+    await nextTick()
+    await loadCollections()
   }
 }
 
