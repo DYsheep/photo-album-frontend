@@ -3,19 +3,34 @@ import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   plugins: [vue()],
+  build: {
+    // 开启 CSS 代码分割，按需加载
+    cssCodeSplit: true,
+    // 分包策略：node_modules 单独打包，长期缓存
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-vue': ['vue', 'vue-router', 'pinia'],
+          'vendor-ui': ['element-plus'],
+          'vendor-map': ['leaflet', 'leaflet.markercluster'],
+          'vendor-icons': ['lucide-vue-next'],
+        }
+      }
+    },
+    // 生产环境去除 console
+    minify: 'terser',
+    terserOptions: {
+      compress: { drop_console: true, drop_debugger: true }
+    }
+  },
   server: {
     port: 5173,
     open: true,
-    // 开发环境禁用缓存，确保每次刷新都加载最新代码
     headers: {
       'Cache-Control': 'no-store'
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true
-      },
-      '/files': {
         target: 'http://localhost:8080',
         changeOrigin: true
       }
