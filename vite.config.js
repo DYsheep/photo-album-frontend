@@ -17,10 +17,10 @@ export default defineConfig({
         }
       }
     },
-    // 生产环境去除 console
-    minify: 'terser',
-    terserOptions: {
-      compress: { drop_console: true, drop_debugger: true }
+    // 生产环境去除 console 和 debugger
+    minify: 'esbuild',
+    esbuild: {
+      drop: ['console', 'debugger']
     }
   },
   server: {
