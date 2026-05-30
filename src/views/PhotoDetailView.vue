@@ -294,7 +294,6 @@ onMounted(() => {
   max-height: 70vh;
   object-fit: contain;
   border-radius: 8px;
-  display: block;
   cursor: zoom-in;
 }
 
@@ -561,8 +560,6 @@ onMounted(() => {
   .detail-image {
     max-width: 100%;
     max-height: 60vh;
-    width: fit-content;
-    margin: 0 auto;
   }
 
   /* 手机端侧边导航缩小并靠边 */
