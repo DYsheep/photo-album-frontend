@@ -1,7 +1,7 @@
 <template>
   <div class="collection-list">
     <div class="back-bar">
-      <router-link to="/" class="back-btn">← 返回首页</router-link>
+      <router-link to="/" class="back-btn"><EmojiIcon name="left-arrow" :size="16" class="icon-inline" /> 返回首页</router-link>
     </div>
     <h1 class="page-title">照片合集</h1>
     <p class="page-desc">精选照片系列，按主题浏览</p>
@@ -198,5 +198,29 @@ onMounted(() => {
   text-align: center;
   padding: 60px 0;
   color: var(--text-muted, #888);
+}
+
+.back-bar {
+  margin-bottom: 16px;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border: 1.5px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  background: var(--bg-card, #fff);
+  color: var(--text-regular, #555);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.back-btn:hover {
+  border-color: var(--color-primary, #378ADD);
+  color: var(--color-primary, #378ADD);
+  background: var(--color-primary-light, #F5FAFF);
 }
 </style>
