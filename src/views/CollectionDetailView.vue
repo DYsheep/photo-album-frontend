@@ -16,6 +16,7 @@
         <button class="back-btn" @click="goBack">
           <EmojiIcon name="left-arrow" :size="16" class="icon-inline" /> 返回合集列表
         </button>
+        <router-link to="/" class="back-btn">返回首页</router-link>
       </div>
 
       <!-- 合集头部 -->
