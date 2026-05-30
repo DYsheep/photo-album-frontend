@@ -34,10 +34,7 @@ request.interceptors.response.use(
       if (res.code === 401) {
         const authStore = useAuthStore()
         authStore.logout()
-        // 只在管理页时才跳转登录，公共页只提示
-        if (window.location.pathname.startsWith('/admin')) {
-          window.location.href = '/admin/login'
-        }
+        // 路由守卫会自动跳转首页，不要强行 reload
       }
       return Promise.reject(new Error(res.message || '请求失败'))
     }
@@ -51,9 +48,6 @@ request.interceptors.response.use(
           ElMessage.error('未授权，请重新登录')
           const authStore = useAuthStore()
           authStore.logout()
-          if (window.location.pathname.startsWith('/admin')) {
-            window.location.href = '/admin/login'
-          }
           break
         case 403:
           ElMessage.error('拒绝访问')
