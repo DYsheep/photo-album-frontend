@@ -558,6 +558,9 @@ onMounted(() => {
   }
 
   .detail-image {
+    width: auto;
+    height: auto;
+    display: block;
     max-width: 100%;
     max-height: 60vh;
   }
