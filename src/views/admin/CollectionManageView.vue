@@ -2,9 +2,14 @@
   <div class="collection-manage">
     <div class="page-header">
       <h2>合集管理</h2>
-      <button class="btn-primary btn-sm" @click="openCreateDialog">
-        <EmojiIcon name="plus" :size="16" class="icon-inline" /> 新建合集
-      </button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button v-if="dragChanged" class="btn-secondary btn-sm" @click="saveOrder" :disabled="savingOrder">
+          {{ savingOrder ? '保存中...' : '保存排序' }}
+        </button>
+        <button class="btn-primary btn-sm" @click="openCreateDialog">
+          <EmojiIcon name="plus" :size="16" class="icon-inline" /> 新建合集
+        </button>
+      </div>
     </div>
 
     <!-- 合集列表表格 -->
@@ -12,6 +17,7 @@
       <table class="data-table" v-if="collections.length > 0">
         <thead>
           <tr>
+            <th style="width:30px"></th>
             <th style="width:50px">#</th>
             <th>名称</th>
             <th>照片数</th>
@@ -21,7 +27,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(col, index) in collections" :key="col.id">
+          <tr
+            v-for="(col, index) in collections"
+            :key="col.id"
+            :draggable="true"
+            @dragstart="onDragStart($event, index)"
+            @dragover.prevent="onDragOver"
+            @drop="onDrop($event, index)"
+            @dragend="onDragEnd"
+            :class="{ 'drag-over': dropIndex === index }"
+          >
+            <td class="drag-handle">⋮⋮</td>
             <td>{{ index + 1 }}</td>
             <td class="name-cell">{{ col.name }}</td>
             <td>{{ col.photoCount || 0 }}</td>
@@ -165,6 +181,7 @@ import {
   getCollectionDetailApi
 } from '../../api/collection'
 import { getPhotoListApi } from '../../api/photo'
+import { reorderCollectionsApi } from '../../api/collection'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatDateShort } from '../../utils/format'
 import EmojiIcon from '../../components/EmojiIcon.vue'
@@ -369,6 +386,53 @@ async function removePhoto(photoId) {
   }
 }
 
+// ===== 拖拽排序 =====
+const dragIndex = ref(-1)
+const dropIndex = ref(-1)
+const dragChanged = ref(false)
+const savingOrder = ref(false)
+
+function onDragStart(e, index) {
+  dragIndex.value = index
+  e.dataTransfer.effectAllowed = 'move'
+}
+
+function onDragOver(e) {
+  e.dataTransfer.dropEffect = 'move'
+}
+
+function onDrop(e, index) {
+  dropIndex.value = -1
+  if (dragIndex.value === -1 || dragIndex.value === index) return
+  const item = collections.value.splice(dragIndex.value, 1)[0]
+  collections.value.splice(index, 0, item)
+  dragChanged.value = true
+}
+
+function onDragEnd() {
+  dragIndex.value = -1
+  dropIndex.value = -1
+}
+
+async function saveOrder() {
+  savingOrder.value = true
+  try {
+    const orderList = collections.value.map((col, i) => ({ id: col.id, sortOrder: i }))
+    const res = await reorderCollectionsApi(orderList)
+    if (res.code === 200) {
+      ElMessage.success('排序已保存')
+      dragChanged.value = false
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (err) {
+    console.error('保存排序失败:', err)
+    ElMessage.error('保存失败，请重试')
+  } finally {
+    savingOrder.value = false
+  }
+}
+
 onMounted(() => {
   loadCollections()
 })
@@ -554,5 +618,18 @@ onMounted(() => {
   display: flex;
   gap: 10px;
   align-items: center;
+}
+
+/* 拖拽排序 */
+.drag-handle {
+  cursor: grab;
+  color: var(--text-muted, #ccc);
+  font-size: 14px;
+  user-select: none;
+  padding: 12px 6px !important;
+}
+.drag-handle:active { cursor: grabbing; }
+.data-table tr.drag-over td {
+  border-top: 2px solid var(--color-primary, #378ADD);
 }
 </style>

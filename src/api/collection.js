@@ -41,3 +41,8 @@ export function removePhotoFromCollectionApi(collectionId, photoId) {
 export function getAdminCollectionsApi() {
   return request.get('/admin/collections')
 }
+
+/** 批量更新合集排序（后台） */
+export function reorderCollectionsApi(orderList) {
+  return request.put('/admin/collections/reorder', orderList)
+}
