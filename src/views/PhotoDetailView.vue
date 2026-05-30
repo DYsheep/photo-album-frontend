@@ -287,7 +287,6 @@ onMounted(() => {
   border-radius: 12px;
   overflow: hidden;
   min-height: 400px;
-  position: relative;
 }
 
 .detail-image {
