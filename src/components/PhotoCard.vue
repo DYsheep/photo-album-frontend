@@ -28,7 +28,6 @@ const props = defineProps({
   clickable: { type: Boolean, default: true },
   routeQuery: { type: Object, default: () => ({}) }
 })
-})
 
 const emit = defineEmits(['click'])
 
