@@ -96,6 +96,13 @@
             inactive-text="草稿"
           />
         </el-form-item>
+        <el-form-item label="私密状态">
+          <el-switch
+            v-model="formData.isPrivateBool"
+            active-text="私密"
+            inactive-text="公开"
+          />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -211,7 +218,8 @@ const formData = reactive({
   name: '',
   description: '',
   sortOrder: 0,
-  isPublishedBool: true
+  isPublishedBool: true,
+  isPrivateBool: false
 })
 
 function openCreateDialog() {
@@ -221,6 +229,7 @@ function openCreateDialog() {
   formData.description = ''
   formData.sortOrder = 0
   formData.isPublishedBool = true
+  formData.isPrivateBool = false
   dialogVisible.value = true
 }
 
@@ -231,6 +240,7 @@ function openEditDialog(col) {
   formData.description = col.description || ''
   formData.sortOrder = col.sortOrder || 0
   formData.isPublishedBool = col.isPublished === 1
+  formData.isPrivateBool = col.isPrivate === 1
   dialogVisible.value = true
 }
 
@@ -246,7 +256,8 @@ async function handleSave() {
       name: formData.name.trim(),
       description: formData.description.trim(),
       sortOrder: formData.sortOrder,
-      isPublished: formData.isPublishedBool ? 1 : 0
+      isPublished: formData.isPublishedBool ? 1 : 0,
+      isPrivate: formData.isPrivateBool ? 1 : 0
     }
 
     let res

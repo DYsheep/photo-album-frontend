@@ -105,6 +105,11 @@
           <label>描述</label>
           <textarea v-model="editForm.description" rows="3"></textarea>
         </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" v-model="editForm.isPrivate" /> 设为私密（仅管理员可见）
+          </label>
+        </div>
         <div class="modal-actions">
           <button class="btn-secondary" @click="closeEdit">取消</button>
           <button class="btn-primary" @click="saveEdit" :disabled="saving">保存</button>
@@ -265,13 +270,14 @@ function isSelected(id) {
 
 const editingPhoto = ref(null)
 const saving = ref(false)
-const editForm = reactive({ title: '', categoryId: null, description: '' })
+const editForm = reactive({ title: '', categoryId: null, description: '', isPrivate: false })
 
 function openEdit(photo) {
   editingPhoto.value = photo
   editForm.title = photo.title
   editForm.categoryId = photo.categoryId
   editForm.description = photo.description || ''
+  editForm.isPrivate = photo.isPrivate === 1
 }
 
 function closeEdit() {
@@ -285,7 +291,8 @@ async function saveEdit() {
     await updatePhotoApi(editingPhoto.value.id, {
       title: editForm.title,
       categoryId: editForm.categoryId,
-      description: editForm.description
+      description: editForm.description,
+      isPrivate: editForm.isPrivate ? 1 : 0
     })
     ElMessage.success('保存成功')
     closeEdit()
