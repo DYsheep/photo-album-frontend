@@ -560,10 +560,14 @@ onMounted(() => {
   }
 
   .detail-image {
-    max-width: 100%;
-    max-height: 55vh;
+    max-width: 100vw;
+    max-height: 60vh;
+    width: auto;
+    height: auto;
     border-radius: 0;
     object-fit: contain;
+    display: block;
+    margin: 0 auto;
   }
 
   /* 手机端侧边导航缩小并靠边 */
