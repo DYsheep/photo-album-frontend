@@ -12,21 +12,19 @@
       <table class="data-table" v-if="collections.length > 0">
         <thead>
           <tr>
-            <th>ID</th>
+            <th style="width:50px">#</th>
             <th>名称</th>
             <th>照片数</th>
-            <th>排序</th>
             <th>状态</th>
             <th>创建时间</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="col in collections" :key="col.id">
-            <td>{{ col.id }}</td>
+          <tr v-for="(col, index) in collections" :key="col.id">
+            <td>{{ index + 1 }}</td>
             <td class="name-cell">{{ col.name }}</td>
             <td>{{ col.photoCount || 0 }}</td>
-            <td>{{ col.sortOrder }}</td>
             <td>
               <span :class="col.isPublished === 1 ? 'status-published' : 'status-draft'">
                 {{ col.isPublished === 1 ? '已发布' : '草稿' }}

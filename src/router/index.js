@@ -136,7 +136,8 @@ router.beforeEach((to, from, next) => {
 
   // 需要登录的页面（管理后台）
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-    next({ name: 'adminLogin', query: { redirect: to.fullPath } })
+    // 未登录访问后台 → 跳转首页
+    next({ name: 'home' })
     return
   }
 
