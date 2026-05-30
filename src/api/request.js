@@ -27,15 +27,14 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response) => {
     const res = response.data
-    // 假设后端返回格式: { code: 200, data: ..., message: '...' }
     if (res.code && res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
-      // Token 过期或无效，跳转登录
-      if (res.code === 401) {
+      // 401 / 403 静默处理，由路由守卫负责跳转
+      if (res.code === 401 || res.code === 403) {
         const authStore = useAuthStore()
-        authStore.logout()
-        // 路由守卫会自动跳转首页，不要强行 reload
+        if (res.code === 401) authStore.logout()
+        return Promise.reject(new Error('AUTH'))
       }
+      ElMessage.error(res.message || '请求失败')
       return Promise.reject(new Error(res.message || '请求失败'))
     }
     return res
@@ -45,12 +44,9 @@ request.interceptors.response.use(
       const status = error.response.status
       switch (status) {
         case 401:
-          ElMessage.error('未授权，请重新登录')
-          const authStore = useAuthStore()
-          authStore.logout()
+          useAuthStore().logout()
           break
         case 403:
-          ElMessage.error('拒绝访问')
           break
         case 500:
           ElMessage.error('服务器错误')
@@ -61,7 +57,10 @@ request.interceptors.response.use(
     } else if (error.code === 'ECONNABORTED') {
       ElMessage.error('请求超时，请检查网络')
     } else {
-      ElMessage.error('网络异常，请稍后重试')
+      // 静默处理 AUTH 类型错误和网络异常
+      if (error.message !== 'AUTH') {
+        ElMessage.error('网络异常，请稍后重试')
+      }
     }
     return Promise.reject(error)
   }
