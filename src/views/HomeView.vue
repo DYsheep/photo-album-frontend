@@ -287,7 +287,8 @@ onMounted(async () => {
 }
 
 @media (max-width: 600px) {
-  .photo-grid { column-count: 1; }
+  .photo-grid { column-count: 2; column-gap: 8px; }
+  .photo-grid > * { margin-bottom: 8px; }
 }
 
 .empty-hint {
