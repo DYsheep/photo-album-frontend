@@ -559,9 +559,10 @@ onMounted(() => {
   }
 
   .detail-image {
-    display: inline;
     max-width: 100%;
     max-height: 60vh;
+    width: fit-content;
+    margin: 0 auto;
   }
 
   /* 手机端侧边导航缩小并靠边 */
