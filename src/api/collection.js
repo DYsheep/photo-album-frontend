@@ -46,3 +46,8 @@ export function getAdminCollectionsApi() {
 export function reorderCollectionsApi(orderList) {
   return request.put('/admin/collections/reorder', orderList)
 }
+
+/** 合集内相邻照片 ID */
+export function getCollectionAdjacentApi(collectionId, photoId) {
+  return request.get(`/collections/${collectionId}/adjacent`, { params: { photoId } })
+}

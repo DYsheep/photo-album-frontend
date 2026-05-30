@@ -116,6 +116,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPhotoDetailApi, getAdjacentPhotosApi, updatePhotoApi } from '../api/photo'
+import { getCollectionAdjacentApi } from '../api/collection'
 import { useAuthStore } from '../stores/auth'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { formatDate, formatFileSize } from '../utils/format'
@@ -127,6 +128,7 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const isAdmin = computed(() => authStore.isLoggedIn)
+const collectionCtx = computed(() => route.query.collection || null)
 
 const photo = ref(null)
 const loading = ref(true)
@@ -203,7 +205,12 @@ async function loadPhoto() {
 // 获取相邻照片 ID（上一张/下一张）
 async function loadAdjacentIds() {
   try {
-    const res = await getAdjacentPhotosApi(currentId.value)
+    let res
+    if (collectionCtx.value) {
+      res = await getCollectionAdjacentApi(collectionCtx.value, currentId.value)
+    } else {
+      res = await getAdjacentPhotosApi(currentId.value)
+    }
     if (res.code === 200 && res.data) {
       const { prevId, nextId } = res.data
       adjacentIds.value = [
@@ -223,7 +230,8 @@ function goPrev() {
   const idx = adjacentIds.value.indexOf(currentId.value)
   if (idx > 0) {
     const prevId = adjacentIds.value[idx - 1]
-    router.push({ name: 'photoDetail', params: { id: prevId } })
+    const q = collectionCtx.value ? { collection: collectionCtx.value } : {}
+    router.push({ name: 'photoDetail', params: { id: prevId }, query: q })
   }
 }
 
@@ -232,7 +240,8 @@ function goNext() {
   const idx = adjacentIds.value.indexOf(currentId.value)
   if (idx >= 0 && idx < adjacentIds.value.length - 1) {
     const nextId = adjacentIds.value[idx + 1]
-    router.push({ name: 'photoDetail', params: { id: nextId } })
+    const q = collectionCtx.value ? { collection: collectionCtx.value } : {}
+    router.push({ name: 'photoDetail', params: { id: nextId }, query: q })
   }
 }
 

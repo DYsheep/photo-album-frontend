@@ -24,14 +24,10 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const props = defineProps({
-  photo: {
-    type: Object,
-    required: true
-  },
-  clickable: {
-    type: Boolean,
-    default: true
-  }
+  photo: { type: Object, required: true },
+  clickable: { type: Boolean, default: true },
+  routeQuery: { type: Object, default: () => ({}) }
+})
 })
 
 const emit = defineEmits(['click'])
@@ -39,7 +35,7 @@ const emit = defineEmits(['click'])
 function handleClick() {
   if (props.clickable) {
     emit('click', props.photo)
-    router.push({ name: 'photoDetail', params: { id: props.photo.id } })
+    router.push({ name: 'photoDetail', params: { id: props.photo.id }, query: props.routeQuery })
   }
 }
 

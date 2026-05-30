@@ -28,7 +28,7 @@
       <!-- 照片网格 -->
       <div class="photo-grid" v-if="photos.length > 0">
         <div v-for="photo in photos" :key="photo.id">
-          <PhotoCard :photo="photo" />
+          <PhotoCard :photo="photo" :route-query="{ collection: collectionId }" />
         </div>
       </div>
 
@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCollectionDetailApi, getCollectionsApi } from '../api/collection'
 import EmojiIcon from '../components/EmojiIcon.vue'
@@ -50,6 +50,7 @@ import PhotoCard from '../components/PhotoCard.vue'
 
 const route = useRoute()
 const router = useRouter()
+const collectionId = computed(() => route.params.id)
 
 const loading = ref(true)
 const errorMsg = ref('')
