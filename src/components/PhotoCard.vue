@@ -48,6 +48,11 @@ function onImageLoad(e) {
 }
 
 function onImageError(e) {
+  // 缩略图加载失败，尝试原图
+  if (e.target.src !== props.photo.url && props.photo.url) {
+    e.target.src = props.photo.url
+    return
+  }
   e.target.classList.add('loaded', 'error')
 }
 </script>
