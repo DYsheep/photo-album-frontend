@@ -552,8 +552,7 @@ onMounted(() => {
 
   .detail-image-area {
     min-height: 260px;
-    border-radius: 0;
-    margin: 0 -8px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -562,7 +561,6 @@ onMounted(() => {
   .detail-image {
     max-width: 100%;
     max-height: 60vh;
-    border-radius: 0;
   }
 
   /* 手机端侧边导航缩小并靠边 */
