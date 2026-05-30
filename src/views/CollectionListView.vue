@@ -1,5 +1,8 @@
 <template>
   <div class="collection-list">
+    <div class="back-bar">
+      <router-link to="/" class="back-btn">← 返回首页</router-link>
+    </div>
     <h1 class="page-title">照片合集</h1>
     <p class="page-desc">精选照片系列，按主题浏览</p>
 
