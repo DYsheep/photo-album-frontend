@@ -119,6 +119,7 @@ export const useAlbumStore = defineStore('album', () => {
         categoryId: p.categoryId,
         categoryName: p.categoryName || '',
         url: p.url,
+        thumbnailUrl: p.thumbnailUrl,
         tags: p.tags,
         viewCount: p.viewCount,
         fileSize: p.fileSize,
