@@ -33,6 +33,12 @@
               <input v-model="f.tags" type="text" placeholder="例如: 日出, 清晨, 风景" />
             </div>
           </div>
+          <div class="form-row">
+            <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+              <label style="margin:0;">私密状态</label>
+              <el-switch v-model="f.isPrivate" active-text="私密" inactive-text="公开" />
+            </div>
+          </div>
         </div>
 
         <!-- 上传进度 -->
@@ -147,6 +153,7 @@ async function handleUpload() {
       if (f.categoryId) formData.append('categoryId', f.categoryId)
       if (f.description) formData.append('description', f.description)
       if (f.tags) formData.append('tags', f.tags)
+      formData.append('isPrivate', f.isPrivate ? '1' : '0')
 
       await uploadPhotoApi(formData, (percent) => {
         uploadPercent.value = Math.round(((i + percent / 100) / selectedFiles.value.length) * 100)
