@@ -105,10 +105,9 @@
           <label>描述</label>
           <textarea v-model="editForm.description" rows="3"></textarea>
         </div>
-        <div class="form-group">
-          <label>
-            <input type="checkbox" v-model="editForm.isPrivate" /> 设为私密（仅管理员可见）
-          </label>
+        <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+          <label style="margin:0;">私密状态</label>
+          <el-switch v-model="editForm.isPrivate" active-text="私密" inactive-text="公开" />
         </div>
         <div class="modal-actions">
           <button class="btn-secondary" @click="closeEdit">取消</button>

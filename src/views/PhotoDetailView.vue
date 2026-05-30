@@ -30,6 +30,9 @@
         <div class="detail-meta">
           <span v-if="photo.categoryName" class="meta-category">{{ photo.categoryName }}</span>
           <span v-if="photo.dateTaken" class="meta-date">{{ formatDate(photo.dateTaken) }}</span>
+          <span v-if="isAdmin" class="private-switch">
+            <el-switch v-model="privateState" active-text="私密" inactive-text="公开" size="small" @change="togglePrivate" :loading="privateSaving" />
+          </span>
         </div>
 
         <!-- EXIF 结构化面板 -->
@@ -112,7 +115,8 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPhotoDetailApi, getAdjacentPhotosApi } from '../api/photo'
+import { getPhotoDetailApi, getAdjacentPhotosApi, updatePhotoApi } from '../api/photo'
+import { useAuthStore } from '../stores/auth'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { formatDate, formatFileSize } from '../utils/format'
 import EmojiIcon from '../components/EmojiIcon.vue'
@@ -121,10 +125,14 @@ import ShareButton from '../components/ShareButton.vue'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
+const isAdmin = computed(() => authStore.isLoggedIn)
 
 const photo = ref(null)
 const loading = ref(true)
 const imageLoaded = ref(false)
+const privateState = ref(false)
+const privateSaving = ref(false)
 const adjacentIds = ref([])
 const currentId = computed(() => Number(route.params.id))
 
@@ -178,6 +186,7 @@ async function loadPhoto() {
     const res = await getPhotoDetailApi(currentId.value)
     if (res.code === 200 && res.data) {
       photo.value = res.data
+      privateState.value = res.data.isPrivate === 1
       // 同时加载相邻照片 ID 列表（用于上下张导航）
       await loadAdjacentIds()
     } else {
@@ -231,6 +240,21 @@ function goNext() {
 watch(() => route.params.id, (newId) => {
   if (newId) loadPhoto()
 })
+
+// 切换私密状态
+async function togglePrivate() {
+  if (!photo.value) return
+  privateSaving.value = true
+  try {
+    await updatePhotoApi(photo.value.id, { isPrivate: privateState.value ? 1 : 0 })
+    photo.value.isPrivate = privateState.value ? 1 : 0
+  } catch (err) {
+    console.error('切换私密失败:', err)
+    privateState.value = !privateState.value // 回滚
+  } finally {
+    privateSaving.value = false
+  }
+}
 
 onMounted(() => {
   loadPhoto()
