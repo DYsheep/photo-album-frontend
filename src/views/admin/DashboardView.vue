@@ -78,31 +78,16 @@
         <div class="exif-card" v-if="focalLengthList.length > 0">
           <h4>焦段偏好</h4>
           <div class="donut-wrapper">
-            <svg viewBox="0 0 160 160" class="donut-chart">
-              <circle cx="80" cy="80" r="60" fill="none" stroke="var(--bg-hover, #eee)" stroke-width="24" />
-              <circle
-                v-for="(arc, i) in focalArcs"
-                :key="i"
-                cx="80" cy="80" r="60"
-                fill="none"
-                :stroke="arc.color"
-                stroke-width="24"
-                :stroke-dasharray="arc.dashArray"
-                :stroke-dashoffset="arc.dashOffset"
-                stroke-linecap="round"
-                transform="rotate(-90 80 80)"
-              >
-                <title>{{ arc.name }}: {{ arc.count }}</title>
-              </circle>
-              <text x="80" y="76" text-anchor="middle" class="donut-total" fill="var(--text-primary, #333)" font-size="16" font-weight="500">{{ focalTotal }}</text>
-              <text x="80" y="94" text-anchor="middle" class="donut-label" fill="var(--text-muted, #888)" font-size="11">张照片</text>
+            <svg viewBox="0 0 240 200" class="donut-chart">
+              <g v-for="(arc, i) in focalArcs" :key="i">
+                <path :d="arc.path" :fill="arc.color" stroke="#fff" stroke-width="1.5" />
+                <polyline :points="arc.labelLine" fill="none" :stroke="arc.color" stroke-width="1.2" />
+                <text :x="arc.labelX" :y="arc.labelY" text-anchor="middle" font-size="10" fill="var(--text-regular, #555)" font-weight="500">{{ arc.name }}</text>
+              </g>
+              <circle cx="120" cy="100" r="50" fill="var(--bg-card, #fff)" />
+              <text x="120" y="95" text-anchor="middle" font-size="12" fill="var(--text-muted, #888)">最多焦段</text>
+              <text x="120" y="113" text-anchor="middle" font-size="15" fill="var(--color-primary, #378ADD)" font-weight="600">{{ topFocalLength }}</text>
             </svg>
-            <div class="donut-legend">
-              <span v-for="(arc, i) in focalArcs" :key="i" class="legend-item">
-                <i :style="{ background: arc.color }"></i>
-                {{ arc.name }} {{ arc.count }}
-              </span>
-            </div>
           </div>
         </div>
 
@@ -222,20 +207,45 @@ const isoMax = computed(() => maxCount(isoList.value))
 const yearMax = computed(() => maxCount(yearList.value))
 
 const focalTotal = computed(() => focalLengthList.value.reduce((s, i) => s + i.count, 0))
+const topFocalLength = computed(() => focalLengthList.value[0]?.name || '')
 
-const arcColors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#B37FEB', '#36CFC9', '#FF85C0']
+const arcColors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#B37FEB', '#FA8C16', '#36CFC9', '#FF85C0']
 const focalArcs = computed(() => {
   const total = focalTotal.value
-  const circumference = 2 * Math.PI * 60 // r=60
-  let offset = 0
+  if (!total) return []
+  const cnt = focalLengthList.value.length
+  const innerR = 38, outerR = 72, cx = 120, cy = 100
+  let startAngle = -Math.PI / 2
   return focalLengthList.value.map((item, i) => {
-    const pct = item.count / total
-    const length = pct * circumference
-    const arc = { name: item.name, count: item.count, color: arcColors[i % arcColors.length], dashArray: `${length} ${circumference - length}`, dashOffset: -offset }
-    offset += length
+    const sweepAngle = (item.count / total) * Math.PI * 2
+    const endAngle = startAngle + sweepAngle
+    const midAngle = startAngle + sweepAngle / 2
+    const path = describeArc(cx, cy, innerR, outerR, startAngle, endAngle)
+    // label line: from outer edge to label position
+    const lx1 = cx + outerR * Math.cos(midAngle)
+    const ly1 = cy + outerR * Math.sin(midAngle)
+    const labelR = outerR + 22
+    const lx2 = cx + labelR * Math.cos(midAngle)
+    const ly2 = cy + labelR * Math.sin(midAngle)
+    const lx3 = lx2 + (midAngle > Math.PI/2 || midAngle < -Math.PI/2 ? -20 : 20)
+    const arc = {
+      name: item.name, path,
+      labelLine: `${lx1},${ly1} ${lx2},${ly2} ${lx3},${ly2}`,
+      labelX: lx3, labelY: ly2 + 4, color: arcColors[i % arcColors.length]
+    }
+    startAngle = endAngle
     return arc
   })
 })
+
+function describeArc(cx, cy, r1, r2, start, end) {
+  const x1o = cx + r2 * Math.cos(start), y1o = cy + r2 * Math.sin(start)
+  const x2o = cx + r2 * Math.cos(end), y2o = cy + r2 * Math.sin(end)
+  const x1i = cx + r1 * Math.cos(end), y1i = cy + r1 * Math.sin(end)
+  const x2i = cx + r1 * Math.cos(start), y2i = cy + r1 * Math.sin(start)
+  const large = end - start > Math.PI ? 1 : 0
+  return `M ${x1o} ${y1o} A ${r2} ${r2} 0 ${large} 1 ${x2o} ${y2o} L ${x1i} ${y1i} A ${r1} ${r1} 0 ${large} 0 ${x2i} ${y2i} Z`
+}
 
 function maxCount(list) {
   if (!list.length) return 1
@@ -554,31 +564,10 @@ h3 {
 /* 环状图 */
 .donut-wrapper {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-.donut-chart {
-  width: 140px;
-  height: 140px;
-}
-.donut-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
   justify-content: center;
 }
-.legend-item {
-  font-size: 12px;
-  color: var(--text-regular, #555);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.legend-item i {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
+.donut-chart {
+  width: 240px;
+  height: 200px;
 }
 </style>
