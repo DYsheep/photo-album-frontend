@@ -77,20 +77,31 @@
         <!-- 焦段偏好 -->
         <div class="exif-card" v-if="focalLengthList.length > 0">
           <h4>焦段偏好</h4>
-          <div class="bar-chart">
-            <div
-              v-for="item in focalLengthList"
-              :key="item.name"
-              class="bar-row"
-            >
-              <span class="bar-label">{{ item.name }}</span>
-              <div class="bar-track">
-                <div
-                  class="bar-fill"
-                  :style="{ width: barWidth(item.count, focalLengthMax) }"
-                ></div>
-              </div>
-              <span class="bar-value">{{ item.count }}</span>
+          <div class="donut-wrapper">
+            <svg viewBox="0 0 160 160" class="donut-chart">
+              <circle cx="80" cy="80" r="60" fill="none" stroke="var(--bg-hover, #eee)" stroke-width="24" />
+              <circle
+                v-for="(arc, i) in focalArcs"
+                :key="i"
+                cx="80" cy="80" r="60"
+                fill="none"
+                :stroke="arc.color"
+                stroke-width="24"
+                :stroke-dasharray="arc.dashArray"
+                :stroke-dashoffset="arc.dashOffset"
+                stroke-linecap="round"
+                transform="rotate(-90 80 80)"
+              >
+                <title>{{ arc.name }}: {{ arc.count }}</title>
+              </circle>
+              <text x="80" y="76" text-anchor="middle" class="donut-total" fill="var(--text-primary, #333)" font-size="16" font-weight="500">{{ focalTotal }}</text>
+              <text x="80" y="94" text-anchor="middle" class="donut-label" fill="var(--text-muted, #888)" font-size="11">张照片</text>
+            </svg>
+            <div class="donut-legend">
+              <span v-for="(arc, i) in focalArcs" :key="i" class="legend-item">
+                <i :style="{ background: arc.color }"></i>
+                {{ arc.name }} {{ arc.count }}
+              </span>
             </div>
           </div>
         </div>
@@ -207,9 +218,24 @@ const cameraList = computed(() => sortedEntries(stats.exifStats?.cameras))
 const isoList = computed(() => sortedEntries(stats.exifStats?.isos))
 const yearList = computed(() => sortedEntries(stats.exifStats?.yearDistribution))
 
-const focalLengthMax = computed(() => maxCount(focalLengthList.value))
 const isoMax = computed(() => maxCount(isoList.value))
 const yearMax = computed(() => maxCount(yearList.value))
+
+const focalTotal = computed(() => focalLengthList.value.reduce((s, i) => s + i.count, 0))
+
+const arcColors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#B37FEB', '#36CFC9', '#FF85C0']
+const focalArcs = computed(() => {
+  const total = focalTotal.value
+  const circumference = 2 * Math.PI * 60 // r=60
+  let offset = 0
+  return focalLengthList.value.map((item, i) => {
+    const pct = item.count / total
+    const length = pct * circumference
+    const arc = { name: item.name, count: item.count, color: arcColors[i % arcColors.length], dashArray: `${length} ${circumference - length}`, dashOffset: -offset }
+    offset += length
+    return arc
+  })
+})
 
 function maxCount(list) {
   if (!list.length) return 1
@@ -523,5 +549,36 @@ h3 {
   padding: 30px 0;
   color: var(--text-placeholder, #aaa);
   font-size: 14px;
+}
+
+/* 环状图 */
+.donut-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.donut-chart {
+  width: 140px;
+  height: 140px;
+}
+.donut-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  justify-content: center;
+}
+.legend-item {
+  font-size: 12px;
+  color: var(--text-regular, #555);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.legend-item i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
 }
 </style>
