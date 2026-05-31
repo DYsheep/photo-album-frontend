@@ -87,7 +87,7 @@
     </div>
 
     <!-- 编辑弹窗 -->
-    <div v-if="editingPhoto" class="modal-overlay" @click.self="closeEdit">
+    <div v-if="editingPhoto" class="modal-overlay">
       <div class="modal-content">
         <h3>编辑照片</h3>
         <div class="form-group">
