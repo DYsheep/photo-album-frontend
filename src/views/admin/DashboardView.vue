@@ -88,12 +88,12 @@
                 <path :d="arc.path" :fill="arc.color" stroke="#fff" stroke-width="1.5" />
                 <template v-if="arc.showLabel && hoveredIndex !== i">
                   <polyline :points="arc.labelLine" fill="none" :stroke="arc.color" stroke-width="1.2" />
-                  <text :x="arc.labelX" :y="arc.labelY" text-anchor="middle" font-size="10" fill="var(--text-regular, #555)" font-weight="500">{{ arc.name }}</text>
+                  <text :x="arc.labelX" :y="arc.labelY" text-anchor="middle" font-size="10" fill="var(--text-regular, #555)" font-weight="500">{{ arc.name }}mm</text>
                 </template>
               </g>
               <circle cx="120" cy="100" r="50" fill="var(--bg-card, #fff)" />
               <text x="120" y="95" text-anchor="middle" font-size="12" fill="var(--text-muted, #888)">最多焦段</text>
-              <text x="120" y="113" text-anchor="middle" font-size="15" fill="var(--color-primary, #378ADD)" font-weight="600">{{ topFocalLength }}</text>
+              <text x="120" y="113" text-anchor="middle" font-size="15" fill="var(--color-primary, #378ADD)" font-weight="600">{{ topFocalLength }}mm</text>
             </svg>
             <!-- 鼠标跟随 tooltip —— HTML div，图层最高 -->
             <div
@@ -101,7 +101,7 @@
               class="donut-tooltip"
               :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }"
             >
-              {{ currentArc.name }} · {{ currentArc.count }} 张
+              {{ currentArc.name }}mm · {{ currentArc.count }} 张
             </div>
           </div>
         </div>
