@@ -78,7 +78,7 @@
         <div class="exif-card" v-if="focalLengthList.length > 0">
           <h4>焦段偏好</h4>
           <div class="donut-wrapper">
-            <svg viewBox="0 0 240 200" class="donut-chart">
+            <svg viewBox="0 0 240 240" class="donut-chart">
               <g
                 v-for="(arc, i) in focalArcs" :key="i"
                 class="arc-g"
@@ -86,17 +86,17 @@
                 @mouseleave="hoveredIndex = -1"
               >
                 <path :d="arc.path" :fill="arc.color" stroke="#fff" stroke-width="1.5" />
-                <!-- Hover 浮出 tooltip -->
-                <g v-if="hoveredIndex === i" class="arc-tooltip-g">
-                  <rect :x="arc.tooltipX - 48" y="138" width="96" height="22" rx="4" fill="var(--bg-card, #fff)" stroke="var(--border-light, #ddd)" />
-                  <text :x="arc.tooltipX" y="153" text-anchor="middle" font-size="11" fill="var(--text-primary, #333)" font-weight="500">{{ arc.name }} · {{ arc.count }} 张</text>
-                </g>
                 <template v-if="arc.showLabel && hoveredIndex !== i">
                   <polyline :points="arc.labelLine" fill="none" :stroke="arc.color" stroke-width="1.2" />
                   <text :x="arc.labelX" :y="arc.labelY" text-anchor="middle" font-size="10" fill="var(--text-regular, #555)" font-weight="500">{{ arc.name }}</text>
                 </template>
               </g>
               <circle cx="120" cy="100" r="50" fill="var(--bg-card, #fff)" />
+              <!-- Hover tooltip —— 渲染在中心圆上层 -->
+              <g v-if="hoveredIndex >= 0" class="arc-tooltip-g">
+                <rect x="35" y="78" width="170" height="36" rx="6" fill="var(--bg-card, #fff)" stroke="var(--border-light, #ddd)" />
+                <text x="120" y="100" text-anchor="middle" font-size="12" fill="var(--text-primary, #333)" font-weight="500">{{ focalArcs[hoveredIndex].name }} · {{ focalArcs[hoveredIndex].count }} 张</text>
+              </g>
               <text x="120" y="95" text-anchor="middle" font-size="12" fill="var(--text-muted, #888)">最多焦段</text>
               <text x="120" y="113" text-anchor="middle" font-size="15" fill="var(--color-primary, #378ADD)" font-weight="600">{{ topFocalLength }}</text>
             </svg>
@@ -585,7 +585,7 @@ h3 {
 }
 .donut-chart {
   width: 240px;
-  height: 200px;
+  height: 240px;
 }
 
 /* 环图 hover 浮起效果 */
