@@ -77,7 +77,7 @@
         <!-- 焦段偏好 -->
         <div class="exif-card" v-if="focalLengthList.length > 0">
           <h4>焦段偏好</h4>
-          <div class="donut-wrapper">
+          <div class="donut-wrapper" @mousemove="onDonutMouseMove">
             <svg viewBox="0 0 240 240" class="donut-chart">
               <g
                 v-for="(arc, i) in focalArcs" :key="i"
@@ -92,13 +92,17 @@
                 </template>
               </g>
               <circle cx="120" cy="100" r="50" fill="var(--bg-card, #fff)" />
-              <!-- Hover tooltip —— 渲染在中心圆上层 -->
-              <g v-if="hoveredIndex >= 0" class="arc-tooltip-g">
-                <rect x="35" y="78" width="170" height="36" rx="6" fill="var(--bg-card, #fff)" stroke="var(--border-light, #ddd)" />
-                <text x="120" y="100" text-anchor="middle" font-size="12" fill="var(--text-primary, #333)" font-weight="500">{{ focalArcs[hoveredIndex].name }} · {{ focalArcs[hoveredIndex].count }} 张</text>
-              </g>
               <text x="120" y="95" text-anchor="middle" font-size="12" fill="var(--text-muted, #888)">最多焦段</text>
               <text x="120" y="113" text-anchor="middle" font-size="15" fill="var(--color-primary, #378ADD)" font-weight="600">{{ topFocalLength }}</text>
+            </svg>
+            <!-- 鼠标跟随 tooltip —— HTML div，图层最高 -->
+            <div
+              v-if="hoveredIndex >= 0 && currentArc"
+              class="donut-tooltip"
+              :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }"
+            >
+              {{ currentArc.name }} · {{ currentArc.count }} 张
+            </div>
             </svg>
           </div>
         </div>
@@ -219,6 +223,14 @@ const isoMax = computed(() => maxCount(isoList.value))
 const yearMax = computed(() => maxCount(yearList.value))
 
 const hoveredIndex = ref(-1)
+const tooltipX = ref(0)
+const tooltipY = ref(0)
+const currentArc = computed(() => hoveredIndex.value >= 0 ? focalArcs.value[hoveredIndex.value] : null)
+
+function onDonutMouseMove(e) {
+  tooltipX.value = e.clientX + 14
+  tooltipY.value = e.clientY - 10
+}
 
 const focalTotal = computed(() => focalLengthList.value.reduce((s, i) => s + i.count, 0))
 const topFocalLength = computed(() => focalLengthList.value[0]?.name || '')
@@ -599,8 +611,22 @@ h3 {
 .arc-g:hover path:first-child {
   transform: scale(1.07);
 }
-.arc-tooltip-g {
-  animation: tooltipIn 0.15s ease;
+
+/* HTML tooltip 跟随鼠标，图层最高 */
+.donut-tooltip {
+  position: fixed;
+  z-index: 9999;
+  padding: 6px 14px;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border-light, #ddd);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-primary, #333);
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  animation: tooltipIn 0.12s ease;
 }
 @keyframes tooltipIn {
   from { opacity: 0; transform: translateY(4px); }
