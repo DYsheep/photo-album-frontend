@@ -103,7 +103,6 @@
             >
               {{ currentArc.name }} · {{ currentArc.count }} 张
             </div>
-            </svg>
           </div>
         </div>
 
