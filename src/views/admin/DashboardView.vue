@@ -79,11 +79,19 @@
           <h4>焦段偏好</h4>
           <div class="donut-wrapper">
             <svg viewBox="0 0 240 200" class="donut-chart">
-              <g v-for="(arc, i) in focalArcs" :key="i">
-                <path :d="arc.path" :fill="arc.color" stroke="#fff" stroke-width="1.5">
-                  <title>{{ arc.name }} · {{ arc.count }} 张</title>
-                </path>
-                <template v-if="arc.showLabel">
+              <g
+                v-for="(arc, i) in focalArcs" :key="i"
+                class="arc-g"
+                @mouseenter="hoveredIndex = i"
+                @mouseleave="hoveredIndex = -1"
+              >
+                <path :d="arc.path" :fill="arc.color" stroke="#fff" stroke-width="1.5" />
+                <!-- Hover 浮出 tooltip -->
+                <g v-if="hoveredIndex === i" class="arc-tooltip-g">
+                  <rect :x="arc.tooltipX - 48" y="138" width="96" height="22" rx="4" fill="var(--bg-card, #fff)" stroke="var(--border-light, #ddd)" />
+                  <text :x="arc.tooltipX" y="153" text-anchor="middle" font-size="11" fill="var(--text-primary, #333)" font-weight="500">{{ arc.name }} · {{ arc.count }} 张</text>
+                </g>
+                <template v-if="arc.showLabel && hoveredIndex !== i">
                   <polyline :points="arc.labelLine" fill="none" :stroke="arc.color" stroke-width="1.2" />
                   <text :x="arc.labelX" :y="arc.labelY" text-anchor="middle" font-size="10" fill="var(--text-regular, #555)" font-weight="500">{{ arc.name }}</text>
                 </template>
@@ -210,6 +218,8 @@ const yearList = computed(() => sortedEntries(stats.exifStats?.yearDistribution)
 const isoMax = computed(() => maxCount(isoList.value))
 const yearMax = computed(() => maxCount(yearList.value))
 
+const hoveredIndex = ref(-1)
+
 const focalTotal = computed(() => focalLengthList.value.reduce((s, i) => s + i.count, 0))
 const topFocalLength = computed(() => focalLengthList.value[0]?.name || '')
 
@@ -235,9 +245,10 @@ const focalArcs = computed(() => {
     const pct = item.count / total
     const showLabel = pct >= 0.08
     const arc = {
-      name: item.name, path, showLabel,
+      name: item.name, count: item.count, path, showLabel,
       labelLine: `${lx1},${ly1} ${lx2},${ly2} ${lx3},${ly2}`,
-      labelX: lx3, labelY: ly2 + 4, color: arcColors[i % arcColors.length]
+      labelX: lx3, labelY: ly2 + 4,
+      tooltipX: 120, color: arcColors[i % arcColors.length]
     }
     startAngle = endAngle
     return arc
@@ -575,5 +586,24 @@ h3 {
 .donut-chart {
   width: 240px;
   height: 200px;
+}
+
+/* 环图 hover 浮起效果 */
+.arc-g {
+  cursor: pointer;
+}
+.arc-g path:first-child {
+  transition: transform 0.2s ease;
+  transform-origin: 120px 100px;
+}
+.arc-g:hover path:first-child {
+  transform: scale(1.07);
+}
+.arc-tooltip-g {
+  animation: tooltipIn 0.15s ease;
+}
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 </style>
