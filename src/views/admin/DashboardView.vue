@@ -80,9 +80,13 @@
           <div class="donut-wrapper">
             <svg viewBox="0 0 240 200" class="donut-chart">
               <g v-for="(arc, i) in focalArcs" :key="i">
-                <path :d="arc.path" :fill="arc.color" stroke="#fff" stroke-width="1.5" />
-                <polyline :points="arc.labelLine" fill="none" :stroke="arc.color" stroke-width="1.2" />
-                <text :x="arc.labelX" :y="arc.labelY" text-anchor="middle" font-size="10" fill="var(--text-regular, #555)" font-weight="500">{{ arc.name }}</text>
+                <path :d="arc.path" :fill="arc.color" stroke="#fff" stroke-width="1.5">
+                  <title>{{ arc.name }} · {{ arc.count }} 张</title>
+                </path>
+                <template v-if="arc.showLabel">
+                  <polyline :points="arc.labelLine" fill="none" :stroke="arc.color" stroke-width="1.2" />
+                  <text :x="arc.labelX" :y="arc.labelY" text-anchor="middle" font-size="10" fill="var(--text-regular, #555)" font-weight="500">{{ arc.name }}</text>
+                </template>
               </g>
               <circle cx="120" cy="100" r="50" fill="var(--bg-card, #fff)" />
               <text x="120" y="95" text-anchor="middle" font-size="12" fill="var(--text-muted, #888)">最多焦段</text>
@@ -228,8 +232,10 @@ const focalArcs = computed(() => {
     const lx2 = cx + labelR * Math.cos(midAngle)
     const ly2 = cy + labelR * Math.sin(midAngle)
     const lx3 = lx2 + (midAngle > Math.PI/2 || midAngle < -Math.PI/2 ? -20 : 20)
+    const pct = item.count / total
+    const showLabel = pct >= 0.08
     const arc = {
-      name: item.name, path,
+      name: item.name, path, showLabel,
       labelLine: `${lx1},${ly1} ${lx2},${ly2} ${lx3},${ly2}`,
       labelX: lx3, labelY: ly2 + 4, color: arcColors[i % arcColors.length]
     }
