@@ -127,7 +127,7 @@ import ShareButton from '../components/ShareButton.vue'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const isAdmin = computed(() => authStore.isLoggedIn)
+const isAdmin = computed(() => authStore.isAdmin)
 const collectionCtx = computed(() => route.query.collection || null)
 
 const photo = ref(null)

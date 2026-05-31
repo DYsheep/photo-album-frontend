@@ -19,6 +19,7 @@ import CategoryView from '../views/admin/CategoryView.vue'
 import TagManageView from '../views/admin/TagManageView.vue'
 import CollectionManageView from '../views/admin/CollectionManageView.vue'
 import ShareManageView from '../views/admin/ShareManageView.vue'
+import UserManageView from '../views/admin/UserManageView.vue'
 
 // 公开分享页面
 import ShareView from '../views/ShareView.vue'
@@ -117,6 +118,12 @@ const router = createRouter({
           name: 'adminShare',
           component: ShareManageView,
           meta: { title: '分享管理', requiresAuth: true }
+        },
+        {
+          path: 'users',
+          name: 'adminUsers',
+          component: UserManageView,
+          meta: { title: '用户管理', requiresAuth: true }
         }
       ]
     },

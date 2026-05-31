@@ -44,6 +44,10 @@
           <EmojiIcon name="link" class="nav-icon" :size="22" />
           <span v-show="!isCollapsed" class="nav-text">分享管理</span>
         </router-link>
+        <router-link to="/admin/users" class="nav-item" active-class="active">
+          <EmojiIcon name="people" class="nav-icon" :size="22" />
+          <span v-show="!isCollapsed" class="nav-text">用户管理</span>
+        </router-link>
       </nav>
 
       <div class="sidebar-footer">
@@ -102,7 +106,8 @@ const currentTitle = computed(() => {
     '/admin/categories': '分类管理',
     '/admin/tags': '标签管理',
     '/admin/collections': '合集管理',
-    '/admin/share': '分享管理'
+    '/admin/share': '分享管理',
+    '/admin/users': '用户管理'
   }
   return titleMap[route.path] || '管理后台'
 })
