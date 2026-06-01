@@ -50,18 +50,20 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import EmojiIcon from './components/EmojiIcon.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 
 const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const menuOpen = ref(false)
 
 function handleLogout() {
   authStore.logout()
   menuOpen.value = false
+  router.push({ name: 'home' })
 }
 
 watch(() => route.path, () => { menuOpen.value = false })
