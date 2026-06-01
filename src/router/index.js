@@ -141,9 +141,8 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 
-  // 需要登录的页面（管理后台）
-  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-    // 未登录访问后台 → 跳转首页
+  // 需要管理员权限的页面
+  if (to.meta.requiresAuth && !authStore.isAdmin) {
     next({ name: 'home' })
     return
   }
