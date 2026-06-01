@@ -73,7 +73,8 @@
         <p class="perm-hint">不设权限 = 可看全部私密内容；设白名单 = 仅看列表中内容；设黑名单 = 排除列表中内容</p>
         <div v-for="(p, i) in permissions" :key="p.id" class="perm-row">
           <span :class="p.permType === 'W' ? 'tag-whitelist' : 'tag-blacklist'">{{ p.permType === 'W' ? '白名单' : '黑名单' }}</span>
-          <span>{{ p.targetType === 'photo' ? '照片' : '合集' }} #{{ p.targetId }}</span>
+          <img v-if="p.thumbUrl" :src="p.thumbUrl" class="perm-thumb" />
+          <span class="perm-name">{{ p.targetName || (p.targetType === 'photo' ? '照片' : '合集') + ' #' + p.targetId }}</span>
           <button class="btn-sm btn-danger" @click="removePerm(p.id)">删除</button>
         </div>
         <div v-if="!permissions.length" class="empty-state" style="padding:20px 0;">无特殊权限，默认可查看全部私密内容</div>
@@ -87,11 +88,40 @@
             <option value="photo">照片</option>
             <option value="collection">合集</option>
           </select>
-          <input v-model="newPerm.targetId" placeholder="ID" style="width:70px;" />
-          <button class="btn-primary btn-sm" @click="addPerm">添加</button>
+          <button class="btn-primary btn-sm" @click="openSelector">选择</button>
+          <span v-if="selectedItem" class="selected-preview">
+            <img v-if="selectedItem.thumb" :src="selectedItem.thumb" class="perm-thumb" />
+            {{ selectedItem.name }}
+          </span>
+          <button v-if="selectedItem" class="btn-primary btn-sm" @click="addPerm">添加</button>
         </div>
         <div class="modal-actions" style="margin-top:16px;">
           <button class="btn-secondary" @click="permVisible = false">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 选择器弹窗 -->
+    <div v-if="selectorVisible" class="modal-overlay" @click.self="selectorVisible = false">
+      <div class="modal-content" style="max-width:700px;max-height:70vh;overflow-y:auto;">
+        <h3>选择{{ newPerm.targetType === 'photo' ? '照片' : '合集' }}</h3>
+        <input v-model="selectorKeyword" placeholder="搜索..." class="filter-input" style="width:100%;margin-bottom:12px;" />
+        <div class="selector-grid">
+          <div
+            v-for="item in filteredSelectorItems"
+            :key="item.id"
+            class="selector-card"
+            :class="{ selected: selectedItem && selectedItem.id === item.id }"
+            @click="selectItem(item)"
+          >
+            <img v-if="item.thumb" :src="item.thumb" class="selector-thumb" />
+            <div v-else class="selector-no-thumb">无封面</div>
+            <div class="selector-name">{{ item.name }}</div>
+          </div>
+        </div>
+        <div v-if="!filteredSelectorItems.length" class="empty-state" style="padding:20px;">无匹配结果</div>
+        <div class="modal-actions" style="margin-top:12px;">
+          <button class="btn-secondary" @click="selectorVisible = false">关闭</button>
         </div>
       </div>
     </div>
@@ -99,8 +129,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { getUsersApi, createUserApi, updateUserApi, deleteUserApi, getUserPermissionsApi, addUserPermissionApi, removeUserPermissionApi } from '../../api/user'
+import { getPhotoListApi } from '../../api/photo'
+import { getAdminCollectionsApi } from '../../api/collection'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const users = ref([])
@@ -112,7 +144,17 @@ const form = reactive({ username: '', password: '', nickname: '', role: 'user' }
 const permVisible = ref(false)
 const permUser = ref(null)
 const permissions = ref([])
-const newPerm = reactive({ type: 'W', targetType: 'photo', targetId: '' })
+const newPerm = reactive({ type: 'W', targetType: 'photo' })
+const selectorVisible = ref(false)
+const selectorItems = ref([])
+const selectorKeyword = ref('')
+const selectedItem = ref(null)
+
+const filteredSelectorItems = computed(() => {
+  if (!selectorKeyword.value) return selectorItems.value
+  const kw = selectorKeyword.value.toLowerCase()
+  return selectorItems.value.filter(i => i.name.toLowerCase().includes(kw))
+})
 
 function roleLabel(r) {
   return { admin: '管理员', viewer: '查看者', user: '普通用户' }[r] || r
@@ -163,18 +205,62 @@ async function confirmDelete(u) {
 
 async function openPermissions(u) {
   permUser.value = u
-  newPerm.type = 'W'; newPerm.targetType = 'photo'; newPerm.targetId = ''
+  newPerm.type = 'W'; newPerm.targetType = 'photo'
+  selectedItem.value = null
   const res = await getUserPermissionsApi(u.id)
   permissions.value = (res.code === 200 && res.data) ? res.data : []
+  // 补全每条权限的名称和缩略图
+  for (const p of permissions.value) {
+    if (!p.targetName) await fillPermName(p)
+  }
   permVisible.value = true
 }
+
+async function fillPermName(p) {
+  try {
+    if (p.targetType === 'photo') {
+      const r = await getPhotoListApi({ pageSize: 500 })
+      if (r.code === 200) {
+        const found = (r.data?.list || []).find(ph => ph.id == p.targetId)
+        if (found) { p.targetName = found.title; p.thumbUrl = found.thumbnailUrl || found.url }
+      }
+    } else {
+      const r = await getAdminCollectionsApi()
+      if (r.code === 200) {
+        const found = (r.data || []).find(c => c.id == p.targetId)
+        if (found) { p.targetName = found.name; p.thumbUrl = found.coverUrl }
+      }
+    }
+  } catch { /* ignore */ }
+}
+
+async function openSelector() {
+  selectorVisible.value = true
+  selectorKeyword.value = ''
+  if (newPerm.targetType === 'photo') {
+    const r = await getPhotoListApi({ pageSize: 500 })
+    if (r.code === 200) selectorItems.value = (r.data?.list || []).map(p => ({ id: p.id, name: p.title || p.fileName, thumb: p.thumbnailUrl || p.url }))
+  } else {
+    const r = await getAdminCollectionsApi()
+    if (r.code === 200) selectorItems.value = (r.data || []).map(c => ({ id: c.id, name: c.name, thumb: c.coverUrl }))
+  }
+}
+
+function selectItem(item) {
+  selectedItem.value = item
+  selectorVisible.value = false
+}
+
 async function addPerm() {
-  if (!newPerm.targetId) return
-  await addUserPermissionApi(permUser.value.id, { permType: newPerm.type, targetType: newPerm.targetType, targetId: newPerm.targetId })
+  if (!selectedItem.value) return
+  await addUserPermissionApi(permUser.value.id, {
+    permType: newPerm.type, targetType: newPerm.targetType, targetId: selectedItem.value.id
+  })
   ElMessage.success('已添加')
-  newPerm.targetId = ''
+  selectedItem.value = null
   openPermissions(permUser.value)
 }
+
 async function removePerm(permId) {
   await removeUserPermissionApi(permUser.value.id, permId)
   ElMessage.success('已删除')
@@ -193,4 +279,16 @@ onMounted(loadUsers)
 .perm-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 0.5px solid var(--border-light, #eee); }
 .tag-whitelist { background: #E6F1FB; color: #409EFF; padding: 1px 8px; border-radius: 3px; font-size: 11px; }
 .tag-blacklist { background: #FDE2E2; color: #F56C6C; padding: 1px 8px; border-radius: 3px; font-size: 11px; }
+
+.perm-thumb { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.perm-name { flex: 1; font-size: 13px; }
+.selected-preview { display: flex; align-items: center; gap: 6px; font-size: 13px; max-width: 200px; overflow: hidden; }
+
+.filter-input { padding: 8px 12px; border: 1px solid var(--border-color, #ddd); border-radius: 6px; font-size: 14px; }
+.selector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+.selector-card { cursor: pointer; border: 2px solid transparent; border-radius: 8px; overflow: hidden; transition: all 0.15s; }
+.selector-card:hover, .selector-card.selected { border-color: var(--color-primary, #378ADD); }
+.selector-thumb { width: 100%; height: 80px; object-fit: cover; display: block; }
+.selector-no-thumb { width: 100%; height: 80px; background: var(--bg-hover, #f0f0f0); display: flex; align-items: center; justify-content: center; font-size: 11px; color: #aaa; }
+.selector-name { padding: 4px 6px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
