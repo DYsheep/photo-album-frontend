@@ -12,7 +12,9 @@
           <router-link to="/collections">合集</router-link>
           <router-link to="/map">地图</router-link>
           <router-link to="/about">关于</router-link>
-          <router-link to="/admin/login" class="admin-link"><EmojiIcon name="gear" :size="16" class="icon-inline" /> 管理</router-link>
+          <router-link v-if="authStore.isAdmin" to="/admin/dashboard" class="admin-link"><EmojiIcon name="gear" :size="16" class="icon-inline" /> 管理</router-link>
+          <router-link v-else-if="!authStore.isLoggedIn" to="/admin/login" class="admin-link"><EmojiIcon name="gear" :size="16" class="icon-inline" /> 管理</router-link>
+          <button v-if="authStore.isLoggedIn" class="logout-btn" @click="handleLogout">退出</button>
           <ThemeToggle />
         </div>
         <!-- 手机汉堡按钮 -->
@@ -32,7 +34,9 @@
           <router-link to="/collections" @click="menuOpen = false">合集</router-link>
           <router-link to="/map" @click="menuOpen = false">地图</router-link>
           <router-link to="/about" @click="menuOpen = false">关于</router-link>
-          <router-link to="/admin/login" @click="menuOpen = false">⚙ 管理</router-link>
+          <router-link v-if="authStore.isAdmin" to="/admin/dashboard" @click="menuOpen = false">⚙ 管理</router-link>
+          <router-link v-else-if="!authStore.isLoggedIn" to="/admin/login" @click="menuOpen = false">⚙ 管理</router-link>
+          <a v-if="authStore.isLoggedIn" class="logout-link" @click="handleLogout">退出登录</a>
           <ThemeToggle />
         </nav>
       </div>
@@ -45,13 +49,20 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAuthStore } from './stores/auth'
 import EmojiIcon from './components/EmojiIcon.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 
 const route = useRoute()
+const authStore = useAuthStore()
 const menuOpen = ref(false)
+
+function handleLogout() {
+  authStore.logout()
+  menuOpen.value = false
+}
 
 watch(() => route.path, () => { menuOpen.value = false })
 </script>
@@ -117,6 +128,18 @@ watch(() => route.path, () => { menuOpen.value = false })
 .nav-links .admin-link:hover {
   color: #85C1E9;
 }
+
+.logout-btn {
+  background: none;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+}
+.logout-btn:hover { color: #F56C6C; border-color: #F56C6C; }
+.logout-link { color: #F56C6C; font-size: 16px; cursor: pointer; }
 
 /* 汉堡按钮 - 默认隐藏 */
 .hamburger {
