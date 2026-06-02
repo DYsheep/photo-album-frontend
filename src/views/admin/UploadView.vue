@@ -110,7 +110,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import EmojiIcon from '../../components/EmojiIcon.vue'
-import { getCategoriesApi } from '../../api/category'
+import { getCategoryListApi } from '../../api/category'
 import { getAdminCollectionsApi } from '../../api/collection'
 import { uploadPhotoApi } from '../../api/photo'
 
@@ -200,7 +200,7 @@ function goManage() {
 }
 
 onMounted(async () => {
-  try { const r = await getCategoriesApi(); if (r.code === 200) categories.value = r.data || [] } catch {}
+  try { const r = await getCategoryListApi(); if (r.code === 200) categories.value = r.data || [] } catch {}
   try { const r = await getAdminCollectionsApi(); if (r.code === 200) collections.value = r.data || [] } catch {}
 })
 </script>
