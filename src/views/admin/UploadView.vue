@@ -180,9 +180,7 @@ async function uploadAll() {
       if (preset.categoryId) formData.append('categoryId', preset.categoryId)
       if (preset.tags) formData.append('tags', preset.tags)
       if (preset.isPrivate) formData.append('isPrivate', '1')
-
-      // 合集通过创建后加入的 API 处理，或者扩展 upload API
-      // 目前 upload API 不支持 collectionId，上传后单独加入合集
+      if (preset.collectionId) formData.append('collectionId', preset.collectionId)
 
       await uploadPhotoApi(formData, (e) => {
         f.progress = Math.round((e.loaded / e.total) * 100)
