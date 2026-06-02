@@ -27,7 +27,7 @@
           <EmojiIcon name="outbox-tray" :size="36" />
         </div>
         <p class="drop-title">拖拽照片到此处</p>
-        <p class="drop-sub">或 <button class="link-btn" @click="$refs.fileInput.click()">点击选择文件</button></p>
+        <p class="drop-sub">或 <button class="link-btn" @click="fileInput.click()">点击选择文件</button></p>
         <p class="drop-hint">支持 JPG / PNG / WebP / HEIC &nbsp;·&nbsp;可多选</p>
       </div>
     </div>
@@ -115,10 +115,11 @@
     <!-- 操作 -->
     <div v-if="files.length" class="actions">
       <button
-        class="btn-primary"
+        class="btn-primary btn-upload-all"
         @click="uploadAll"
         :disabled="uploading || allDone"
       >
+        <EmojiIcon v-if="!uploading" name="outbox-tray" :size="18" class="icon-inline" />
         {{ uploading ? '上传中...' : '开始上传全部' }}
       </button>
       <button v-if="allDone" class="btn-secondary" @click="goManage">去管理照片</button>
@@ -231,7 +232,7 @@ onMounted(async () => {
 .drop-title { font-size: 16px; font-weight: 500; color: var(--text-primary); margin: 0; }
 .drop-sub { font-size: 13px; color: var(--text-muted, #999); margin: 6px 0 0; }
 .drop-hint { font-size: 11px; color: var(--text-muted, #bbb); margin: 8px 0 0; }
-.link-btn { background: none; border: none; color: var(--color-primary, #378ADD); cursor: pointer; padding: 0; font-size: inherit; }
+.link-btn { background: none; border: none; color: var(--color-primary, #378ADD); cursor: pointer; padding: 0; font-size: inherit; pointer-events: auto; }
 .link-btn:hover { text-decoration: underline; }
 .file-input-hidden { display: none; }
 
@@ -311,5 +312,14 @@ onMounted(async () => {
 .status-text.fail { color: #F56C6C; }
 
 /* 操作按钮 */
-.actions { margin-top: 20px; display: flex; gap: 12px; }
+.actions { margin-top: 20px; display: flex; gap: 12px; align-items: center; }
+.btn-upload-all {
+  padding: 10px 28px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
 </style>
