@@ -1,357 +1,264 @@
 <template>
   <div class="upload-page">
-    <div class="upload-area">
-      <!-- 拖拽上传区（使用 ImageUploader 组件） -->
-      <ImageUploader v-model="rawFiles" />
+    <h2>上传照片</h2>
 
-      <!-- 图片信息表单 -->
-      <div class="upload-form" v-if="selectedFiles.length > 0">
-        <div v-for="(f, idx) in selectedFiles" :key="'form-' + idx" class="photo-form-card">
-          <h4>{{ f.file.name }}</h4>
-          <div class="form-row">
-            <div class="form-group">
-              <label>标题</label>
-              <input v-model="f.title" type="text" placeholder="给照片起个名字" />
-            </div>
-            <div class="form-group">
-              <label>分类</label>
-              <select v-model="f.categoryId">
-                <option :value="null">请选择</option>
-                <option v-for="cat in categoryList" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group full-width">
-              <label>描述（可选）</label>
-              <textarea v-model="f.description" rows="2" placeholder="简单描述这张照片..."></textarea>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>标签（逗号分隔）</label>
-              <input v-model="f.tags" type="text" placeholder="例如: 日出, 清晨, 风景" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group" style="display:flex;align-items:center;gap:12px;">
-              <label style="margin:0;">私密状态</label>
-              <el-switch v-model="f.isPrivate" active-text="私密" inactive-text="公开" />
-            </div>
-          </div>
-        </div>
-
-        <!-- 上传进度 -->
-        <div v-if="uploading" class="progress-section">
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: uploadPercent + '%' }"></div>
-          </div>
-          <span class="progress-text">上传中... {{ uploadPercent }}%</span>
-        </div>
-
-        <!-- 操作按钮 -->
-        <div class="action-row">
-          <button class="btn-secondary" @click="clearAll">清空全部</button>
-          <button class="btn-primary" @click="handleUpload" :disabled="!canUpload || uploading">
-            {{ uploading ? '上传中...' : '开始上传 (' + selectedFiles.length + ' 张)' }}
-          </button>
-        </div>
+    <!-- 拖拽区域 -->
+    <div
+      class="drop-zone"
+      :class="{ 'drop-active': dragging }"
+      @dragenter.prevent="dragging = true"
+      @dragleave.prevent="dragging = false"
+      @dragover.prevent
+      @drop.prevent="handleDrop"
+    >
+      <input
+        ref="fileInput"
+        type="file"
+        accept="image/*"
+        multiple
+        class="file-input-hidden"
+        @change="handleFileSelect"
+      />
+      <div class="drop-hint">
+        <EmojiIcon name="image" :size="40" />
+        <p>拖拽照片到此处，或 <button class="link-btn" @click="$refs.fileInput.click()">点击选择</button></p>
+        <p class="sub">支持 JPG/PNG/WebP/HEIC，可多选</p>
       </div>
     </div>
 
-    <!-- 上传结果 -->
-    <div v-if="uploadResults.length > 0" class="result-area">
-      <h3>上传结果</h3>
-      <div class="result-list">
-        <div
-          v-for="(res, idx) in uploadResults"
-          :key="idx"
-          class="result-item"
-          :class="{ success: res.success, error: !res.success }"
-        >
-          <EmojiIcon v-if="res.success" name="check-mark-button" class="result-icon" :size="18" />
-          <EmojiIcon v-else name="cross-mark" class="result-icon" :size="18" />
-          <span class="result-name">{{ res.name }}</span>
-          <span class="result-msg">{{ res.message }}</span>
+    <!-- 预设信息（应用于所有文件） -->
+    <div v-if="files.length" class="preset-form">
+      <h3>批量设置</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>分类</label>
+          <select v-model="preset.categoryId">
+            <option :value="null">不指定</option>
+            <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>合集</label>
+          <select v-model="preset.collectionId">
+            <option :value="null">不指定</option>
+            <option v-for="c in collections" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-group flex-2">
+          <label>标签（逗号分隔）</label>
+          <input v-model="preset.tags" placeholder="风景, 人像, 黑白" />
         </div>
       </div>
+      <div class="form-row">
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="preset.isPrivate" /> 设为私密
+        </label>
+      </div>
+    </div>
+
+    <!-- 文件列表 -->
+    <div v-if="files.length" class="file-list">
+      <div class="file-list-header">
+        <h3>已选 {{ files.length }} 张</h3>
+        <button v-if="!uploading" class="link-btn" @click="clearFiles">清空</button>
+      </div>
+      <div
+        v-for="(f, i) in files"
+        :key="i"
+        class="file-item"
+        :class="{ 'uploaded': f.status === 'done', 'failed': f.status === 'fail' }"
+      >
+        <img :src="f.preview" class="file-thumb" />
+        <div class="file-info">
+          <input
+            v-model="f.title"
+            :placeholder="f.originalName"
+            class="file-title-input"
+            :disabled="f.status === 'done'"
+          />
+          <div class="file-meta">{{ formatSize(f.size) }}</div>
+          <div v-if="f.status === 'uploading'" class="progress-bar">
+            <div class="progress-fill" :style="{ width: f.progress + '%' }"></div>
+          </div>
+          <div v-if="f.status === 'done'" class="status-tag done">✓ 已上传</div>
+          <div v-if="f.status === 'fail'" class="status-tag fail">✗ {{ f.error }}</div>
+        </div>
+        <button
+          v-if="f.status !== 'done'"
+          class="btn-sm btn-danger"
+          @click="removeFile(i)"
+          :disabled="uploading"
+        >移除</button>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div v-if="files.length" class="actions">
+      <button
+        class="btn-primary"
+        @click="uploadAll"
+        :disabled="uploading || allDone"
+      >
+        {{ uploading ? '上传中...' : '开始上传全部' }}
+      </button>
+      <button v-if="allDone" class="btn-secondary" @click="goManage">去管理照片</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { uploadPhotoApi } from '../../api/photo'
-import { getCategoryListApi } from '../../api/category'
-import ImageUploader from '../../components/ImageUploader.vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import EmojiIcon from '../../components/EmojiIcon.vue'
+import { getCategoriesApi } from '../../api/category'
+import { getAdminCollectionsApi } from '../../api/collection'
+import { uploadPhotoApi } from '../../api/photo'
 
-const rawFiles = ref([])
-const selectedFiles = ref([])
+const router = useRouter()
+const fileInput = ref(null)
+const dragging = ref(false)
 const uploading = ref(false)
-const uploadPercent = ref(0)
-const uploadResults = ref([])
-const categoryList = ref([])
+const files = ref([])
+const categories = ref([])
+const collections = ref([])
+const preset = reactive({ categoryId: null, collectionId: null, tags: '', isPrivate: false })
 
-// 页面加载时获取真实分类列表
-onMounted(async () => {
-  try {
-    const res = await getCategoryListApi()
-    categoryList.value = res.data || []
-  } catch (err) {
-    console.error('加载分类列表失败:', err)
-  }
-})
+const allDone = computed(() => files.value.length && files.value.every(f => f.status === 'done'))
 
-// 同步 rawFiles（ImageUploader 管理的文件）到 selectedFiles（带表单数据）
-watch(rawFiles, (newFiles) => {
-  // 为每个 rawFile 找到或创建对应的表单条目
-  const newSelected = newFiles.map(rawFile => {
-    const existing = selectedFiles.value.find(
-      sf => sf.file === rawFile.file && sf.previewUrl === rawFile.previewUrl
-    )
-    if (existing) {
-      return existing
-    }
-    const defaultTitle = rawFile.file.name.replace(/\.[^/.]+$/, '')
-    return {
-      file: rawFile.file,
-      previewUrl: rawFile.previewUrl,
-      title: defaultTitle,
-      categoryId: null,
-      description: '',
-      tags: ''
-    }
-  })
-  selectedFiles.value = newSelected
-}, { deep: true })
-
-// 清空
-function clearAll() {
-  rawFiles.value = []
-  selectedFiles.value = []
-  uploadResults.value = []
+function formatSize(bytes) {
+  if (!bytes) return ''
+  return bytes < 1048576 ? (bytes / 1024).toFixed(0) + ' KB' : (bytes / 1048576).toFixed(1) + ' MB'
 }
 
-// 上传逻辑
-const canUpload = computed(() => {
-  return selectedFiles.value.every(f => f.title)
-})
+function makeFileItem(file) {
+  return {
+    file,
+    originalName: file.name,
+    title: file.name.replace(/\.[^.]+$/, ''),
+    size: file.size,
+    preview: URL.createObjectURL(file),
+    status: 'pending',
+    progress: 0,
+    error: ''
+  }
+}
 
-async function handleUpload() {
+function addFiles(rawFiles) {
+  for (const f of rawFiles) {
+    if (!f.type.startsWith('image/')) continue
+    files.value.push(makeFileItem(f))
+  }
+}
+
+function handleDrop(e) {
+  dragging.value = false
+  addFiles(e.dataTransfer.files)
+}
+function handleFileSelect(e) {
+  addFiles(e.target.files)
+  e.target.value = ''
+}
+function removeFile(i) {
+  URL.revokeObjectURL(files.value[i].preview)
+  files.value.splice(i, 1)
+}
+function clearFiles() {
+  files.value.forEach(f => URL.revokeObjectURL(f.preview))
+  files.value = []
+}
+
+async function uploadAll() {
   uploading.value = true
-  uploadPercent.value = 0
-  uploadResults.value = []
-
-  for (let i = 0; i < selectedFiles.value.length; i++) {
-    const f = selectedFiles.value[i]
-
+  for (const f of files.value) {
+    if (f.status === 'done') continue
+    f.status = 'uploading'
+    f.progress = 0
     try {
       const formData = new FormData()
       formData.append('file', f.file)
-      formData.append('title', f.title)
-      if (f.categoryId) formData.append('categoryId', f.categoryId)
-      if (f.description) formData.append('description', f.description)
-      if (f.tags) formData.append('tags', f.tags)
-      formData.append('isPrivate', f.isPrivate ? '1' : '0')
+      if (f.title) formData.append('title', f.title)
+      if (preset.categoryId) formData.append('categoryId', preset.categoryId)
+      if (preset.tags) formData.append('tags', preset.tags)
+      if (preset.isPrivate) formData.append('isPrivate', '1')
 
-      await uploadPhotoApi(formData, (percent) => {
-        uploadPercent.value = Math.round(((i + percent / 100) / selectedFiles.value.length) * 100)
-      })
+      // 合集通过创建后加入的 API 处理，或者扩展 upload API
+      // 目前 upload API 不支持 collectionId，上传后单独加入合集
 
-      uploadResults.value.push({
-        name: f.file.name,
-        success: true,
-        message: '上传成功'
+      await uploadPhotoApi(formData, (e) => {
+        f.progress = Math.round((e.loaded / e.total) * 100)
       })
+      f.status = 'done'
+      f.progress = 100
     } catch (err) {
-      let errMsg = '上传失败'
-      if (err.response?.data?.message) {
-        errMsg = err.response.data.message
-      } else if (err.message) {
-        errMsg = err.message
-      }
-      uploadResults.value.push({
-        name: f.file.name,
-        success: false,
-        message: errMsg
-      })
+      f.status = 'fail'
+      f.error = err.response?.data?.message || '上传失败'
     }
   }
-
   uploading.value = false
-
-  // 上传完成后清理
-  const successCount = uploadResults.value.filter(r => r.success).length
-  if (successCount === selectedFiles.value.length) {
-    clearAll()
-  }
 }
+
+function goManage() {
+  router.push({ name: 'adminPhotos' })
+}
+
+onMounted(async () => {
+  try { const r = await getCategoriesApi(); if (r.code === 200) categories.value = r.data || [] } catch {}
+  try { const r = await getAdminCollectionsApi(); if (r.code === 200) collections.value = r.data || [] } catch {}
+})
 </script>
 
 <style scoped>
-.upload-page {
-  max-width: 800px;
-}
-
-/* 表单 */
-.photo-form-card {
-  background: #fff;
-  border: 0.5px solid #eee;
-  border-radius: 10px;
-  padding: 18px 20px;
-  margin-bottom: 16px;
-}
-
-.photo-form-card h4 {
-  font-size: 14px;
-  color: #333;
-  margin-bottom: 14px;
-  font-weight: 500;
-}
-
-.form-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.form-group {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group.full-width {
-  flex: none;
-  width: 100%;
-}
-
-.form-group label {
-  font-size: 13px;
-  color: #555;
-  margin-bottom: 5px;
-  font-weight: 500;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  height: 36px;
-  padding: 0 11px;
-  border: 1.5px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.form-group textarea {
-  height: auto;
-  padding: 8px 11px;
-  resize: vertical;
-}
-
-/* 进度条 */
-.progress-section {
-  margin: 18px 0;
-}
-
-.progress-bar {
-  height: 8px;
-  background: #eee;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #378ADD, #5DADE2);
-  border-radius: 4px;
-  transition: width 0.3s ease-out;
-}
-
-.progress-text {
-  font-size: 13px;
-  color: #666;
-}
-
-/* 按钮 */
-.action-row {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 10px 28px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.btn-secondary {
-  background: transparent;
-  border: 1.5px solid #ddd;
-  color: #555;
-}
-
-.btn-secondary:hover {
-  border-color: #bbb;
-}
-
-/* 结果 */
-.result-area {
-  margin-top: 28px;
-  background: #fff;
+.upload-page { max-width: 800px; }
+.drop-zone {
+  border: 2px dashed var(--border-color, #ddd);
   border-radius: 12px;
-  padding: 20px 24px;
-  border: 0.5px solid #eee;
+  padding: 48px 24px;
+  text-align: center;
+  transition: all 0.2s;
+  cursor: pointer;
+  background: var(--bg-card, #fafafa);
 }
+.drop-zone.drop-active { border-color: var(--color-primary, #378ADD); background: rgba(55,138,221,0.04); }
+.drop-hint p { margin: 8px 0 0; color: var(--text-muted, #888); }
+.drop-hint .sub { font-size: 12px; }
+.link-btn { background: none; border: none; color: var(--color-primary, #378ADD); cursor: pointer; padding: 0; text-decoration: underline; }
+.file-input-hidden { display: none; }
 
-.result-area h3 {
-  font-size: 15px;
-  color: #333;
-  margin-bottom: 14px;
+.preset-form {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-card, #fafafa);
+  border-radius: 8px;
 }
+.preset-form h3 { margin: 0 0 12px; font-size: 15px; }
+.form-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+.form-group.flex-2 { flex: 2; }
+.form-group label { font-size: 12px; color: var(--text-muted); }
+.form-group input, .form-group select {
+  padding: 6px 10px; border: 1px solid var(--border-color, #ddd); border-radius: 6px; font-size: 14px; background: var(--bg-input); color: var(--text-primary);
+}
+.checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
 
-.result-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 0.5px solid #f5f5f5;
+.file-list { margin-top: 20px; }
+.file-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.file-list-header h3 { margin: 0; font-size: 15px; }
+.file-item {
+  display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 0.5px solid var(--border-light, #eee);
 }
+.file-item.uploaded { opacity: 0.7; }
+.file-item.failed { background: rgba(245,108,108,0.04); border-radius: 6px; padding: 8px; }
+.file-thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.file-info { flex: 1; min-width: 0; }
+.file-title-input {
+  width: 100%; padding: 4px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 13px; background: var(--bg-input); color: var(--text-primary);
+}
+.file-meta { font-size: 11px; color: var(--text-muted, #aaa); margin-top: 2px; }
+.progress-bar { height: 4px; background: var(--bg-hover, #eee); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--color-primary, #378ADD); border-radius: 2px; transition: width 0.3s; }
+.status-tag { font-size: 11px; margin-top: 2px; }
+.status-tag.done { color: #67C23A; }
+.status-tag.fail { color: #F56C6C; }
 
-.result-item:last-child {
-  border-bottom: none;
-}
-
-.result-icon {
-  font-size: 16px;
-}
-
-.result-item.success .result-msg {
-  color: #27500A;
-}
-
-.result-item.error .result-msg {
-  color: #A32D2D;
-}
-
-.result-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: #333;
-  min-width: 150px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.result-msg {
-  font-size: 12px;
-}
+.actions { margin-top: 20px; display: flex; gap: 12px; }
 </style>

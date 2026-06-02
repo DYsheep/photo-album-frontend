@@ -20,6 +20,7 @@ import TagManageView from '../views/admin/TagManageView.vue'
 import CollectionManageView from '../views/admin/CollectionManageView.vue'
 import ShareManageView from '../views/admin/ShareManageView.vue'
 import UserManageView from '../views/admin/UserManageView.vue'
+import UploadView from '../views/admin/UploadView.vue'
 
 // 公开分享页面
 import ShareView from '../views/ShareView.vue'
