@@ -15,7 +15,6 @@ export function getPhotoDetailApi(id) {
 /** 上传照片（multipart/form-data） */
 export function uploadPhotoApi(formData, onProgress) {
   return request.post('/photos/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: (progressEvent) => {
       if (onProgress && progressEvent.total) {
         const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total)
