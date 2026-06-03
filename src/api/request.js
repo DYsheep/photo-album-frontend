@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useAuthStore } from '../stores/auth'
 import { ElMessage } from 'element-plus'
+import router from '../router'
 
 // 创建 Axios 实例
 const request = axios.create({
@@ -31,7 +32,11 @@ request.interceptors.response.use(
       // 401 / 403 静默处理，由路由守卫负责跳转
       if (res.code === 401 || res.code === 403) {
         const authStore = useAuthStore()
-        if (res.code === 401) authStore.logout()
+        if (res.code === 401) {
+          authStore.logout()
+          ElMessage.warning('登录已过期，请重新登录')
+          router.push({ name: 'home' })
+        }
         return Promise.reject(new Error('AUTH'))
       }
       ElMessage.error(res.message || '请求失败')
@@ -45,6 +50,8 @@ request.interceptors.response.use(
       switch (status) {
         case 401:
           useAuthStore().logout()
+          ElMessage.warning('登录已过期，请重新登录')
+          router.push({ name: 'home' })
           break
         case 403:
           break
