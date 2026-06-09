@@ -26,6 +26,16 @@
         <!-- 标题 -->
         <h1 class="detail-title">{{ photo.title }}</h1>
 
+        <!-- 点赞 -->
+        <div class="detail-like-row">
+          <button class="heart-btn" @click="handleLike" :class="{ liked: liked }" :disabled="liking">
+            <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            <span>{{ photo.likeCount || 0 }}</span>
+          </button>
+        </div>
+
         <!-- 分类 + 拍摄日期 -->
         <div class="detail-meta">
           <span v-if="photo.categoryName" class="meta-category">{{ photo.categoryName }}</span>
@@ -76,16 +86,11 @@
           <p class="desc-text">{{ photo.description }}</p>
         </div>
 
-        <!-- 浏览量 + 点赞 + 文件大小 -->
+        <!-- 浏览量 + 文件大小 -->
         <div class="detail-stats">
           <span class="stat-item">
             <EmojiIcon name="eye" :size="15" class="icon-inline" /> {{ photo.viewCount || 0 }} 次浏览
           </span>
-          <button class="stat-item like-btn" @click="handleLike" :disabled="liked || liking">
-            <EmojiIcon name="heart" :size="15" class="icon-inline" />
-            <template v-if="liking">...</template>
-            <template v-else>{{ photo.likeCount || 0 }}</template>
-          </button>
           <span class="stat-item">
             <EmojiIcon name="floppy-disk" :size="15" class="icon-inline" /> {{ formatFileSize(photo.fileSize) }}
           </span>
@@ -414,9 +419,30 @@ onMounted(() => {
 .detail-title {
   font-size: 24px;
   color: var(--text-primary, #1a1a2e);
-  margin: 0 0 14px;
+  margin: 0 0 6px;
   line-height: 1.3;
 }
+
+.detail-like-row { margin-bottom: 14px; }
+.heart-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border-color, #dfe1e5);
+  border-radius: 24px;
+  padding: 8px 18px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-muted, #888);
+  transition: all 0.2s;
+}
+.heart-btn:hover { border-color: #F56C6C; color: #F56C6C; background: rgba(245,108,108,0.04); }
+.heart-btn.liked { border-color: #F56C6C; color: #F56C6C; }
+.heart-btn.liked .heart-icon { fill: #F56C6C; stroke: #F56C6C; }
+.heart-btn:disabled { opacity: 0.7; cursor: default; }
+.heart-icon { width: 20px; height: 20px; flex-shrink: 0; }
 
 .detail-meta {
   display: flex;
@@ -520,18 +546,6 @@ onMounted(() => {
   font-size: 13px;
   color: var(--text-muted, #888);
 }
-
-.like-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  font-size: 13px;
-  color: var(--text-muted, #888);
-  transition: color 0.2s;
-}
-.like-btn:disabled { cursor: default; opacity: 0.7; }
-.like-btn:not(:disabled):hover { color: #F56C6C; }
 
 /* 底部导航 */
 .bottom-nav {

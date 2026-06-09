@@ -9,6 +9,10 @@
         @load="onImageLoad"
         @error="onImageError"
       />
+      <div class="like-badge" v-if="photo.likeCount">
+        <svg class="badge-heart" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        {{ photo.likeCount }}
+      </div>
     </div>
     <div class="photo-info">
       <h3>{{ photo.title }}</h3>
@@ -66,7 +70,26 @@ function onImageError(e) {
   background: linear-gradient(135deg, var(--bg-hover, #f5f5f5), var(--border-light, #e8e8e8));
   overflow: hidden;
   min-height: 150px;
+  position: relative;
 }
+
+.like-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 12px;
+  pointer-events: none;
+}
+.badge-heart { width: 13px; height: 13px; }
 
 .photo-img {
   width: 100%;
