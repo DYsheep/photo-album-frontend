@@ -26,23 +26,21 @@
         <!-- 标题 -->
         <h1 class="detail-title">{{ photo.title }}</h1>
 
-        <!-- 点赞 -->
-        <div class="detail-like-row">
+        <!-- 分类 + 拍摄日期 + 点赞 -->
+        <div class="detail-meta">
+          <div class="meta-left">
+            <span v-if="photo.categoryName" class="meta-category">{{ photo.categoryName }}</span>
+            <span v-if="photo.dateTaken" class="meta-date">{{ formatDate(photo.dateTaken) }}</span>
+            <span v-if="isAdmin" class="private-switch">
+              <el-switch v-model="privateState" active-text="私密" inactive-text="公开" size="small" @change="togglePrivate" :loading="privateSaving" />
+            </span>
+          </div>
           <button class="heart-btn" @click="handleLike" :class="{ liked: liked }" :disabled="liking">
             <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
             <span>{{ photo.likeCount || 0 }}</span>
           </button>
-        </div>
-
-        <!-- 分类 + 拍摄日期 -->
-        <div class="detail-meta">
-          <span v-if="photo.categoryName" class="meta-category">{{ photo.categoryName }}</span>
-          <span v-if="photo.dateTaken" class="meta-date">{{ formatDate(photo.dateTaken) }}</span>
-          <span v-if="isAdmin" class="private-switch">
-            <el-switch v-model="privateState" active-text="私密" inactive-text="公开" size="small" @change="togglePrivate" :loading="privateSaving" />
-          </span>
         </div>
 
         <!-- EXIF 结构化面板 -->
@@ -423,32 +421,39 @@ onMounted(() => {
   line-height: 1.3;
 }
 
-.detail-like-row { margin-bottom: 14px; }
 .heart-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: var(--bg-card, #fff);
   border: 1px solid var(--border-color, #dfe1e5);
   border-radius: 24px;
-  padding: 8px 18px;
+  padding: 6px 16px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--text-muted, #888);
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 .heart-btn:hover { border-color: #F56C6C; color: #F56C6C; background: rgba(245,108,108,0.04); }
 .heart-btn.liked { border-color: #F56C6C; color: #F56C6C; }
 .heart-btn.liked .heart-icon { fill: #F56C6C; stroke: #F56C6C; }
 .heart-btn:disabled { opacity: 0.7; cursor: default; }
-.heart-icon { width: 20px; height: 20px; flex-shrink: 0; }
+.heart-icon { width: 18px; height: 18px; flex-shrink: 0; }
 
 .detail-meta {
   display: flex;
   gap: 12px;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.meta-left {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex: 1;
   flex-wrap: wrap;
 }
 
