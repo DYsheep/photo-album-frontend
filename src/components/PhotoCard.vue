@@ -15,7 +15,7 @@
         <span class="photo-tag">{{ photo.categoryName }}</span>
         <span class="like-badge" v-if="photo.likeCount" :title="photo.id">
           ♥ {{ photo.likeCount }}
-        </div>
+        </span>
       </div>
       <h3>{{ photo.title }}</h3>
       <p class="photo-desc">{{ photo.description }}</p>
