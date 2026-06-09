@@ -162,9 +162,19 @@ onMounted(() => {
 }
 
 .photo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  columns: 3;
+  column-gap: 20px;
+}
+.photo-grid > div {
+  break-inside: avoid;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+  .photo-grid { columns: 2; }
+}
+@media (max-width: 560px) {
+  .photo-grid { columns: 1; }
 }
 
 .empty-state {
