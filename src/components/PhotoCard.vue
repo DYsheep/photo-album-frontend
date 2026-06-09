@@ -13,9 +13,8 @@
     <div class="photo-info">
       <div class="photo-info-row">
         <span class="photo-tag">{{ photo.categoryName }}</span>
-        <div class="like-badge" v-if="photo.likeCount">
-          <svg class="badge-heart" viewBox="0 0 24 24" fill="#F56C6C"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          {{ photo.likeCount }}
+        <span class="like-badge" v-if="photo.likeCount" :title="photo.id">
+          ♥ {{ photo.likeCount }}
         </div>
       </div>
       <h3>{{ photo.title }}</h3>
@@ -77,11 +76,11 @@ function onImageError(e) {
 .like-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  color: var(--text-muted, #999);
-  font-size: 13px;
+  gap: 3px;
+  color: #F56C6C;
+  font-size: 14px;
+  font-weight: 600;
 }
-.badge-heart { width: 14px; height: 14px; flex-shrink: 0; }
 
 .photo-img {
   width: 100%;
