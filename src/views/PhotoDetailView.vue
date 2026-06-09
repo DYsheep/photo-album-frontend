@@ -76,11 +76,16 @@
           <p class="desc-text">{{ photo.description }}</p>
         </div>
 
-        <!-- 浏览量 + 文件大小 -->
+        <!-- 浏览量 + 点赞 + 文件大小 -->
         <div class="detail-stats">
           <span class="stat-item">
             <EmojiIcon name="eye" :size="15" class="icon-inline" /> {{ photo.viewCount || 0 }} 次浏览
           </span>
+          <button class="stat-item like-btn" @click="handleLike" :disabled="liked || liking">
+            <EmojiIcon name="heart" :size="15" class="icon-inline" />
+            <template v-if="liking">...</template>
+            <template v-else>{{ photo.likeCount || 0 }}</template>
+          </button>
           <span class="stat-item">
             <EmojiIcon name="floppy-disk" :size="15" class="icon-inline" /> {{ formatFileSize(photo.fileSize) }}
           </span>
@@ -115,7 +120,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPhotoDetailApi, getAdjacentPhotosApi, updatePhotoApi } from '../api/photo'
+import { getPhotoDetailApi, getAdjacentPhotosApi, updatePhotoApi, likePhotoApi } from '../api/photo'
 import { getCollectionAdjacentApi } from '../api/collection'
 import { useAuthStore } from '../stores/auth'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
@@ -135,6 +140,8 @@ const loading = ref(true)
 const imageLoaded = ref(false)
 const privateState = ref(false)
 const privateSaving = ref(false)
+const liking = ref(false)
+const liked = ref(false)
 const adjacentIds = ref([])
 const currentId = computed(() => Number(route.params.id))
 
@@ -189,6 +196,7 @@ async function loadPhoto() {
     if (res.code === 200 && res.data) {
       photo.value = res.data
       privateState.value = res.data.isPrivate === 1
+      liked.value = !!localStorage.getItem(`liked_${res.data.id}`)
       // 同时加载相邻照片 ID 列表（用于上下张导航）
       await loadAdjacentIds()
     } else {
@@ -262,6 +270,23 @@ async function togglePrivate() {
     privateState.value = !privateState.value // 回滚
   } finally {
     privateSaving.value = false
+  }
+}
+
+async function handleLike() {
+  if (!photo.value || liking.value) return
+  liking.value = true
+  try {
+    const res = await likePhotoApi(photo.value.id)
+    if (res.code === 200) {
+      photo.value.likeCount = res.data
+      liked.value = true
+      localStorage.setItem(`liked_${photo.value.id}`, '1')
+    }
+  } catch (err) {
+    console.error('点赞失败:', err)
+  } finally {
+    liking.value = false
   }
 }
 
@@ -495,6 +520,18 @@ onMounted(() => {
   font-size: 13px;
   color: var(--text-muted, #888);
 }
+
+.like-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  color: var(--text-muted, #888);
+  transition: color 0.2s;
+}
+.like-btn:disabled { cursor: default; opacity: 0.7; }
+.like-btn:not(:disabled):hover { color: #F56C6C; }
 
 /* 底部导航 */
 .bottom-nav {

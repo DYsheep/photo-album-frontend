@@ -25,6 +25,11 @@ export function uploadPhotoApi(formData, onProgress) {
   })
 }
 
+/** 点赞照片 */
+export function likePhotoApi(id) {
+  return request.post(`/photos/${id}/like`)
+}
+
 /** 更新照片信息 */
 export function updatePhotoApi(id, data) {
   return request.put(`/photos/${id}`, data)
