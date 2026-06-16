@@ -115,7 +115,7 @@ const currentTitle = computed(() => {
 function handleLogout() {
   if (confirm('确定要退出登录吗？')) {
     authStore.logout()
-    router.push('/admin/login')
+    window.location.href = '/'
   }
 }
 </script>

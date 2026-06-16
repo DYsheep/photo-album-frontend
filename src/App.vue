@@ -69,7 +69,7 @@ function goHome() {
   menuOpen.value = false
   if (route.path === '/') {
     window.scrollTo({ top: 0, behavior: 'smooth' })
-    router.go(0)   // 已在首页，强制刷新
+    setTimeout(() => window.location.reload(), 300)
   } else {
     router.push('/')
   }
