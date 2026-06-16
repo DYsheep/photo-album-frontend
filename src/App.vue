@@ -2,7 +2,7 @@
   <div id="app">
     <header class="app-header">
       <nav class="nav-container">
-        <router-link to="/" class="logo">
+        <router-link to="/" class="logo" @click.prevent="goHome">
           <EmojiIcon name="camera" :size="24" />
           <span>我的摄影相册</span>
         </router-link>
@@ -64,6 +64,16 @@ function handleLogout() {
   authStore.logout()
   menuOpen.value = false
   router.push({ name: 'home' })
+}
+
+function goHome() {
+  menuOpen.value = false
+  if (route.path === '/') {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    router.go(0)   // 已在首页，强制刷新
+  } else {
+    router.push('/')
+  }
 }
 
 watch(() => route.path, () => { menuOpen.value = false })
