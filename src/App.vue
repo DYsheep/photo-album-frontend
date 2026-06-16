@@ -62,8 +62,7 @@ const menuOpen = ref(false)
 
 function handleLogout() {
   authStore.logout()
-  menuOpen.value = false
-  router.push({ name: 'home' })
+  goHome()
 }
 
 function goHome() {
