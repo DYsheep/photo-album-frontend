@@ -8,6 +8,8 @@ export const useAuthStore = defineStore('auth', () => {
   const userInfo = ref(JSON.parse(localStorage.getItem('admin_user') || '{}'))
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => userInfo.value?.role === 'admin')
+  const canUpload = computed(() => isAdmin.value || userInfo.value?.canUpload === 1)
+  const canManage = computed(() => isAdmin.value || userInfo.value?.canManage === 1)
 
   /** 登录 */
   async function login(loginForm) {
@@ -49,6 +51,8 @@ export const useAuthStore = defineStore('auth', () => {
     userInfo,
     isLoggedIn,
     isAdmin,
+    canUpload,
+    canManage,
     login,
     logout,
     setUserInfo

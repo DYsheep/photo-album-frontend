@@ -59,6 +59,17 @@
             <option value="admin">管理员</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>操作权限</label>
+          <div class="perm-checks">
+            <label class="check-label">
+              <input type="checkbox" v-model="form.canUpload" /> 可上传照片
+            </label>
+            <label class="check-label">
+              <input type="checkbox" v-model="form.canManage" /> 可管理合集
+            </label>
+          </div>
+        </div>
         <div class="modal-actions">
           <button class="btn-secondary" @click="dialogVisible = false">取消</button>
           <button class="btn-primary" @click="handleSave" :disabled="saving">{{ saving ? '保存中...' : '保存' }}</button>
@@ -139,7 +150,7 @@ const users = ref([])
 const dialogVisible = ref(false)
 const editingUser = ref(null)
 const saving = ref(false)
-const form = reactive({ username: '', password: '', nickname: '', role: 'user' })
+const form = reactive({ username: '', password: '', nickname: '', role: 'user', canUpload: false, canManage: false })
 
 const permVisible = ref(false)
 const permUser = ref(null)
@@ -169,16 +180,20 @@ async function loadUsers() {
 function openCreate() {
   editingUser.value = null
   form.username = ''; form.password = ''; form.nickname = ''; form.role = 'user'
+  form.canUpload = false; form.canManage = false
   dialogVisible.value = true
 }
 function openEdit(u) {
   editingUser.value = u
   form.username = u.username; form.password = ''; form.nickname = u.nickname; form.role = u.role
+  form.canUpload = u.canUpload === 1
+  form.canManage = u.canManage === 1
   dialogVisible.value = true
 }
 async function handleSave() {
   saving.value = true
-  const data = { nickname: form.nickname, role: form.role, password: form.password || undefined }
+  const data = { nickname: form.nickname, role: form.role, password: form.password || undefined,
+    canUpload: form.canUpload ? '1' : '0', canManage: form.canManage ? '1' : '0' }
   try {
     if (editingUser.value) {
       await updateUserApi(editingUser.value.id, data)
@@ -291,4 +306,7 @@ onMounted(loadUsers)
 .selector-thumb { width: 100%; height: 80px; object-fit: cover; display: block; }
 .selector-no-thumb { width: 100%; height: 80px; background: var(--bg-hover, #f0f0f0); display: flex; align-items: center; justify-content: center; font-size: 11px; color: #aaa; }
 .selector-name { padding: 4px 6px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.perm-checks { display: flex; flex-direction: column; gap: 8px; }
+.check-label { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-secondary, #555); cursor: pointer; }
+.check-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
 </style>
