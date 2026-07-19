@@ -20,31 +20,31 @@
           <EmojiIcon name="bar-chart" class="nav-icon" :size="22" />
           <span v-show="!isCollapsed" class="nav-text">数据概览</span>
         </router-link>
-        <router-link to="/admin/upload" class="nav-item" active-class="active">
+        <router-link to="/admin/upload" class="nav-item" active-class="active" v-if="canUpload">
           <EmojiIcon name="outbox-tray" class="nav-icon" :size="22" />
           <span v-show="!isCollapsed" class="nav-text">上传图片</span>
         </router-link>
-        <router-link to="/admin/photos" class="nav-item" active-class="active">
+        <router-link to="/admin/photos" class="nav-item" active-class="active" v-if="canManage">
           <EmojiIcon name="framed-picture" class="nav-icon" :size="22" />
           <span v-show="!isCollapsed" class="nav-text">照片管理</span>
         </router-link>
-        <router-link to="/admin/categories" class="nav-item" active-class="active">
+        <router-link to="/admin/categories" class="nav-item" active-class="active" v-if="canManage">
           <EmojiIcon name="file-folder" class="nav-icon" :size="22" />
           <span v-show="!isCollapsed" class="nav-text">分类管理</span>
         </router-link>
-        <router-link to="/admin/tags" class="nav-item" active-class="active">
+        <router-link to="/admin/tags" class="nav-item" active-class="active" v-if="canManage">
           <EmojiIcon name="label" class="nav-icon" :size="22" />
           <span v-show="!isCollapsed" class="nav-text">标签管理</span>
         </router-link>
-        <router-link to="/admin/collections" class="nav-item" active-class="active">
+        <router-link to="/admin/collections" class="nav-item" active-class="active" v-if="canManage">
           <EmojiIcon name="open-book" class="nav-icon" :size="22" />
           <span v-show="!isCollapsed" class="nav-text">合集管理</span>
         </router-link>
-        <router-link to="/admin/share" class="nav-item" active-class="active">
+        <router-link to="/admin/share" class="nav-item" active-class="active" v-if="canManage">
           <EmojiIcon name="link" class="nav-icon" :size="22" />
           <span v-show="!isCollapsed" class="nav-text">分享管理</span>
         </router-link>
-        <router-link to="/admin/users" class="nav-item" active-class="active">
+        <router-link to="/admin/users" class="nav-item" active-class="active" v-if="isAdmin">
           <EmojiIcon name="people" class="nav-icon" :size="22" />
           <span v-show="!isCollapsed" class="nav-text">用户管理</span>
         </router-link>
@@ -94,6 +94,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const isAdmin = computed(() => authStore.isAdmin)
+const canUpload = computed(() => authStore.canUpload || authStore.isAdmin)
+const canManage = computed(() => authStore.canManage || authStore.isAdmin)
 
 const isCollapsed = ref(false)
 const mobileMenuOpen = ref(false)

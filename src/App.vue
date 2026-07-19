@@ -12,7 +12,7 @@
           <router-link to="/collections">合集</router-link>
           <router-link to="/map">地图</router-link>
           <router-link to="/about">关于</router-link>
-          <router-link v-if="authStore.isAdmin" to="/admin/dashboard" class="admin-link"><EmojiIcon name="gear" :size="16" class="icon-inline" /> 管理</router-link>
+          <router-link v-if="authStore.isAdmin || authStore.canUpload || authStore.canManage" to="/admin/dashboard" class="admin-link"><EmojiIcon name="gear" :size="16" class="icon-inline" /> 管理</router-link>
           <router-link v-else-if="!authStore.isLoggedIn" to="/admin/login" class="admin-link"><EmojiIcon name="gear" :size="16" class="icon-inline" /> 管理</router-link>
           <button v-if="authStore.isLoggedIn" class="logout-btn" @click="handleLogout">退出</button>
           <ThemeToggle />
@@ -34,7 +34,7 @@
           <router-link to="/collections" @click="menuOpen = false">合集</router-link>
           <router-link to="/map" @click="menuOpen = false">地图</router-link>
           <router-link to="/about" @click="menuOpen = false">关于</router-link>
-          <router-link v-if="authStore.isAdmin" to="/admin/dashboard" @click="menuOpen = false">⚙ 管理</router-link>
+          <router-link v-if="authStore.isAdmin || authStore.canUpload || authStore.canManage" to="/admin/dashboard" @click="menuOpen = false">⚙ 管理</router-link>
           <router-link v-else-if="!authStore.isLoggedIn" to="/admin/login" @click="menuOpen = false">⚙ 管理</router-link>
           <a v-if="authStore.isLoggedIn" class="logout-link" @click="handleLogout">退出登录</a>
           <ThemeToggle />

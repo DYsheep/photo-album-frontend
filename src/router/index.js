@@ -141,8 +141,12 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 
-  // 需要管理员权限的页面
-  if (to.meta.requiresAuth && !authStore.isAdmin) {
+  // 需要管理权限的页面（管理员 或 有上传/管理权限的用户）
+  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+    next({ name: 'login' })
+    return
+  }
+  if (to.meta.requiresAuth && !authStore.isAdmin && !authStore.canUpload && !authStore.canManage) {
     next({ name: 'home' })
     return
   }
