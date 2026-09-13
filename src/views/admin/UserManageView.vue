@@ -81,30 +81,36 @@
     <div v-if="permVisible" class="modal-overlay" @click.self="permVisible = false">
       <div class="modal-content" style="max-width:500px;">
         <h3>{{ permUser?.username }} 的访问权限</h3>
-        <p class="perm-hint">不设权限 = 可看全部私密内容；设白名单 = 仅看列表中内容；设黑名单 = 排除列表中内容</p>
+        <p class="perm-hint">默认看不到任何私密内容；白名单定义可见范围（全局=全部私密，或指定照片/合集）；黑名单在白名单范围内排除</p>
         <div v-for="(p, i) in permissions" :key="p.id" class="perm-row">
           <span :class="p.permType === 'W' ? 'tag-whitelist' : 'tag-blacklist'">{{ p.permType === 'W' ? '白名单' : '黑名单' }}</span>
           <img v-if="p.thumbUrl" :src="p.thumbUrl" class="perm-thumb" />
-          <span class="perm-name">{{ p.targetName || (p.targetType === 'photo' ? '照片' : '合集') + ' #' + p.targetId }}</span>
+          <span class="perm-name">{{ permLabel(p) }}</span>
           <button class="btn-sm btn-danger" @click="removePerm(p.id)">删除</button>
         </div>
-        <div v-if="!permissions.length" class="empty-state" style="padding:20px 0;">无特殊权限，默认可查看全部私密内容</div>
+        <div v-if="!permissions.length" class="empty-state" style="padding:20px 0;">无授权条目，该账号看不到任何私密内容</div>
         <hr />
         <div style="display:flex;gap:8px;align-items:center;">
           <select v-model="newPerm.type" style="flex:1;">
-            <option value="W">白名单（仅允许）</option>
-            <option value="B">黑名单（排除）</option>
+            <option value="W">白名单（定义可见范围）</option>
+            <option value="B">黑名单（在范围内排除）</option>
           </select>
           <select v-model="newPerm.targetType" style="width:80px;">
+            <option value="global">全局</option>
             <option value="photo">照片</option>
             <option value="collection">合集</option>
           </select>
-          <button class="btn-primary btn-sm" @click="openSelector">选择</button>
-          <span v-if="selectedItem" class="selected-preview">
-            <img v-if="selectedItem.thumb" :src="selectedItem.thumb" class="perm-thumb" />
-            {{ selectedItem.name }}
-          </span>
-          <button v-if="selectedItem" class="btn-primary btn-sm" @click="addPerm">添加</button>
+          <template v-if="newPerm.targetType === 'global'">
+            <button class="btn-primary btn-sm" @click="addGlobalPerm">添加</button>
+          </template>
+          <template v-else>
+            <button class="btn-primary btn-sm" @click="openSelector">选择</button>
+            <span v-if="selectedItem" class="selected-preview">
+              <img v-if="selectedItem.thumb" :src="selectedItem.thumb" class="perm-thumb" />
+              {{ selectedItem.name }}
+            </span>
+            <button v-if="selectedItem" class="btn-primary btn-sm" @click="addPerm">添加</button>
+          </template>
         </div>
         <div class="modal-actions" style="margin-top:16px;">
           <button class="btn-secondary" @click="permVisible = false">关闭</button>
@@ -274,6 +280,22 @@ async function addPerm() {
   ElMessage.success('已添加')
   selectedItem.value = null
   openPermissions(permUser.value)
+}
+
+/** 添加"全局"授权（白名单=全部私密内容可见） */
+async function addGlobalPerm() {
+  await addUserPermissionApi(permUser.value.id, {
+    permType: newPerm.type, targetType: 'global'
+  })
+  ElMessage.success('已添加')
+  openPermissions(permUser.value)
+}
+
+/** 授权条目展示文案 */
+function permLabel(p) {
+  if (p.targetType === 'global') return '全部私密内容'
+  if (p.targetName) return p.targetName
+  return (p.targetType === 'photo' ? '照片' : '合集') + ' #' + p.targetId
 }
 
 async function removePerm(permId) {

@@ -94,8 +94,11 @@
           </span>
         </div>
 
-        <!-- 分享按钮 -->
-        <ShareButton :photo-id="photo.id" />
+        <!-- 分享按钮（创建分享链接需登录并具备上传/管理权限，无权限用户不展示） -->
+        <ShareButton
+          v-if="authStore.isAdmin || authStore.canUpload || authStore.canManage"
+          :photo-id="photo.id"
+        />
       </div>
     </div>
 
