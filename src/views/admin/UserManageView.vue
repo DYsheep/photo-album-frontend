@@ -11,6 +11,7 @@
           <th>用户名</th>
           <th>昵称</th>
           <th>角色</th>
+          <th>能力</th>
           <th>创建时间</th>
           <th>操作</th>
         </tr>
@@ -24,6 +25,15 @@
               {{ roleLabel(u.role) }}
             </span>
           </td>
+          <td>
+            <span v-if="u.role === 'admin'" class="cap-badge cap-all">全部</span>
+            <template v-else>
+              <span v-if="u.canViewPrivate === 1" class="cap-badge cap-private">私密</span>
+              <span v-if="u.canUpload === 1" class="cap-badge cap-upload">上传</span>
+              <span v-if="u.canManage === 1" class="cap-badge cap-manage">管理</span>
+              <span v-if="!u.canViewPrivate && !u.canUpload && !u.canManage" class="cap-none">仅浏览</span>
+            </template>
+          </td>
           <td>{{ formatDate(u.createdAt) }}</td>
           <td>
             <button class="btn-sm btn-secondary" @click="openEdit(u)">编辑</button>
@@ -34,6 +44,25 @@
       </tbody>
     </table>
     <div v-else class="empty-state">暂无用户</div>
+
+    <!-- 操作审计（授权与账号管理动作） -->
+    <div class="audit-card" style="margin-top:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h3 style="margin:0;">操作审计<span style="font-size:13px;color:var(--text-muted,#888);margin-left:8px;">最近 {{ auditLogs.length }} 条</span></h3>
+        <button class="btn-secondary" @click="loadAuditLogs">刷新</button>
+      </div>
+      <el-table :data="auditLogs" size="small" empty-text="暂无审计记录">
+        <el-table-column label="时间" width="160">
+          <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+        </el-table-column>
+        <el-table-column prop="actorName" label="操作人" width="110" />
+        <el-table-column label="动作" width="110">
+          <template #default="{ row }">{{ actionLabel(row.action) }}</template>
+        </el-table-column>
+        <el-table-column prop="detail" label="详情" min-width="280" />
+        <el-table-column prop="ip" label="来源IP" width="130" />
+      </el-table>
+    </div>
 
     <!-- 创建 / 编辑弹窗 -->
     <div v-if="dialogVisible" class="modal-overlay" @click.self="dialogVisible = false">
@@ -55,20 +84,25 @@
           <label>角色</label>
           <select v-model="form.role">
             <option value="user">普通用户</option>
-            <option value="viewer">查看者（可看私密）</option>
+            <option value="viewer">查看者</option>
             <option value="admin">管理员</option>
           </select>
+          <p class="form-hint">角色仅作标识，实际权限由下方能力位决定</p>
         </div>
         <div class="form-group">
-          <label>操作权限</label>
+          <label>能力</label>
           <div class="perm-checks">
+            <label class="check-label">
+              <input type="checkbox" v-model="form.canViewPrivate" /> 可查看私密内容
+            </label>
             <label class="check-label">
               <input type="checkbox" v-model="form.canUpload" /> 可上传照片
             </label>
             <label class="check-label">
-              <input type="checkbox" v-model="form.canManage" /> 可管理合集
+              <input type="checkbox" v-model="form.canManage" /> 可管理内容（照片/分类/标签/合集/分享）
             </label>
           </div>
+          <p class="form-hint">"可查看私密内容"只表示具备能力，具体能看到哪些仍需在"权限"弹窗中逐项授权</p>
         </div>
         <div class="modal-actions">
           <button class="btn-secondary" @click="dialogVisible = false">取消</button>
@@ -81,11 +115,15 @@
     <div v-if="permVisible" class="modal-overlay" @click.self="permVisible = false">
       <div class="modal-content" style="max-width:500px;">
         <h3>{{ permUser?.username }} 的访问权限</h3>
-        <p class="perm-hint">默认看不到任何私密内容；白名单定义可见范围（全局=全部私密，或指定照片/合集）；黑名单在白名单范围内排除</p>
+        <p class="perm-hint">默认看不到任何私密内容；白名单定义可见范围（全局=全部私密；照片/合集/分类=指定对象，合集与分类会级联到其内部照片）；黑名单在白名单范围内排除</p>
+        <p class="perm-preview" v-if="preview">
+          当前可见范围：共 {{ preview.totalPhotos }} 张，其中私密 {{ preview.privatePhotos }} 张（该账号可见私密 {{ preview.visiblePrivatePhotos }} 张）
+        </p>
         <div v-for="(p, i) in permissions" :key="p.id" class="perm-row">
           <span :class="p.permType === 'W' ? 'tag-whitelist' : 'tag-blacklist'">{{ p.permType === 'W' ? '白名单' : '黑名单' }}</span>
           <img v-if="p.thumbUrl" :src="p.thumbUrl" class="perm-thumb" />
           <span class="perm-name">{{ permLabel(p) }}</span>
+          <span class="perm-meta">{{ permMeta(p) }}</span>
           <button class="btn-sm btn-danger" @click="removePerm(p.id)">删除</button>
         </div>
         <div v-if="!permissions.length" class="empty-state" style="padding:20px 0;">无授权条目，该账号看不到任何私密内容</div>
@@ -99,6 +137,8 @@
             <option value="global">全局</option>
             <option value="photo">照片</option>
             <option value="collection">合集</option>
+            <option value="category">分类</option>
+            <option value="tag">标签</option>
           </select>
           <template v-if="newPerm.targetType === 'global'">
             <button class="btn-primary btn-sm" @click="addGlobalPerm">添加</button>
@@ -147,8 +187,10 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { getUsersApi, createUserApi, updateUserApi, deleteUserApi, getUserPermissionsApi, addUserPermissionApi, removeUserPermissionApi } from '../../api/user'
+import { getUsersApi, createUserApi, updateUserApi, deleteUserApi, getUserPermissionsApi, addUserPermissionApi, removeUserPermissionApi, getAuditLogsApi, getUserPreviewApi } from '../../api/user'
 import { getPhotoListApi } from '../../api/photo'
+import { getCategoryListApi } from '../../api/category'
+import { getAdminTagListApi } from '../../api/admin-tag'
 import { getAdminCollectionsApi } from '../../api/collection'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -156,7 +198,11 @@ const users = ref([])
 const dialogVisible = ref(false)
 const editingUser = ref(null)
 const saving = ref(false)
-const form = reactive({ username: '', password: '', nickname: '', role: 'user', canUpload: false, canManage: false })
+const form = reactive({ username: '', password: '', nickname: '', role: 'user', canUpload: false, canManage: false, canViewPrivate: false })
+
+const auditLogs = ref([])
+/** 当前账号的可见范围预览 */
+const preview = ref(null)
 
 const permVisible = ref(false)
 const permUser = ref(null)
@@ -177,16 +223,50 @@ function roleLabel(r) {
   return { admin: '管理员', viewer: '查看者', user: '普通用户' }[r] || r
 }
 function formatDate(d) { return d ? d.substring(0, 10) : '' }
+function formatDateTime(d) {
+  if (!d) return '-'
+  return String(d).replace('T', ' ').slice(0, 16)
+}
+
+const ACTION_LABELS = {
+  GRANT_ADD: '新增授权',
+  GRANT_REMOVE: '移除授权',
+  USER_CREATE: '创建账号',
+  USER_UPDATE: '修改账号',
+  USER_DELETE: '删除账号',
+  LOGIN_SUCCESS: '登录成功',
+  LOGIN_FAIL: '登录失败'
+}
+function actionLabel(action) {
+  return ACTION_LABELS[action] || action
+}
+
+/** 授权条目元信息：操作人 + 授权时间 */
+function permMeta(p) {
+  const actor = users.value.find(u => u.id === p.createdBy)
+  const who = actor ? actor.username : (p.createdBy ? '#' + p.createdBy : '系统')
+  const when = formatDateTime(p.createdAt)
+  return when === '-' ? who : `${who} · ${when}`
+}
 
 async function loadUsers() {
   const res = await getUsersApi()
   if (res.code === 200) users.value = res.data || []
 }
 
+async function loadAuditLogs() {
+  try {
+    const res = await getAuditLogsApi(50)
+    if (res.code === 200) auditLogs.value = res.data || []
+  } catch (err) {
+    console.error('获取审计日志失败:', err)
+  }
+}
+
 function openCreate() {
   editingUser.value = null
   form.username = ''; form.password = ''; form.nickname = ''; form.role = 'user'
-  form.canUpload = false; form.canManage = false
+  form.canUpload = false; form.canManage = false; form.canViewPrivate = false
   dialogVisible.value = true
 }
 function openEdit(u) {
@@ -194,12 +274,14 @@ function openEdit(u) {
   form.username = u.username; form.password = ''; form.nickname = u.nickname; form.role = u.role
   form.canUpload = u.canUpload === 1
   form.canManage = u.canManage === 1
+  form.canViewPrivate = u.canViewPrivate === 1
   dialogVisible.value = true
 }
 async function handleSave() {
   saving.value = true
   const data = { nickname: form.nickname, role: form.role, password: form.password || undefined,
-    canUpload: form.canUpload ? '1' : '0', canManage: form.canManage ? '1' : '0' }
+    canUpload: form.canUpload ? '1' : '0', canManage: form.canManage ? '1' : '0',
+    canViewPrivate: form.canViewPrivate ? '1' : '0' }
   try {
     if (editingUser.value) {
       await updateUserApi(editingUser.value.id, data)
@@ -228,13 +310,23 @@ async function openPermissions(u) {
   permUser.value = u
   newPerm.type = 'W'; newPerm.targetType = 'photo'
   selectedItem.value = null
+  preview.value = null
   const res = await getUserPermissionsApi(u.id)
   permissions.value = (res.code === 200 && res.data) ? res.data : []
   // 补全每条权限的名称和缩略图
   for (const p of permissions.value) {
     if (!p.targetName) await fillPermName(p)
   }
+  loadPreview(u.id)
   permVisible.value = true
+}
+
+/** 以该账号视角预览可见范围（配置核对用） */
+async function loadPreview(userId) {
+  try {
+    const res = await getUserPreviewApi(userId)
+    preview.value = (res.code === 200 && res.data) ? res.data : null
+  } catch { preview.value = null }
 }
 
 async function fillPermName(p) {
@@ -244,6 +336,18 @@ async function fillPermName(p) {
       if (r.code === 200) {
         const found = (r.data?.list || []).find(ph => ph.id == p.targetId)
         if (found) { p.targetName = found.title; p.thumbUrl = found.thumbnailUrl || found.url }
+      }
+    } else if (p.targetType === 'category') {
+      const r = await getCategoryListApi()
+      if (r.code === 200) {
+        const found = (r.data || []).find(c => c.id == p.targetId)
+        if (found) { p.targetName = found.name }
+      }
+    } else if (p.targetType === 'tag') {
+      const r = await getAdminTagListApi()
+      if (r.code === 200) {
+        const found = (r.data || []).find(t => t.id == p.targetId)
+        if (found) { p.targetName = found.name }
       }
     } else {
       const r = await getAdminCollectionsApi()
@@ -261,6 +365,12 @@ async function openSelector() {
   if (newPerm.targetType === 'photo') {
     const r = await getPhotoListApi({ pageSize: 500 })
     if (r.code === 200) selectorItems.value = (r.data?.list || []).map(p => ({ id: p.id, name: p.title || p.fileName, thumb: p.thumbnailUrl || p.url }))
+  } else if (newPerm.targetType === 'category') {
+    const r = await getCategoryListApi()
+    if (r.code === 200) selectorItems.value = (r.data || []).map(c => ({ id: c.id, name: c.name }))
+  } else if (newPerm.targetType === 'tag') {
+    const r = await getAdminTagListApi()
+    if (r.code === 200) selectorItems.value = (r.data || []).map(t => ({ id: t.id, name: `${t.name}（${t.count}）` }))
   } else {
     const r = await getAdminCollectionsApi()
     if (r.code === 200) selectorItems.value = (r.data || []).map(c => ({ id: c.id, name: c.name, thumb: c.coverUrl }))
@@ -280,6 +390,7 @@ async function addPerm() {
   ElMessage.success('已添加')
   selectedItem.value = null
   openPermissions(permUser.value)
+  loadAuditLogs()
 }
 
 /** 添加"全局"授权（白名单=全部私密内容可见） */
@@ -289,22 +400,28 @@ async function addGlobalPerm() {
   })
   ElMessage.success('已添加')
   openPermissions(permUser.value)
+  loadAuditLogs()
 }
 
 /** 授权条目展示文案 */
 function permLabel(p) {
   if (p.targetType === 'global') return '全部私密内容'
   if (p.targetName) return p.targetName
-  return (p.targetType === 'photo' ? '照片' : '合集') + ' #' + p.targetId
+  const label = { photo: '照片', collection: '合集', category: '分类', tag: '标签' }[p.targetType] || p.targetType
+  return label + ' #' + p.targetId
 }
 
 async function removePerm(permId) {
   await removeUserPermissionApi(permUser.value.id, permId)
   ElMessage.success('已删除')
   openPermissions(permUser.value)
+  loadAuditLogs()
 }
 
-onMounted(loadUsers)
+onMounted(() => {
+  loadUsers()
+  loadAuditLogs()
+})
 </script>
 
 <style scoped>
@@ -313,6 +430,14 @@ onMounted(loadUsers)
 .role-viewer { color: #409EFF; font-weight: 500; }
 .role-user { color: #909399; }
 .perm-hint { font-size: 12px; color: var(--text-muted, #888); margin-bottom: 12px; }
+.perm-preview { font-size: 12px; color: var(--text-regular, #555); margin: -6px 0 12px; }
+.form-hint { font-size: 12px; color: var(--text-muted, #999); margin: 6px 0 0; }
+.cap-badge { display: inline-block; padding: 1px 6px; margin-right: 4px; border-radius: 4px; font-size: 12px; }
+.cap-all { background: #E6F1FB; color: #185FA5; }
+.cap-private { background: #FCEBEB; color: #A32D2D; }
+.cap-upload { background: #E1F5EE; color: #0F6E56; }
+.cap-manage { background: #FAEEDA; color: #854F0B; }
+.cap-none { font-size: 12px; color: var(--text-muted, #999); }
 .perm-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 0.5px solid var(--border-light, #eee); }
 .tag-whitelist { background: #E6F1FB; color: #409EFF; padding: 1px 8px; border-radius: 3px; font-size: 11px; }
 .tag-blacklist { background: #FDE2E2; color: #F56C6C; padding: 1px 8px; border-radius: 3px; font-size: 11px; }

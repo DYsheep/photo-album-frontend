@@ -29,6 +29,26 @@
                 {{ copied ? '已复制' : '复制' }}
               </button>
             </div>
+
+            <div class="expiry-row">
+              <label class="expiry-label">有效期</label>
+              <select v-model="expiryChoice" class="expiry-select" @change="handleExpiryChange">
+                <option value="permanent">永久有效</option>
+                <option value="7">7 天后到期</option>
+                <option value="30">30 天后到期</option>
+                <option value="custom">自定义到期日</option>
+              </select>
+              <input
+                v-if="expiryChoice === 'custom'"
+                v-model="customDate"
+                type="date"
+                class="expiry-date"
+                :min="today"
+                @change="handleExpiryChange"
+              />
+            </div>
+            <p class="expiry-hint">{{ expiryText }}</p>
+            <p class="expiry-note">照片被设为私密后，该链接对无权限访问者即刻失效。</p>
           </div>
         </div>
       </div>
@@ -37,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { createShareLinkApi } from '../api/share'
 import { ElMessage } from 'element-plus'
 import EmojiIcon from './EmojiIcon.vue'
@@ -53,23 +73,78 @@ const shareUrl = ref('')
 const copied = ref(false)
 const linkInputRef = ref(null)
 
+/** 有效期选择：permanent | '7' | '30' | 'custom' */
+const expiryChoice = ref('permanent')
+const customDate = ref('')
+const expiresAt = ref(null)
+
+const today = computed(() => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+})
+
+const expiryText = computed(() => {
+  if (!expiresAt.value) return '永久有效'
+  return '有效期至 ' + String(expiresAt.value).replace('T', ' ').slice(0, 16)
+})
+
+/** 组装创建/更新参数；返回 null 表示自定义到期日尚未选择 */
+function buildExpiryOptions() {
+  if (expiryChoice.value === 'permanent') return {}
+  if (expiryChoice.value === 'custom') {
+    return customDate.value ? { expiresAt: customDate.value } : null
+  }
+  const days = Number(expiryChoice.value)
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return { expiresAt: iso }
+}
+
+/** 请求分享链接（创建或按新有效期更新） */
+async function requestShareLink() {
+  const options = buildExpiryOptions()
+  if (options === null) {
+    ElMessage.warning('请选择到期日')
+    return null
+  }
+  const res = await createShareLinkApi(props.photoId, options)
+  if (res.code === 200 && res.data) {
+    shareUrl.value = res.data.shareUrl
+    expiresAt.value = res.data.expiresAt || null
+    return res
+  }
+  ElMessage.error(res.message || '创建分享链接失败')
+  return null
+}
+
 async function handleShare() {
   loading.value = true
   try {
-    const res = await createShareLinkApi(props.photoId)
-    if (res.code === 200 && res.data) {
-      shareUrl.value = res.data.shareUrl
+    const res = await requestShareLink()
+    if (res) {
       showDialog.value = true
       await nextTick()
       linkInputRef.value?.select()
-    } else {
-      ElMessage.error(res.message || '创建分享链接失败')
     }
   } catch (err) {
     console.error('创建分享链接失败:', err)
     ElMessage.error('创建分享链接失败，请稍后重试')
   } finally {
     loading.value = false
+  }
+}
+
+/** 已生成链接后调整有效期（同一链接按新设置更新，分享码不变） */
+async function handleExpiryChange() {
+  if (!showDialog.value) return
+  if (buildExpiryOptions() === null) return
+  try {
+    const res = await requestShareLink()
+    if (res) ElMessage.success('有效期已更新')
+  } catch (err) {
+    console.error('更新分享有效期失败:', err)
+    ElMessage.error('更新有效期失败，请稍后重试')
   }
 }
 
@@ -218,5 +293,51 @@ async function copyLink() {
 
 .copy-btn:hover {
   background: var(--color-primary-dark, #2B6EC5);
+}
+
+/* 有效期设置 */
+.expiry-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.expiry-label {
+  font-size: 14px;
+  color: var(--text-secondary, #333);
+  flex-shrink: 0;
+}
+
+.expiry-select,
+.expiry-date {
+  padding: 8px 12px;
+  border: 1.5px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-secondary, #333);
+  background: var(--bg-card, #fff);
+  outline: none;
+}
+
+.expiry-select {
+  flex: 1;
+}
+
+.expiry-select:focus,
+.expiry-date:focus {
+  border-color: var(--color-primary, #378ADD);
+}
+
+.expiry-hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--text-muted, #888);
+}
+
+.expiry-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--text-muted, #999);
 }
 </style>

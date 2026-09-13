@@ -51,3 +51,20 @@ export function reorderCollectionsApi(orderList) {
 export function getCollectionAdjacentApi(collectionId, photoId) {
   return request.get(`/collections/${collectionId}/adjacent`, { params: { photoId } })
 }
+
+// ========== 协作者（对象级管理权） ==========
+
+/** 查看合集协作者 */
+export function getCollectionMembersApi(collectionId) {
+  return request.get(`/admin/collections/${collectionId}/members`)
+}
+
+/** 指派协作者 */
+export function addCollectionMemberApi(collectionId, userId) {
+  return request.post(`/admin/collections/${collectionId}/members/${userId}`)
+}
+
+/** 移除协作者 */
+export function removeCollectionMemberApi(collectionId, userId) {
+  return request.delete(`/admin/collections/${collectionId}/members/${userId}`)
+}

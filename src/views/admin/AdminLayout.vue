@@ -36,7 +36,7 @@
           <EmojiIcon name="label" class="nav-icon" :size="22" />
           <span v-show="!isCollapsed" class="nav-text">标签管理</span>
         </router-link>
-        <router-link to="/admin/collections" class="nav-item" active-class="active" v-if="canManage">
+        <router-link to="/admin/collections" class="nav-item" active-class="active" v-if="canManage || isCollectionMember">
           <EmojiIcon name="open-book" class="nav-icon" :size="22" />
           <span v-show="!isCollapsed" class="nav-text">合集管理</span>
         </router-link>
@@ -97,6 +97,7 @@ const authStore = useAuthStore()
 const isAdmin = computed(() => authStore.isAdmin)
 const canUpload = computed(() => authStore.canUpload || authStore.isAdmin)
 const canManage = computed(() => authStore.canManage || authStore.isAdmin)
+const isCollectionMember = computed(() => authStore.isCollectionMember === true)
 
 const isCollapsed = ref(false)
 const mobileMenuOpen = ref(false)

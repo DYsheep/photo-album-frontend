@@ -115,7 +115,8 @@ const router = createRouter({
           path: 'collections',
           name: 'adminCollections',
           component: CollectionManageView,
-          meta: { title: '合集管理', requiresAuth: true, requires: 'manage' }
+          // 合集管理：具备管理权限，或为某个合集的协作者（只能看到被指派的合集）
+          meta: { title: '合集管理', requiresAuth: true, requires: 'collect' }
         },
         {
           path: 'share',
@@ -155,6 +156,7 @@ router.beforeEach((to, from, next) => {
   const abilityCheck = {
     upload: () => authStore.isAdmin || authStore.canUpload,
     manage: () => authStore.isAdmin || authStore.canManage,
+    collect: () => authStore.isAdmin || authStore.canManage || authStore.isCollectionMember,
     admin: () => authStore.isAdmin
   }
   const required = to.meta.requires

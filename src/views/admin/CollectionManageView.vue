@@ -51,6 +51,9 @@
               <button class="action-btn" @click="managePhotos(col)" title="管理照片">
                 <EmojiIcon name="framed-picture" :size="16" />
               </button>
+              <button v-if="canManageCollections" class="action-btn" @click="openMembers(col)" title="协作者">
+                <EmojiIcon name="people" :size="16" />
+              </button>
               <button class="action-btn" @click="openEditDialog(col)" title="编辑">
                 <EmojiIcon name="pencil" :size="16" />
               </button>
@@ -173,6 +176,41 @@
         <el-button @click="photoDialogVisible = false">完成</el-button>
       </template>
     </el-dialog>
+
+    <!-- 协作者弹窗（对象级管理权：被指派的账号可维护该合集） -->
+    <el-dialog v-model="memberDialogVisible" :title="`协作者 · ${memberCollection?.name || ''}`" width="520px">
+      <el-table :data="members" size="small" empty-text="暂无协作者">
+        <el-table-column label="账号" min-width="160">
+          <template #default="{ row }">
+            {{ row.nickname || row.username || ('#' + row.userId) }}
+            <span style="color:var(--text-muted,#999);font-size:12px;">{{ row.username }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="角色" width="100">
+          <template #default="{ row }">{{ row.memberRole === 'editor' ? '可维护' : row.memberRole }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="90">
+          <template #default="{ row }">
+            <el-button link type="danger" @click="removeMember(row)">移除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:16px;">
+        <el-select v-model="selectedUserId" placeholder="选择账号" filterable style="flex:1;">
+          <el-option
+            v-for="u in candidateUsers"
+            :key="u.id"
+            :label="`${u.nickname || u.username} (${u.username})`"
+            :value="u.id"
+          />
+        </el-select>
+        <el-button type="primary" @click="addMember" :disabled="!selectedUserId">指派</el-button>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted,#999);margin:8px 0 0;">
+        协作者可维护该合集（改名、封面、增删合集内照片），但不具备全站管理权，也看不到其他合集。
+      </p>
+    </el-dialog>
   </div>
 </template>
 
@@ -188,10 +226,14 @@ import {
   getCollectionDetailApi
 } from '../../api/collection'
 import { getPhotoListApi } from '../../api/photo'
-import { reorderCollectionsApi } from '../../api/collection'
+import { reorderCollectionsApi, getCollectionMembersApi, addCollectionMemberApi, removeCollectionMemberApi } from '../../api/collection'
+import { getUsersApi } from '../../api/user'
+import { useAuthStore } from '../../stores/auth'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatDateShort } from '../../utils/format'
 import EmojiIcon from '../../components/EmojiIcon.vue'
+
+const authStore = useAuthStore()
 
 // ===== 合集列表 =====
 const collections = ref([])
@@ -442,6 +484,53 @@ async function saveOrder() {
   } finally {
     savingOrder.value = false
   }
+}
+
+// ===== 协作者（对象级管理权） =====
+const memberDialogVisible = ref(false)
+const memberCollection = ref(null)
+const members = ref([])
+const selectedUserId = ref(null)
+const candidateUsers = ref([])
+/** 指派协作者需要全站管理权限（协作者本人只能查看） */
+const canManageCollections = computed(() => authStore.isAdmin === true || authStore.canManage === true)
+
+async function openMembers(col) {
+  memberCollection.value = col
+  memberDialogVisible.value = true
+  selectedUserId.value = null
+  await loadMembers()
+  if (canManageCollections.value) {
+    try {
+      const res = await getUsersApi()
+      candidateUsers.value = (res.code === 200 && res.data) ? res.data : []
+    } catch { candidateUsers.value = [] }
+  }
+}
+
+async function loadMembers() {
+  try {
+    const res = await getCollectionMembersApi(memberCollection.value.id)
+    members.value = (res.code === 200 && res.data) ? res.data : []
+  } catch { members.value = [] }
+}
+
+async function addMember() {
+  if (!selectedUserId.value) return
+  try {
+    await addCollectionMemberApi(memberCollection.value.id, selectedUserId.value)
+    ElMessage.success('已指派')
+    selectedUserId.value = null
+    await loadMembers()
+  } catch { ElMessage.error('指派失败') }
+}
+
+async function removeMember(row) {
+  try {
+    await removeCollectionMemberApi(memberCollection.value.id, row.userId)
+    ElMessage.success('已移除')
+    await loadMembers()
+  } catch { ElMessage.error('移除失败') }
 }
 
 onMounted(() => {

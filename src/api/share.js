@@ -2,9 +2,13 @@ import request from './request'
 
 // ========== 分享链接相关 API ==========
 
-/** 为照片创建分享链接（需登录且具备上传或管理权限，且对该照片可见） */
-export function createShareLinkApi(photoId) {
-  return request.post(`/share/photo/${photoId}`)
+/**
+ * 为照片创建分享链接（需登录且具备上传或管理权限，且对该照片可见）
+ * options 可选：{ expiresAt: 'YYYY-MM-DD' | ISO 日期时间, expiresInDays: number }
+ * 两者都不传 = 永久有效；同一张照片重复创建会按本次设置更新有效期。
+ */
+export function createShareLinkApi(photoId, options) {
+  return request.post(`/share/photo/${photoId}`, options || {})
 }
 
 /** 根据分享码获取分享数据（公开访问，无需 token） */

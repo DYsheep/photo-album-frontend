@@ -23,6 +23,14 @@
             {{ formatTime(row.createdAt) }}
           </template>
         </el-table-column>
+        <el-table-column prop="expiresAt" label="有效期" min-width="180">
+          <template #default="{ row }">
+            <span v-if="!row.expiresAt" style="color:#0F6E56;">永久有效</span>
+            <span v-else :style="{ color: row.expired ? '#A32D2D' : '#854F0B' }">
+              {{ row.expired ? '已过期 · ' : '' }}{{ formatTime(row.expiresAt) }}
+            </span>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
             <div class="action-btns">

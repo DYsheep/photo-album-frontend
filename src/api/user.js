@@ -34,3 +34,13 @@ export function addUserPermissionApi(userId, data) {
 export function removeUserPermissionApi(userId, permId) {
   return request.delete(`/admin/users/${userId}/permissions/${permId}`)
 }
+
+/** 授权与账号操作审计日志（仅管理员） */
+export function getAuditLogsApi(size = 50) {
+  return request.get('/admin/audit-logs', { params: { size } })
+}
+
+/** 以该账号视角预览可见范围（仅管理员） */
+export function getUserPreviewApi(userId) {
+  return request.get(`/admin/users/${userId}/preview`)
+}
