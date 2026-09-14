@@ -33,6 +33,9 @@
   --color-primary-dark: #185FA5;
   --color-danger: #E24B4A;
   --color-danger-hover: #A32D2D;
+  --color-success: #0F6E56;
+  --color-success-hover: #0A5744;
+  --color-success-light: #E1F5EE;
   --color-secondary: #5DADE2;
   --color-secondary-hover: #85C1E9;
 
@@ -96,6 +99,9 @@ html.dark {
   --color-primary-dark: #337ecc;
   --color-danger: #f56c6c;
   --color-danger-hover: #f89898;
+  --color-success: #5DCAA5;
+  --color-success-hover: #7DD8B8;
+  --color-success-light: #10241E;
   --color-secondary: #409EFF;
   --color-secondary-hover: #66b1ff;
 

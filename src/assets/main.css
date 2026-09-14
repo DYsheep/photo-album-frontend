@@ -270,3 +270,45 @@ button {
   flex-wrap: wrap;
   gap: 12px;
 }
+
+/* ========== 共享布局工具类（跨页面复用，替代散落的内联 style） ========== */
+
+/* 区块上间距 */
+.mt-md { margin-top: 16px; }
+.mt-lg { margin-top: 24px; }
+
+/* 一行内左右分布（区块标题 + 右侧操作） */
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 行内操作按钮组：统一间隙，替代逐个写 margin-left */
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 卡片区块：审计、统计等信息块统一容器 */
+.card-panel {
+  background: var(--bg-card, #fff);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.06));
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 次要说明文字（表格/表单内） */
+.cell-muted {
+  color: var(--text-muted, #888);
+  font-size: 13px;
+}
+
+/* 语义色工具类（颜色一律走变量，暗色模式自动适配） */
+.text-success { color: var(--color-success, #0F6E56); }
+.text-danger { color: var(--color-danger, #E24B4A); }
+.text-muted { color: var(--text-muted, #888); }

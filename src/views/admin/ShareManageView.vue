@@ -25,7 +25,7 @@
         </el-table-column>
         <el-table-column prop="expiresAt" label="有效期" min-width="180">
           <template #default="{ row }">
-            <span v-if="!row.expiresAt" style="color:#0F6E56;">永久有效</span>
+            <span v-if="!row.expiresAt" class="text-success">永久有效</span>
             <span v-else :style="{ color: row.expired ? '#A32D2D' : '#854F0B' }">
               {{ row.expired ? '已过期 · ' : '' }}{{ formatTime(row.expiresAt) }}
             </span>

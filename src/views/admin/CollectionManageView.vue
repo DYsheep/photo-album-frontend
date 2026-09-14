@@ -2,7 +2,7 @@
   <div class="collection-manage">
     <div class="page-header">
       <h2>合集管理</h2>
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div class="row-actions">
         <button v-if="dragChanged" class="btn-secondary btn-sm" @click="saveOrder" :disabled="savingOrder">
           {{ savingOrder ? '保存中...' : '保存排序' }}
         </button>
@@ -17,8 +17,8 @@
       <table class="data-table" v-if="collections.length > 0">
         <thead>
           <tr>
-            <th style="width:30px"></th>
-            <th style="width:50px">#</th>
+            <th class="col-drag"></th>
+            <th class="col-index">#</th>
             <th>名称</th>
             <th>照片数</th>
             <th>状态</th>
@@ -117,9 +117,9 @@
 
     <!-- 删除确认弹窗 -->
     <el-dialog v-model="deleteDialogVisible" title="确认删除" width="400px">
-      <p style="text-align:center; font-size:15px;">
+      <p class="delete-confirm">
         确定要删除合集「{{ deleteTarget?.name }}」吗？<br />
-        <span style="color:#888; font-size:13px;">此操作不可撤销</span>
+        <span class="cell-muted">此操作不可撤销</span>
       </p>
       <template #footer>
         <el-button @click="deleteDialogVisible = false">取消</el-button>
@@ -150,14 +150,14 @@
       </div>
 
       <!-- 添加照片区域 -->
-      <div class="photo-manage-section" style="margin-top:20px;">
+      <div class="photo-manage-section mt-lg">
         <h4>添加照片</h4>
         <div class="add-photo-controls">
           <el-select
             v-model="selectedPhotoId"
             placeholder="选择照片"
             filterable
-            style="flex:1;"
+            class="grow"
           >
             <el-option
               v-for="photo in availablePhotos"
@@ -183,7 +183,7 @@
         <el-table-column label="账号" min-width="160">
           <template #default="{ row }">
             {{ row.nickname || row.username || ('#' + row.userId) }}
-            <span style="color:var(--text-muted,#999);font-size:12px;">{{ row.username }}</span>
+            <span class="cell-muted">{{ row.username }}</span>
           </template>
         </el-table-column>
         <el-table-column label="角色" width="100">
@@ -196,8 +196,8 @@
         </el-table-column>
       </el-table>
 
-      <div style="display:flex;gap:8px;align-items:center;margin-top:16px;">
-        <el-select v-model="selectedUserId" placeholder="选择账号" filterable style="flex:1;">
+      <div class="field-row">
+        <el-select v-model="selectedUserId" placeholder="选择账号" filterable class="grow">
           <el-option
             v-for="u in candidateUsers"
             :key="u.id"
@@ -207,7 +207,7 @@
         </el-select>
         <el-button type="primary" @click="addMember" :disabled="!selectedUserId">指派</el-button>
       </div>
-      <p style="font-size:12px;color:var(--text-muted,#999);margin:8px 0 0;">
+      <p class="cell-muted hint-block">
         协作者可维护该合集（改名、封面、增删合集内照片），但不具备全站管理权，也看不到其他合集。
       </p>
     </el-dialog>
@@ -557,10 +557,10 @@ onMounted(() => {
   font-weight: 500;
 }
 
-/* 表格样式 */
+/* 表格样式（视觉对齐页面内 el-table） */
 .table-container {
   background: var(--bg-card, #fff);
-  border-radius: 10px;
+  border-radius: 12px;
   border: 0.5px solid var(--border-light, #eee);
   overflow: hidden;
 }
@@ -568,23 +568,37 @@ onMounted(() => {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .data-table th {
-  background: var(--bg-secondary, #f0f2f5);
-  padding: 12px 16px;
+  background: var(--bg-hover, #f5f5f5);
+  padding: 10px 16px;
   text-align: left;
   font-weight: 500;
   color: var(--text-regular, #555);
   font-size: 13px;
-  border-bottom: 0.5px solid var(--border-light, #eee);
+  border-bottom: 1px solid var(--border-light, #eee);
 }
 
 .data-table td {
-  padding: 12px 16px;
-  border-bottom: 0.5px solid var(--border-lighter, #f5f5f5);
+  padding: 10px 16px;
+  font-size: 13px;
   color: var(--text-secondary, #333);
+  border-bottom: 1px solid var(--border-light, #eee);
+}
+
+.data-table tbody tr:hover {
+  background: var(--bg-hover, #f5f5f5);
+}
+
+/* 拖拽手柄列 / 序号列固定宽度 */
+.col-drag {
+  width: 30px;
+}
+
+.col-index {
+  width: 50px;
 }
 
 .name-cell {
@@ -642,6 +656,30 @@ onMounted(() => {
   padding: 60px 0;
   color: var(--text-placeholder, #aaa);
   font-size: 14px;
+}
+
+/* 删除确认弹窗文案 */
+.delete-confirm {
+  text-align: center;
+  font-size: 15px;
+}
+
+/* 表单控件行：下拉 + 按钮横向排列 */
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* 弹窗内说明段落（配合 .cell-muted 使用） */
+.hint-block {
+  margin: 8px 0 0;
+}
+
+/* 撑满剩余宽度的表单控件 */
+.grow {
+  flex: 1;
 }
 
 /* 照片管理弹窗 */
@@ -726,7 +764,7 @@ onMounted(() => {
   color: var(--text-muted, #ccc);
   font-size: 14px;
   user-select: none;
-  padding: 12px 6px !important;
+  padding: 10px 6px !important;
 }
 .drag-handle:active { cursor: grabbing; }
 .data-table tr.drag-over td {
