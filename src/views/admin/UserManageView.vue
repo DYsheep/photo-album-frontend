@@ -1,48 +1,53 @@
 <template>
   <div class="user-manage">
     <div class="page-header">
-      <h2>用户管理</h2>
+      <div>
+        <h2>用户管理</h2>
+        <p class="page-subtitle">共 {{ users.length }} 个账号 · 角色仅作标识，实际权限由下方能力位与授权条目决定</p>
+      </div>
       <button class="btn-primary btn-sm" @click="openCreate">新建用户</button>
     </div>
 
     <!-- 用户列表：与同页审计表统一使用 Element Plus 表格（其暗色变量已在 theme.css 中映射） -->
-    <el-table v-if="users.length" :data="users" class="table-full">
-      <el-table-column prop="username" label="用户名" min-width="120" />
-      <el-table-column label="昵称" min-width="120">
-        <template #default="{ row }">{{ row.nickname || '-' }}</template>
-      </el-table-column>
-      <el-table-column label="角色" width="110">
-        <template #default="{ row }">
-          <span :class="row.role === 'admin' ? 'role-admin' : row.role === 'viewer' ? 'role-viewer' : 'role-user'">
-            {{ roleLabel(row.role) }}
-          </span>
-        </template>
-      </el-table-column>
-      <el-table-column label="能力" min-width="220">
-        <template #default="{ row }">
-          <span v-if="row.role === 'admin'" class="cap-badge cap-all">全部</span>
-          <template v-else>
-            <span v-if="row.canViewPrivate === 1" class="cap-badge cap-private">私密</span>
-            <span v-if="row.canUpload === 1" class="cap-badge cap-upload">上传</span>
-            <span v-if="row.canManage === 1" class="cap-badge cap-manage">管理</span>
-            <span v-if="!row.canViewPrivate && !row.canUpload && !row.canManage" class="cap-none">仅浏览</span>
+    <div class="card-panel">
+      <el-table v-if="users.length" :data="users" class="table-full">
+        <el-table-column prop="username" label="用户名" min-width="130" />
+        <el-table-column label="昵称" min-width="120">
+          <template #default="{ row }">{{ row.nickname || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="角色" width="110" align="center">
+          <template #default="{ row }">
+            <span :class="row.role === 'admin' ? 'role-admin' : row.role === 'viewer' ? 'role-viewer' : 'role-user'">
+              {{ roleLabel(row.role) }}
+            </span>
           </template>
-        </template>
-      </el-table-column>
-      <el-table-column label="创建时间" width="170">
-        <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
-      </el-table-column>
-      <el-table-column label="操作" width="210">
-        <template #default="{ row }">
-          <div class="row-actions">
-            <button class="btn-sm btn-secondary" @click="openEdit(row)">编辑</button>
-            <button class="btn-sm btn-secondary" @click="openPermissions(row)">权限</button>
-            <button v-if="row.role !== 'admin'" class="btn-sm btn-danger" @click="confirmDelete(row)">删除</button>
-          </div>
-        </template>
-      </el-table-column>
-    </el-table>
-    <div v-else class="empty-state">暂无用户</div>
+        </el-table-column>
+        <el-table-column label="能力" min-width="230" align="center">
+          <template #default="{ row }">
+            <span v-if="row.role === 'admin'" class="cap-badge cap-all">全部</span>
+            <template v-else>
+              <span v-if="row.canViewPrivate === 1" class="cap-badge cap-private">私密</span>
+              <span v-if="row.canUpload === 1" class="cap-badge cap-upload">上传</span>
+              <span v-if="row.canManage === 1" class="cap-badge cap-manage">管理</span>
+              <span v-if="!row.canViewPrivate && !row.canUpload && !row.canManage" class="cap-none">仅浏览</span>
+            </template>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="130" align="center">
+          <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="220" align="center">
+          <template #default="{ row }">
+            <div class="row-actions">
+              <button class="btn-sm btn-secondary" @click="openEdit(row)">编辑</button>
+              <button class="btn-sm btn-secondary" @click="openPermissions(row)">权限</button>
+              <button v-if="row.role !== 'admin'" class="btn-sm btn-danger" @click="confirmDelete(row)">删除</button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div v-else class="empty-state">暂无用户</div>
+    </div>
 
     <!-- 操作审计（授权与账号管理动作） -->
     <div class="audit-card card-panel mt-lg">
@@ -66,7 +71,14 @@
     <!-- 创建 / 编辑弹窗 -->
     <div v-if="dialogVisible" class="modal-overlay" @click.self="dialogVisible = false">
       <div class="modal-content modal-narrow">
-        <h3>{{ editingUser ? '编辑用户' : '新建用户' }}</h3>
+        <header class="modal-head">
+          <h3>{{ editingUser ? '编辑用户' : '新建用户' }}</h3>
+          <p class="modal-desc">
+            {{ editingUser
+              ? '留空密码表示不修改口令；修改口令会使该账号已登录的会话立即失效。'
+              : '用户名与密码为必填项；账号能力可在下方一次性勾选。' }}
+          </p>
+        </header>
         <div class="form-group">
           <label>用户名</label>
           <input v-model="form.username" :disabled="!!editingUser" />
@@ -113,45 +125,74 @@
     <!-- 权限弹窗 -->
     <div v-if="permVisible" class="modal-overlay" @click.self="permVisible = false">
       <div class="modal-content modal-medium">
-        <h3>{{ permUser?.username }} 的访问权限</h3>
-        <p class="perm-hint">默认看不到任何私密内容；白名单定义可见范围（全局=全部私密；照片/合集/分类=指定对象，合集与分类会级联到其内部照片）；黑名单在白名单范围内排除</p>
-        <p class="perm-preview" v-if="preview">
-          当前可见范围：共 {{ preview.totalPhotos }} 张，其中私密 {{ preview.privatePhotos }} 张（该账号可见私密 {{ preview.visiblePrivatePhotos }} 张）
-        </p>
-        <div v-for="(p, i) in permissions" :key="p.id" class="perm-row">
-          <span :class="p.permType === 'W' ? 'tag-whitelist' : 'tag-blacklist'">{{ p.permType === 'W' ? '白名单' : '黑名单' }}</span>
-          <img v-if="p.thumbUrl" :src="p.thumbUrl" class="perm-thumb" />
-          <span class="perm-name">{{ permLabel(p) }}</span>
-          <span class="perm-meta">{{ permMeta(p) }}</span>
-          <button class="btn-sm btn-danger" @click="removePerm(p.id)">删除</button>
+        <header class="modal-head">
+          <h3>{{ permUser?.username }} 的访问权限</h3>
+          <p class="modal-desc">默认看不到任何私密内容；白名单定义可见范围（全局=全部私密；照片/合集/分类/标签=指定对象，合集与分类会级联到其内部照片），黑名单在白名单范围内排除</p>
+        </header>
+
+        <div v-if="preview" class="stat-row">
+          <div class="stat-item">
+            <span class="stat-num">{{ preview.totalPhotos }}</span>
+            <span class="stat-label">照片总数</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">{{ preview.privatePhotos }}</span>
+            <span class="stat-label">私密照片</span>
+          </div>
+          <div class="stat-item stat-item--accent">
+            <span class="stat-num">{{ preview.visiblePrivatePhotos }}</span>
+            <span class="stat-label">该账号可见私密</span>
+          </div>
         </div>
-        <div v-if="!permissions.length" class="empty-state perm-empty">无授权条目，该账号看不到任何私密内容</div>
-        <hr />
-        <div class="perm-add-row">
-          <select v-model="newPerm.type" class="select-type">
-            <option value="W">白名单（定义可见范围）</option>
-            <option value="B">黑名单（在范围内排除）</option>
-          </select>
-          <select v-model="newPerm.targetType" class="select-target">
-            <option value="global">全局</option>
-            <option value="photo">照片</option>
-            <option value="collection">合集</option>
-            <option value="category">分类</option>
-            <option value="tag">标签</option>
-          </select>
-          <template v-if="newPerm.targetType === 'global'">
-            <button class="btn-primary btn-sm" @click="addGlobalPerm">添加</button>
-          </template>
-          <template v-else>
-            <button class="btn-primary btn-sm" @click="openSelector">选择</button>
-            <span v-if="selectedItem" class="selected-preview">
-              <img v-if="selectedItem.thumb" :src="selectedItem.thumb" class="perm-thumb" />
-              {{ selectedItem.name }}
-            </span>
-            <button v-if="selectedItem" class="btn-primary btn-sm" @click="addPerm">添加</button>
-          </template>
-        </div>
-        <div class="modal-actions mt-md">
+
+        <section class="section">
+          <div class="section-head">
+            <span class="section-title">已授权条目</span>
+            <span class="cell-muted">{{ permissions.length }} 条</span>
+          </div>
+          <div v-for="p in permissions" :key="p.id" class="perm-row">
+            <span :class="p.permType === 'W' ? 'tag-whitelist' : 'tag-blacklist'">{{ p.permType === 'W' ? '白名单' : '黑名单' }}</span>
+            <img v-if="p.thumbUrl" :src="p.thumbUrl" class="perm-thumb" />
+            <div class="perm-main">
+              <span class="perm-name">{{ permLabel(p) }}</span>
+              <span class="perm-meta">{{ permMeta(p) }}</span>
+            </div>
+            <button class="btn-sm btn-danger" @click="removePerm(p.id)">删除</button>
+          </div>
+          <div v-if="!permissions.length" class="empty-state perm-empty">无授权条目，该账号看不到任何私密内容</div>
+        </section>
+
+        <section class="section section--add">
+          <div class="section-head">
+            <span class="section-title">新增授权</span>
+          </div>
+          <div class="perm-add-row">
+            <select v-model="newPerm.type" class="select-type">
+              <option value="W">白名单（定义可见范围）</option>
+              <option value="B">黑名单（在范围内排除）</option>
+            </select>
+            <select v-model="newPerm.targetType" class="select-target">
+              <option value="global">全局</option>
+              <option value="photo">照片</option>
+              <option value="collection">合集</option>
+              <option value="category">分类</option>
+              <option value="tag">标签</option>
+            </select>
+            <template v-if="newPerm.targetType === 'global'">
+              <button class="btn-primary btn-sm" @click="addGlobalPerm">添加</button>
+            </template>
+            <template v-else>
+              <button class="btn-primary btn-sm" @click="openSelector">选择</button>
+              <span v-if="selectedItem" class="selected-preview">
+                <img v-if="selectedItem.thumb" :src="selectedItem.thumb" class="perm-thumb" />
+                {{ selectedItem.name }}
+              </span>
+              <button v-if="selectedItem" class="btn-primary btn-sm" @click="addPerm">添加</button>
+            </template>
+          </div>
+        </section>
+
+        <div class="modal-actions">
           <button class="btn-secondary" @click="permVisible = false">关闭</button>
         </div>
       </div>
@@ -160,8 +201,11 @@
     <!-- 选择器弹窗 -->
     <div v-if="selectorVisible" class="modal-overlay" @click.self="selectorVisible = false">
       <div class="modal-content modal-wide">
-        <h3>选择{{ newPerm.targetType === 'photo' ? '照片' : '合集' }}</h3>
-        <input v-model="selectorKeyword" placeholder="搜索..." class="filter-input selector-search" />
+        <header class="modal-head">
+          <h3>选择{{ { photo: '照片', collection: '合集', category: '分类', tag: '标签' }[newPerm.targetType] || '对象' }}</h3>
+          <p class="modal-desc">共 {{ filteredSelectorItems.length }} 项，点击缩略图选择，回到上一窗口确认后添加</p>
+        </header>
+        <input v-model="selectorKeyword" placeholder="搜索名称…" class="filter-input selector-search" />
         <div class="selector-grid">
           <div
             v-for="item in filteredSelectorItems"
@@ -424,59 +468,219 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.user-manage { max-width: 900px; }
-.role-admin { color: #F56C6C; font-weight: 500; }
-.role-viewer { color: #409EFF; font-weight: 500; }
-.role-user { color: #909399; }
-.perm-hint { font-size: 12px; color: var(--text-muted, #888); margin-bottom: 12px; }
-.perm-preview { font-size: 12px; color: var(--text-regular, #555); margin: -6px 0 12px; }
-.form-hint { font-size: 12px; color: var(--text-muted, #999); margin: 6px 0 0; }
-.cap-badge { display: inline-block; padding: 1px 6px; margin-right: 4px; border-radius: 4px; font-size: 12px; }
-.cap-all { background: #E6F1FB; color: #185FA5; }
-.cap-private { background: #FCEBEB; color: #A32D2D; }
-.cap-upload { background: #E1F5EE; color: #0F6E56; }
-.cap-manage { background: #FAEEDA; color: #854F0B; }
+/* ============================================================
+   用户管理：样式全部走 theme.css 的设计令牌（颜色/阴影/间距），
+   暗色模式随 html.dark 自动适配；不写死色值。
+   ============================================================ */
+
+.user-manage { max-width: 960px; }
+
+/* ---------- 角色与能力标签 ---------- */
+.role-admin { color: var(--color-danger, #E24B4A); font-weight: 500; }
+.role-viewer { color: var(--color-primary, #378ADD); font-weight: 500; }
+.role-user { color: var(--text-muted, #888); }
+
+.cap-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  margin: 0 4px 2px 0;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.cap-all { background: var(--color-primary-light, #E6F1FB); color: var(--color-primary-dark, #185FA5); }
+.cap-private { background: var(--color-danger-light, #FCEBEB); color: var(--color-danger, #E24B4A); }
+.cap-upload { background: var(--color-success-light, #E1F5EE); color: var(--color-success, #0F6E56); }
+.cap-manage { background: var(--color-warning-light, #FAEEDA); color: var(--color-warning, #854F0B); }
 .cap-none { font-size: 12px; color: var(--text-muted, #999); }
+
+.table-full { width: 100%; }
+
+/* ---------- 审计区块 ---------- */
 .audit-head { margin-bottom: 12px; }
 .audit-title { margin: 0; font-size: 15px; font-weight: 500; color: var(--text-secondary, #333); }
 .audit-count { margin-left: 8px; font-weight: 400; }
-.perm-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 0.5px solid var(--border-light, #eee); }
-.tag-whitelist { background: #E6F1FB; color: #409EFF; padding: 1px 8px; border-radius: 3px; font-size: 11px; }
-.tag-blacklist { background: #FDE2E2; color: #F56C6C; padding: 1px 8px; border-radius: 3px; font-size: 11px; }
 
-.perm-thumb { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
-.perm-name { flex: 1; font-size: 13px; }
-.selected-preview { display: flex; align-items: center; gap: 6px; font-size: 13px; max-width: 200px; overflow: hidden; }
+/* ---------- 弹窗：头部 / 分区 ---------- */
+.modal-head { margin-bottom: 16px; }
+.modal-head h3 { margin: 0; }
+.modal-desc { margin: 6px 0 0; line-height: 1.75; }
 
-.filter-input { padding: 8px 12px; border: 1px solid var(--border-color, #ddd); border-radius: 6px; font-size: 14px; }
-.selector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
-.selector-card { cursor: pointer; border: 2px solid transparent; border-radius: 8px; overflow: hidden; transition: all 0.15s; }
-.selector-card:hover, .selector-card.selected { border-color: var(--color-primary, #378ADD); }
-.selector-thumb { width: 100%; height: 80px; object-fit: cover; display: block; }
-.selector-no-thumb { width: 100%; height: 80px; background: var(--bg-hover, #f0f0f0); display: flex; align-items: center; justify-content: center; font-size: 11px; color: #aaa; }
-.selector-name { padding: 4px 6px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.perm-checks { display: flex; flex-direction: column; gap: 8px; }
-.check-label { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-secondary, #555); cursor: pointer; }
-.check-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+.section { padding-top: 4px; }
+.section--add {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light, #eee);
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.section-title { font-size: 13px; font-weight: 500; color: var(--text-secondary, #333); }
 
-/* 表格整宽 */
-.table-full { width: 100%; }
+/* ---------- 可见范围统计（授权弹窗顶部） ---------- */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-item {
+  padding: 10px 8px;
+  border-radius: 10px;
+  background: var(--bg-hover, #f5f5f5);
+  text-align: center;
+}
+.stat-item--accent { background: var(--color-primary-light, #E6F1FB); }
+.stat-num { display: block; font-size: 18px; font-weight: 500; color: var(--text-primary, #1a1a2e); }
+.stat-item--accent .stat-num { color: var(--color-primary-dark, #185FA5); }
+.stat-label { display: block; margin-top: 2px; font-size: 12px; color: var(--text-muted, #888); }
 
-/* 弹窗宽度修饰：窄（账号表单）/ 中（权限）/ 宽（选择器） */
-.modal-narrow { max-width: 420px; }
-.modal-medium { max-width: 500px; }
-.modal-wide { max-width: 700px; max-height: 70vh; overflow-y: auto; }
-
-/* 权限弹窗：无授权条目时的紧凑空态 */
+/* ---------- 授权条目 ---------- */
+.perm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background-color 0.15s;
+}
+.perm-row + .perm-row { margin-top: 2px; }
+.perm-row:hover { background: var(--bg-hover, #f5f5f5); }
+.tag-whitelist,
+.tag-blacklist {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.tag-whitelist { background: var(--color-primary-light, #E6F1FB); color: var(--color-primary-dark, #185FA5); }
+.tag-blacklist { background: var(--color-danger-light, #FCEBEB); color: var(--color-danger, #E24B4A); }
+.perm-thumb { width: 32px; height: 32px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.perm-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.perm-name {
+  font-size: 13px;
+  color: var(--text-secondary, #333);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.perm-meta { font-size: 12px; color: var(--text-muted, #888); }
 .perm-empty { padding: 20px 0; }
 
-/* 权限弹窗：新增授权的一行（类型 + 目标 + 操作） */
-.perm-add-row { display: flex; gap: 8px; align-items: center; }
-.select-type { flex: 1; }
-.select-target { width: 80px; }
+/* ---------- 新增授权行 ---------- */
+.perm-add-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.perm-add-row select {
+  padding: 8px 10px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--bg-card, #fff);
+  color: var(--text-secondary, #333);
+}
+.select-type { flex: 1; min-width: 160px; }
+.select-target { width: 96px; }
+.selected-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-secondary, #333);
+}
 
-/* 选择器弹窗：搜索框、空态、底部操作 */
+/* ---------- 账号表单 ---------- */
+.form-hint { margin: 6px 0 0; font-size: 12px; color: var(--text-muted, #999); line-height: 1.7; }
+.perm-checks { display: flex; flex-direction: column; gap: 8px; }
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary, #555);
+  cursor: pointer;
+}
+.check-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-primary, #378ADD);
+}
+
+/* ---------- 选择器弹窗 ---------- */
+.filter-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--bg-card, #fff);
+  color: var(--text-secondary, #333);
+}
+.filter-input:focus { outline: none; border-color: var(--color-primary, #378ADD); }
 .selector-search { width: 100%; margin-bottom: 12px; }
+.selector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.selector-card {
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-card, #fff);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.selector-card:hover { border-color: var(--border-color, #ddd); }
+.selector-card.selected {
+  border-color: var(--color-primary, #378ADD);
+  box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.08));
+}
+.selector-thumb { width: 100%; height: 80px; object-fit: cover; display: block; }
+.selector-no-thumb {
+  width: 100%;
+  height: 80px;
+  background: var(--bg-hover, #f0f0f0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--text-placeholder, #aaa);
+}
+.selector-name {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--text-regular, #555);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .selector-empty { padding: 20px; }
 .selector-actions { margin-top: 12px; }
+
+/* ---------- 弹窗宽度修饰 ---------- */
+.modal-narrow { max-width: 440px; }
+.modal-medium { max-width: 560px; }
+.modal-wide { max-width: 720px; max-height: 78vh; overflow-y: auto; }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 768px) {
+  .user-manage { max-width: 100%; }
+  .stat-num { font-size: 16px; }
+  .perm-add-row { flex-direction: column; align-items: stretch; }
+  .select-type,
+  .select-target { width: 100%; flex: none; }
+  .selected-preview { max-width: 100%; }
+  .selector-grid { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+  .perm-row { align-items: flex-start; }
+}
+
+@media (max-width: 480px) {
+  .stat-row { grid-template-columns: 1fr 1fr; }
+  .stat-item--accent { grid-column: span 2; }
+}
 </style>

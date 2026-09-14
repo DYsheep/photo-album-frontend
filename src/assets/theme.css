@@ -36,6 +36,9 @@
   --color-success: #0F6E56;
   --color-success-hover: #0A5744;
   --color-success-light: #E1F5EE;
+  --color-danger-light: #FCEBEB;
+  --color-warning: #854F0B;
+  --color-warning-light: #FAEEDA;
   --color-secondary: #5DADE2;
   --color-secondary-hover: #85C1E9;
 
@@ -102,6 +105,9 @@ html.dark {
   --color-success: #5DCAA5;
   --color-success-hover: #7DD8B8;
   --color-success-light: #10241E;
+  --color-danger-light: #3A1E1E;
+  --color-warning: #EF9F27;
+  --color-warning-light: #3A2A10;
   --color-secondary: #409EFF;
   --color-secondary-hover: #66b1ff;
 
