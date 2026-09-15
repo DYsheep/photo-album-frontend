@@ -10,7 +10,7 @@
 
     <!-- 用户列表：与同页审计表统一使用 Element Plus 表格（其暗色变量已在 theme.css 中映射） -->
     <div class="card-panel">
-      <el-table v-if="users.length" :data="users" class="table-full">
+      <el-table v-if="users.length" :data="users" class="table-full user-table">
         <el-table-column prop="username" label="用户名" min-width="130" />
         <el-table-column label="昵称" min-width="120">
           <template #default="{ row }">{{ row.nickname || '-' }}</template>
@@ -46,6 +46,37 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 移动端：卡片列表（操作按钮直接可见，无需横向滑动）；桌面端由媒体查询隐藏 -->
+      <div v-if="users.length" class="user-cards">
+        <div v-for="u in users" :key="u.id" class="user-card">
+          <div class="user-card-head">
+            <span class="user-card-name">{{ u.username }}</span>
+            <span :class="u.role === 'admin' ? 'role-admin' : u.role === 'viewer' ? 'role-viewer' : 'role-user'">
+              {{ roleLabel(u.role) }}
+            </span>
+          </div>
+          <div class="user-card-meta">
+            <span>{{ u.nickname || '未设置昵称' }}</span>
+            <span>创建于 {{ formatDate(u.createdAt) }}</span>
+          </div>
+          <div class="user-card-caps">
+            <span v-if="u.role === 'admin'" class="cap-badge cap-all">全部</span>
+            <template v-else>
+              <span v-if="u.canViewPrivate === 1" class="cap-badge cap-private">私密</span>
+              <span v-if="u.canUpload === 1" class="cap-badge cap-upload">上传</span>
+              <span v-if="u.canManage === 1" class="cap-badge cap-manage">管理</span>
+              <span v-if="!u.canViewPrivate && !u.canUpload && !u.canManage" class="cap-none">仅浏览</span>
+            </template>
+          </div>
+          <div class="user-card-actions">
+            <button class="btn-sm btn-secondary" @click="openEdit(u)">编辑</button>
+            <button class="btn-sm btn-secondary" @click="openPermissions(u)">权限</button>
+            <button v-if="u.role !== 'admin'" class="btn-sm btn-danger" @click="confirmDelete(u)">删除</button>
+          </div>
+        </div>
+      </div>
+
       <div v-else class="empty-state">暂无用户</div>
     </div>
 
@@ -682,5 +713,78 @@ onMounted(() => {
 @media (max-width: 480px) {
   .stat-row { grid-template-columns: 1fr 1fr; }
   .stat-item--accent { grid-column: span 2; }
+}
+
+/* ========== 移动端用户卡片列表（默认隐藏；≤768px 时替换表格） ========== */
+.user-cards {
+  display: none;
+}
+
+.user-card {
+  padding: 14px;
+  border: 0.5px solid var(--border-light, #eee);
+  border-radius: 12px;
+  background: var(--bg-card, #fff);
+}
+
+.user-card + .user-card {
+  margin-top: 10px;
+}
+
+.user-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.user-card-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary, #1a1a2e);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-muted, #888);
+}
+
+.user-card-caps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.user-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .user-table {
+    display: none;
+  }
+
+  .user-cards {
+    display: block;
+  }
+
+  /* 触摸热区 ≥44px，按钮均分整行宽度 */
+  .user-card-actions .btn-sm {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
 }
 </style>
