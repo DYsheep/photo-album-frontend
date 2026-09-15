@@ -13,7 +13,6 @@
       @dragleave.prevent="dragging = false"
       @dragover.prevent
       @drop.prevent="handleDrop"
-      @click="fileInput.click()"
     >
       <input
         ref="fileInput"
@@ -328,12 +327,21 @@ onMounted(async () => {
 }
 
 /* 兜底：文件输入框不使用 display:none（部分移动浏览器不会为它弹出选择器），改为离屏透明 */
+/* 文件输入框：整块覆盖上传区并全透明——点击=原生点击输入框，
+   在浏览器与 PWA（iOS/Android 独立窗口）中都能唤起相册，不依赖 JS 触发 */
+.drop-zone {
+  position: relative;
+}
+
 .drop-zone input[type="file"] {
+  display: block !important;
   position: absolute;
-  width: 1px;
-  height: 1px;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
   opacity: 0;
-  overflow: hidden;
+  cursor: pointer;
+  z-index: 2;
 }
 
 /* 触摸热区：拖拽区在手机上足够大，整块可点 */
