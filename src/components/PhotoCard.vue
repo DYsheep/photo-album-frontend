@@ -6,6 +6,7 @@
         :alt="photo.title"
         class="photo-img"
         loading="lazy"
+        decoding="async"
         @load="onImageLoad"
         @error="onImageError"
       />
@@ -62,9 +63,17 @@ function onImageError(e) {
   background: var(--bg-card, #fff);
 }
 
-.photo-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md, 0 8px 24px rgba(0, 0, 0, 0.08));
+.photo-card {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 触摸设备没有真正的 hover：仅在支持 hover 的设备上做浮起效果，避免"点完一直浮着" */
+@media (hover: hover) {
+  .photo-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md, 0 8px 24px rgba(0, 0, 0, 0.08));
+  }
 }
 
 .photo-img-wrapper {
@@ -77,7 +86,7 @@ function onImageError(e) {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  color: #F56C6C;
+  color: var(--color-danger, #E24B4A);
   font-size: 14px;
   font-weight: 600;
 }
@@ -147,5 +156,40 @@ function onImageError(e) {
   color: var(--color-primary-dark, #185FA5);
   border-radius: 10px;
   font-size: 12px;
+}
+
+/* ========== 移动端适配（480 / 768 两档，与全站约定一致） ========== */
+@media (max-width: 768px) {
+  .photo-img-wrapper {
+    min-height: 120px;
+  }
+
+  .photo-info {
+    padding: 12px;
+  }
+
+  .photo-info h3 {
+    font-size: 15px;
+  }
+
+  .photo-desc {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .photo-card {
+    border-radius: 10px;
+  }
+
+  .photo-info {
+    padding: 10px 12px;
+  }
+
+  .photo-tag {
+    padding: 2px 8px;
+    font-size: 11px;
+  }
 }
 </style>

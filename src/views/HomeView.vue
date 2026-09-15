@@ -394,4 +394,37 @@ onMounted(async () => {
   font-size: 12px;
   color: var(--text-muted, #888);
 }
+
+/* ========== 小屏手机档（≤480）：与全站断点约定对齐 ========== */
+@media (max-width: 480px) {
+  .hero {
+    padding: 32px 0 16px;
+  }
+
+  /* 多列瀑布流：保留 2 列（照片墙观感），只收紧列间距 */
+  .photo-grid {
+    column-count: 2;
+    column-gap: 6px;
+  }
+
+  .photo-grid > * {
+    break-inside: avoid;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .section-header {
+    padding: 0 14px;
+  }
+
+  .section-title {
+    font-size: 18px;
+  }
+
+  /* 合集卡片的 auto-fill 网格：小屏单列，避免卡片被压得过窄 */
+  .collection-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 12px 14px;
+  }
+}
 </style>

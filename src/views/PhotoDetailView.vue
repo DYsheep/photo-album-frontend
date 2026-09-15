@@ -700,4 +700,32 @@ onMounted(() => {
     font-size: 12px;
   }
 }
+
+/* ========== 小屏手机档（≤480）：详情页在 768 已改为上下堆叠，这里继续收敛尺寸 ========== */
+@media (max-width: 480px) {
+  .detail-image-area {
+    min-height: 200px;
+  }
+
+  .detail-image {
+    max-height: 55vh;
+  }
+
+  .detail-panel {
+    padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .detail-title {
+    font-size: 20px;
+  }
+
+  .detail-stats {
+    gap: 8px;
+  }
+
+  /* 底部导航避开 iPhone 手势条 */
+  .bottom-nav {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+}
 </style>

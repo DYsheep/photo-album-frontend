@@ -527,4 +527,37 @@ onUnmounted(() => {
     margin-left: auto;
   }
 }
+
+/* ========== 小屏手机档 + 刘海/手势区安全适配 ========== */
+@media (max-width: 480px) {
+  /* 触摸热区统一到 ≥44px（此前 40/36px，手指容易点偏） */
+  .lightbox-close {
+    top: 8px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .lightbox-arrow {
+    width: 44px;
+    height: 44px;
+  }
+
+  .lightbox-prev { left: 4px; }
+  .lightbox-next { right: 4px; }
+
+  .lightbox-content {
+    max-width: 100vw;
+    max-height: 70vh;
+  }
+
+  /* 底部信息栏避开 iPhone 手势条 */
+  .lightbox-info {
+    padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .lightbox-title {
+    font-size: 15px;
+  }
+}
 </style>
