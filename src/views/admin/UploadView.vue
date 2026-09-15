@@ -62,9 +62,9 @@
           </div>
           <div class="form-group form-group-check">
             <label>&nbsp;</label>
-            <label class="checkbox-label">
-              <input v-if="auth.isAdmin" type="checkbox" v-model="preset.isPrivate" />
-              <span v-if="auth.isAdmin">设为私密（仅管理员可上传私密照片）</span>
+            <label v-if="auth.isAdmin" class="checkbox-label">
+              <input type="checkbox" v-model="preset.isPrivate" />
+              <span>设为私密（仅管理员可上传私密照片）</span>
             </label>
           </div>
         </div>

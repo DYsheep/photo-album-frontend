@@ -106,7 +106,7 @@
           <textarea v-model="editForm.description" rows="3"></textarea>
         </div>
         <div class="form-group" style="display:flex;align-items:center;gap:12px;">
-          <label v-if="auth.isAdmin" style="margin:0;">私密状态</label>
+          <label v-if="auth.isAdmin" class="field-label">私密状态</label>
           <el-switch v-if="auth.isAdmin" v-model="editForm.isPrivate" active-text="私密" inactive-text="公开" />
         </div>
         <div class="modal-actions">
@@ -601,5 +601,10 @@ async function saveBatchEdit() {
 .modal-actions .btn-secondary {
   background: #f0f0f0;
   color: #555;
+}
+
+/* 表单行内标签（替代原先的内联 style="margin:0"） */
+.field-label {
+  margin: 0;
 }
 </style>
