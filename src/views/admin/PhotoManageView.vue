@@ -106,8 +106,8 @@
           <textarea v-model="editForm.description" rows="3"></textarea>
         </div>
         <div class="form-group" style="display:flex;align-items:center;gap:12px;">
-          <label style="margin:0;">私密状态</label>
-          <el-switch v-model="editForm.isPrivate" active-text="私密" inactive-text="公开" />
+          <label v-if="auth.isAdmin" style="margin:0;">私密状态</label>
+          <el-switch v-if="auth.isAdmin" v-model="editForm.isPrivate" active-text="私密" inactive-text="公开" />
         </div>
         <div class="modal-actions">
           <button class="btn-secondary" @click="closeEdit">取消</button>
@@ -156,6 +156,7 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '../../stores/auth'
 import { ref, computed, reactive, onMounted } from 'vue'
 import { getPhotoListApi, updatePhotoApi, deletePhotoApi, batchDeletePhotosApi, batchUpdatePhotosApi } from '../../api/photo'
 import EmojiIcon from '../../components/EmojiIcon.vue'
@@ -269,6 +270,8 @@ function isSelected(id) {
 
 const editingPhoto = ref(null)
 const saving = ref(false)
+const auth = useAuthStore()
+
 const editForm = reactive({ title: '', categoryId: null, description: '', isPrivate: false })
 
 function openEdit(photo) {

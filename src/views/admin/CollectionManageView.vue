@@ -99,7 +99,7 @@
             inactive-text="草稿"
           />
         </el-form-item>
-        <el-form-item label="私密状态">
+        <el-form-item v-if="auth.isAdmin" label="私密状态">
           <el-switch
             v-model="formData.isPrivateBool"
             active-text="私密"
