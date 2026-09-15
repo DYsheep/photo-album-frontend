@@ -94,50 +94,50 @@
     </div>
 
     <!-- 新建/编辑弹窗 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="isEditing ? '编辑合集' : '新建合集'"
-      width="520px"
-      :close-on-click-modal="false"
-    >
-      <el-form :model="formData" label-position="top">
-        <el-form-item label="合集名称" required>
-          <el-input v-model="formData.name" placeholder="请输入合集名称" maxlength="100" />
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input
-            v-model="formData.description"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入合集描述（选填）"
-            maxlength="500"
-          />
-        </el-form-item>
-        <el-form-item label="排序序号">
-          <el-input-number v-model="formData.sortOrder" :min="0" :max="999" />
-        </el-form-item>
-        <el-form-item label="发布状态">
-          <el-switch
-            v-model="formData.isPublishedBool"
-            active-text="发布"
-            inactive-text="草稿"
-          />
-        </el-form-item>
-        <el-form-item v-if="auth.isAdmin" label="私密状态">
-          <el-switch
-            v-model="formData.isPrivateBool"
-            active-text="私密"
-            inactive-text="公开"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSave" :loading="saving">
-          {{ isEditing ? '保存修改' : '创建合集' }}
-        </el-button>
-      </template>
-    </el-dialog>
+    <!-- 新建/编辑合集（自研模态：不依赖 Element Plus 弹窗内部渲染，兼容性更稳） -->
+    <div v-if="dialogVisible" class="modal-overlay" @click.self="dialogVisible = false">
+      <div class="modal-content modal-collection">
+        <h3>{{ isEditing ? '编辑合集' : '新建合集' }}</h3>
+
+        <div class="form-group">
+          <label>合集名称 *</label>
+          <input v-model="formData.name" placeholder="请输入合集名称" maxlength="100" />
+        </div>
+
+        <div class="form-group">
+          <label>描述</label>
+          <textarea v-model="formData.description" rows="3" placeholder="请输入合集描述（选填）" maxlength="500"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>排序序号</label>
+          <input v-model.number="formData.sortOrder" type="number" min="0" max="999" />
+        </div>
+
+        <div class="form-group">
+          <label>发布状态</label>
+          <label class="check-inline">
+            <input type="checkbox" v-model="formData.isPublishedBool" />
+            发布（不勾选则为草稿）
+          </label>
+        </div>
+
+        <div v-if="auth.isAdmin" class="form-group">
+          <label>私密状态</label>
+          <label class="check-inline">
+            <input type="checkbox" v-model="formData.isPrivateBool" />
+            私密（仅授权账号可见）
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="dialogVisible = false">取消</button>
+          <button class="btn-primary" @click="handleSave" :disabled="saving">
+            {{ saving ? '保存中…' : (isEditing ? '保存修改' : '创建合集') }}
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- 删除确认弹窗 -->
     <el-dialog v-model="deleteDialogVisible" title="确认删除" width="400px">
@@ -894,5 +894,51 @@ onMounted(() => {
     font-size: 14px;
     white-space: nowrap;
   }
+}
+
+/* 新建/编辑合集：自研模态内的表单控件样式（与站内 .form-group 约定一致） */
+.modal-collection {
+  width: 520px;
+  max-width: 92vw;
+}
+
+.modal-collection .form-group {
+  margin-bottom: 14px;
+}
+
+.modal-collection input[type="text"],
+.modal-collection input[type="number"],
+.modal-collection input:not([type]),
+.modal-collection textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--bg-card, #fff);
+  color: var(--text-secondary, #333);
+}
+
+.modal-collection input:focus,
+.modal-collection textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #378ADD);
+}
+
+.check-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-regular, #555);
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.check-inline input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary, #378ADD);
 }
 </style>
