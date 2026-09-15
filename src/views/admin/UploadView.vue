@@ -27,7 +27,7 @@
           <EmojiIcon name="outbox-tray" :size="36" />
         </div>
         <p class="drop-title">拖拽照片到此处</p>
-        <p class="drop-sub">或 <button class="link-btn" @click="fileInput.click()">点击选择文件</button></p>
+        <p class="drop-sub">或 <button class="link-btn" @click.stop="fileInput.click()">点击选择文件</button></p>
         <p class="drop-hint">支持 JPG / PNG / WebP / HEIC &nbsp;·&nbsp;可多选</p>
       </div>
     </div>
@@ -230,7 +230,7 @@ onMounted(async () => {
 }
 .drop-zone:hover { border-color: #b3cfe8; background: rgba(55,138,221,0.02); }
 .drop-zone.drop-active { border-color: var(--color-primary, #378ADD); background: rgba(55,138,221,0.05); border-style: solid; }
-.drop-inner { pointer-events: none; }
+.drop-inner { pointer-events: auto; }
 .drop-icon-wrapper { margin-bottom: 12px; color: var(--text-muted, #aaa); }
 .drop-title { font-size: 16px; font-weight: 500; color: var(--text-primary); margin: 0; }
 .drop-sub { font-size: 13px; color: var(--text-muted, #999); margin: 6px 0 0; }
@@ -324,5 +324,29 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+}
+
+/* 兜底：文件输入框不使用 display:none（部分移动浏览器不会为它弹出选择器），改为离屏透明 */
+.drop-zone input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+/* 触摸热区：拖拽区在手机上足够大，整块可点 */
+@media (max-width: 768px) {
+  .drop-zone {
+    padding: 28px 16px;
+    min-height: 160px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .link-btn {
+    min-height: 44px;
+    padding: 6px 8px;
+  }
 }
 </style>
