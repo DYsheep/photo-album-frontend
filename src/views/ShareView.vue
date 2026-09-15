@@ -155,7 +155,8 @@ async function loadShare() {
     const res = await getShareLinkApi(code.value, accessCode.value)
     if (res.code === 200 && res.data) {
       shareData.value = res.data
-      document.title = `${res.data.title || '分享照片'} - 摄影相册`
+      // 合集分享没有 title 字段，用合集名兜底，浏览器标签与"分享到…"对话框都会用到
+      document.title = `${res.data.collectionName || res.data.title || '分享照片'} - 摄影相册`
     } else {
       shareData.value = null
     }
