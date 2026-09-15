@@ -8,7 +8,33 @@
     </header>
 
     <!-- 照片大图 -->
-    <main class="share-body">
+    <!-- 合集分享：合集信息 + 照片网格（是否含私密由分享设置决定，deny 命中的照片不会出现） -->
+    <main v-if="isCollection" class="share-body share-collection">
+      <header class="collection-head">
+        <h1 class="collection-title">{{ shareData.collectionName }}</h1>
+        <p v-if="shareData.collectionDescription" class="collection-desc">{{ shareData.collectionDescription }}</p>
+        <p class="collection-count">
+          {{ (shareData.photos || []).length }} 张照片<template v-if="shareData.includePrivate === 1"> · 含私密</template>
+        </p>
+      </header>
+
+      <div class="collection-grid" v-if="(shareData.photos || []).length">
+        <a
+          v-for="p in shareData.photos"
+          :key="p.id"
+          :href="p.url"
+          target="_blank"
+          rel="noopener"
+          class="collection-item"
+        >
+          <img :src="p.thumbnailUrl || p.url" :alt="p.title" loading="lazy" decoding="async" />
+          <span class="collection-item-title">{{ p.title }}</span>
+        </a>
+      </div>
+      <p v-else class="collection-empty">该分享暂无可见照片</p>
+    </main>
+
+    <main v-else class="share-body">
       <div class="photo-stage">
         <img
           :src="shareData.photoUrl"
@@ -66,6 +92,20 @@
     </footer>
   </div>
 
+  <!-- 需要访问口令（合集分享设置了口令时） -->
+  <div v-else-if="needCode" class="share-loading code-panel">
+    <EmojiIcon name="lock" :size="36" />
+    <h2>需要访问口令</h2>
+    <input
+      v-model="accessCodeInput"
+      type="password"
+      placeholder="请输入访问口令"
+      @keyup.enter="submitCode"
+    />
+    <button class="btn-primary btn-sm" @click="submitCode">查看</button>
+    <p v-if="codeError" class="code-error">{{ codeError }}</p>
+  </div>
+
   <!-- 加载状态 -->
   <div v-else-if="loading" class="share-loading">
     <p>加载中...</p>
@@ -103,7 +143,7 @@ const hasExif = computed(() => {
 async function loadShare() {
   loading.value = true
   try {
-    const res = await getShareLinkApi(code.value)
+    const res = await getShareLinkApi(code.value, accessCode.value)
     if (res.code === 200 && res.data) {
       shareData.value = res.data
       document.title = `${res.data.title || '分享照片'} - 摄影相册`
@@ -111,11 +151,30 @@ async function loadShare() {
       shareData.value = null
     }
   } catch (err) {
+    // 403 = 需要访问口令（未填写或不正确）
+    if (err?.response?.status === 403) {
+      needCode.value = true
+      codeError.value = accessCode.value ? '口令不正确，请重试' : ''
+      shareData.value = null
+      return
+    }
     console.error('加载分享数据失败:', err)
     shareData.value = null
   } finally {
     loading.value = false
   }
+}
+
+/** 提交口令后重新加载 */
+function submitCode() {
+  codeError.value = ''
+  if (!accessCodeInput.value) {
+    codeError.value = '请输入访问口令'
+    return
+  }
+  accessCode.value = accessCodeInput.value.trim()
+  needCode.value = false
+  loadShare()
 }
 
 onMounted(() => {
@@ -350,5 +409,110 @@ onMounted(() => {
   .exif-block {
     padding: 16px;
   }
+}
+
+/* ========== 合集分享（沿用本页暗色风格） ========== */
+.share-collection {
+  max-width: 1100px;
+  width: 100%;
+  padding: 8px 24px 32px;
+}
+
+.collection-head {
+  text-align: center;
+  margin: 8px 0 20px;
+}
+
+.collection-title {
+  font-size: 24px;
+  color: #f5f5f5;
+  margin: 0 0 8px;
+}
+
+.collection-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #a8a8a8;
+  margin: 0 0 6px;
+}
+
+.collection-count {
+  font-size: 12px;
+  color: #7a7a7a;
+  margin: 0;
+}
+
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.collection-item {
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1a1a1a;
+  text-decoration: none;
+}
+
+.collection-item img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.collection-item-title {
+  display: block;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #c8c8c8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collection-empty {
+  text-align: center;
+  color: #7a7a7a;
+  padding: 40px 0;
+}
+
+/* 口令面板 */
+.code-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+}
+
+.code-panel h2 {
+  font-size: 18px;
+  color: #e0e0e0;
+  margin: 0;
+}
+
+.code-panel input {
+  min-width: 240px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+.code-error {
+  color: #e88;
+  font-size: 13px;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .share-collection { padding: 8px 12px 24px; }
+  .collection-title { font-size: 20px; }
+  .collection-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 }
 </style>
