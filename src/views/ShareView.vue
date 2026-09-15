@@ -134,6 +134,15 @@ const imageLoaded = ref(false)
 
 const code = computed(() => route.params.code)
 
+/** 是否为合集分享 */
+const isCollection = computed(() => shareData.value?.targetType === 'collection')
+
+/** 口令相关状态与提交（合集分享设置了口令时使用） */
+const accessCodeInput = ref('')
+const accessCode = ref('')
+const needCode = ref(false)
+const codeError = ref('')
+
 const hasExif = computed(() => {
   if (!shareData.value) return false
   return !!(shareData.value.cameraModel || shareData.value.aperture ||
