@@ -13,6 +13,7 @@
       @dragleave.prevent="dragging = false"
       @dragover.prevent
       @drop.prevent="handleDrop"
+      @click="fileInput.click()"
     >
       <input
         ref="fileInput"
