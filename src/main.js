@@ -24,3 +24,12 @@ app.use(router)
 app.use(ElementPlus)
 
 app.mount('#app')
+
+// PWA：生产环境注册 Service Worker（应用壳缓存 + 离线可用）
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.warn('Service Worker 注册失败：', err)
+    })
+  })
+}
