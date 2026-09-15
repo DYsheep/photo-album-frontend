@@ -63,8 +63,8 @@
           <div class="form-group form-group-check">
             <label>&nbsp;</label>
             <label class="checkbox-label">
-              <input type="checkbox" v-model="preset.isPrivate" />
-              <span>设为私密</span>
+              <input v-if="auth.isAdmin" type="checkbox" v-model="preset.isPrivate" />
+              <span v-if="auth.isAdmin">设为私密（仅管理员可上传私密照片）</span>
             </label>
           </div>
         </div>
@@ -128,6 +128,7 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '../../stores/auth'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import EmojiIcon from '../../components/EmojiIcon.vue'
@@ -142,6 +143,8 @@ const uploading = ref(false)
 const files = ref([])
 const categories = ref([])
 const collections = ref([])
+const auth = useAuthStore()
+
 const preset = reactive({ categoryId: null, collectionId: null, tags: '', isPrivate: false })
 
 const allDone = computed(() => files.value.length && files.value.every(f => f.status === 'done'))
