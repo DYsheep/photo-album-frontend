@@ -13,9 +13,13 @@
             <code class="share-code">{{ row.code }}</code>
           </template>
         </el-table-column>
-        <el-table-column prop="photoTitle" label="关联照片" min-width="200">
+        <el-table-column prop="photoTitle" label="关联对象" min-width="200">
           <template #default="{ row }">
-            <span class="photo-title-cell">{{ row.photoTitle || '-' }}</span>
+            <span class="photo-title-cell">
+                {{ row.targetType === 'collection'
+                  ? ('合集：' + (row.collectionName || ('#' + row.targetId)))
+                  : (row.photoTitle || '-') }}
+              </span>
           </template>
         </el-table-column>
         <el-table-column prop="createdAt" label="创建时间" min-width="160">
@@ -56,7 +60,11 @@
             </span>
           </div>
           <div class="share-card-meta">
-            <span class="share-card-photo">{{ row.photoTitle || '未关联照片' }}</span>
+            <span class="share-card-photo">
+              {{ row.targetType === 'collection'
+                ? ('合集：' + (row.collectionName || ('#' + row.targetId)))
+                : (row.photoTitle || '未关联照片') }}
+            </span>
             <span>{{ formatTime(row.createdAt) }}</span>
           </div>
           <div class="share-card-actions">
