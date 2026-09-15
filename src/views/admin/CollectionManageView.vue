@@ -14,7 +14,7 @@
 
     <!-- 合集列表表格 -->
     <div class="table-container">
-      <table class="data-table" v-if="collections.length > 0">
+      <table class="data-table collection-table-desktop" v-if="collections.length > 0">
         <thead>
           <tr>
             <th class="col-drag"></th>
@@ -66,6 +66,30 @@
       </table>
       <div v-else class="empty-table">
         <p>暂无合集，点击"新建合集"开始创建</p>
+      </div>
+
+      <!-- 移动端：卡片列表（操作按钮直接可见，无需横向滑动）；桌面端由媒体查询隐藏 -->
+      <div v-if="collections.length > 0" class="collection-cards">
+        <div v-for="col in collections" :key="col.id" class="collection-card">
+          <div class="collection-card-head">
+            <span class="collection-card-name">{{ col.name }}</span>
+            <span class="collection-card-badge" :class="col.isPublished === 1 ? 'is-published' : 'is-draft'">
+              {{ col.isPublished === 1 ? '已发布' : '草稿' }}
+            </span>
+          </div>
+          <div class="collection-card-meta">
+            <span>{{ col.photoCount || 0 }} 张照片</span>
+            <span>排序 {{ col.sortOrder || 0 }}</span>
+            <span>创建于 {{ formatDateShort(col.createdAt) }}</span>
+          </div>
+          <div class="collection-card-desc">{{ col.description || '暂无描述' }}</div>
+          <div class="collection-card-actions">
+            <button class="btn-sm btn-secondary" @click="managePhotos(col)">管理照片</button>
+            <button v-if="canManageCollections" class="btn-sm btn-secondary" @click="openMembers(col)">协作者</button>
+            <button class="btn-sm btn-secondary" @click="openEditDialog(col)">编辑</button>
+            <button class="btn-sm btn-danger" @click="confirmDelete(col)">删除</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -769,5 +793,106 @@ onMounted(() => {
 .drag-handle:active { cursor: grabbing; }
 .data-table tr.drag-over td {
   border-top: 2px solid var(--color-primary, #378ADD);
+}
+
+/* ============================================================
+   移动端合集卡片列表：颜色一律走 theme.css 设计令牌，不写死色值；
+   默认隐藏，≤768px 时替换表格（与 UserManageView / PhotoManageView 同一套模式）。
+   ============================================================ */
+.collection-cards {
+  display: none;
+}
+
+.collection-card {
+  padding: 14px;
+  border: 0.5px solid var(--border-light);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+
+.collection-card + .collection-card {
+  margin-top: 10px;
+}
+
+.collection-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.collection-card-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-card-badge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.collection-card-badge.is-published {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.collection-card-badge.is-draft {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+}
+
+.collection-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.collection-card-desc {
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .collection-table-desktop {
+    display: none;
+  }
+
+  .collection-cards {
+    display: block;
+  }
+
+  /* 触摸热区 ≥44px，按钮均分整行宽度 */
+  .collection-card-actions .btn-sm {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 8px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
 }
 </style>

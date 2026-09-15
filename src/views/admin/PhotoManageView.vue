@@ -44,7 +44,7 @@
 
     <!-- 照片列表（表格模式） -->
     <div class="photo-table-wrap">
-      <table class="photo-table" v-if="photos.length > 0 && !isLoading">
+      <table class="photo-table photo-table-desktop" v-if="photos.length > 0 && !isLoading">
         <thead>
           <tr>
             <th width="36"><input type="checkbox" v-model="selectAll" /></th>
@@ -77,6 +77,34 @@
 
       <div v-else-if="isLoading" class="empty-state">加载中...</div>
       <div v-else class="empty-state"><EmojiIcon name="framed-picture" :size="40" /> 暂无照片数据</div>
+
+      <!-- 移动端：卡片列表（操作按钮直接可见，无需横向滑动）；桌面端由媒体查询隐藏 -->
+      <div v-if="photos.length > 0 && !isLoading" class="photo-cards">
+        <div v-for="photo in photos" :key="photo.id" class="photo-card">
+          <div class="photo-card-head">
+            <input type="checkbox" class="photo-card-check" :value="photo.id" v-model="selectedIds" />
+            <div class="thumb-cell">
+              <img v-if="photo.url" :src="photo.thumbnailUrl || photo.url" alt="" class="thumb-img" />
+              <EmojiIcon v-else name="camera" :size="20" />
+            </div>
+            <span class="photo-card-title">{{ photo.title }}</span>
+            <span class="photo-card-badge" :class="photo.isPrivate === 1 ? 'is-private' : 'is-public'">
+              {{ photo.isPrivate === 1 ? '私密' : '公开' }}
+            </span>
+          </div>
+          <div class="photo-card-meta">
+            <span>{{ photo.categoryName || '未分类' }}</span>
+            <span class="photo-card-desc">{{ photo.description || '暂无描述' }}</span>
+          </div>
+          <div class="photo-card-tags">
+            <span class="cat-tag">{{ photo.categoryName || '未分类' }}</span>
+          </div>
+          <div class="photo-card-actions">
+            <button class="btn-sm btn-secondary" @click="openEdit(photo)">编辑</button>
+            <button class="btn-sm btn-danger" @click="handleDelete(photo.id)">删除</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 分页 -->
@@ -606,5 +634,119 @@ async function saveBatchEdit() {
 /* 表单行内标签（替代原先的内联 style="margin:0"） */
 .field-label {
   margin: 0;
+}
+
+/* ============================================================
+   移动端照片卡片列表：颜色一律走 theme.css 设计令牌，不写死色值；
+   默认隐藏，≤768px 时替换表格（与 UserManageView 同一套模式）。
+   ============================================================ */
+.photo-cards {
+  display: none;
+}
+
+.photo-card {
+  padding: 14px;
+  border: 0.5px solid var(--border-light);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+
+.photo-card + .photo-card {
+  margin-top: 10px;
+}
+
+.photo-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.photo-card .thumb-cell {
+  flex-shrink: 0;
+}
+
+.photo-card-check {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.photo-card-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-card-badge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.photo-card-badge.is-private {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.photo-card-badge.is-public {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.photo-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.photo-card-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.photo-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .photo-table-desktop {
+    display: none;
+  }
+
+  .photo-cards {
+    display: block;
+  }
+
+  /* 触摸热区 ≥44px，按钮均分整行宽度 */
+  .photo-card-actions .btn-sm {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
 }
 </style>

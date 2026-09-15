@@ -7,7 +7,7 @@
 
     <!-- 表格 -->
     <div class="table-card">
-      <el-table :data="list" v-loading="loading" stripe size="default" empty-text="暂无分享链接">
+      <el-table :data="list" v-loading="loading" stripe size="default" empty-text="暂无分享链接" class="share-table-desktop">
         <el-table-column prop="code" label="分享码" min-width="140">
           <template #default="{ row }">
             <code class="share-code">{{ row.code }}</code>
@@ -44,6 +44,27 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 移动端：卡片列表（操作按钮直接可见，无需横向滑动）；桌面端由媒体查询隐藏 -->
+      <div v-if="list.length" class="share-cards">
+        <div v-for="row in list" :key="row.id" class="share-card">
+          <div class="share-card-head">
+            <code class="share-code">{{ row.code }}</code>
+            <span v-if="!row.expiresAt" class="share-card-badge is-permanent text-success">永久有效</span>
+            <span v-else class="share-card-badge" :class="row.expired ? 'is-expired' : 'is-limited'">
+              {{ row.expired ? '已过期 · ' : '有效期至 ' }}{{ formatTime(row.expiresAt) }}
+            </span>
+          </div>
+          <div class="share-card-meta">
+            <span class="share-card-photo">{{ row.photoTitle || '未关联照片' }}</span>
+            <span>{{ formatTime(row.createdAt) }}</span>
+          </div>
+          <div class="share-card-actions">
+            <button class="btn-sm btn-secondary" @click="copyLink(row)">复制链接</button>
+            <button class="btn-sm btn-danger" @click="handleDelete(row)">删除</button>
+          </div>
+        </div>
+      </div>
 
       <div v-if="!loading && list.length === 0" class="empty-state">
         <EmojiIcon name="link" :size="40" />
@@ -214,5 +235,98 @@ onMounted(() => {
 .empty-state p {
   margin-top: 10px;
   font-size: 14px;
+}
+
+/* ============================================================
+   移动端分享卡片列表：颜色一律走 theme.css 设计令牌，不写死色值；
+   默认隐藏，≤768px 时替换表格（与 UserManageView 同一套模式）。
+   ============================================================ */
+.share-cards {
+  display: none;
+}
+
+.share-card {
+  padding: 14px;
+  border: 0.5px solid var(--border-light);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+
+.share-card + .share-card {
+  margin-top: 10px;
+}
+
+.share-card-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.share-card-head .share-code {
+  flex-shrink: 0;
+}
+
+.share-card-badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.share-card-badge.is-permanent {
+  background: var(--color-success-light);
+}
+
+.share-card-badge.is-expired {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.share-card-badge.is-limited {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.share-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.share-card-photo {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .share-table-desktop {
+    display: none;
+  }
+
+  .share-cards {
+    display: block;
+  }
+
+  /* 触摸热区 ≥44px，按钮均分整行宽度 */
+  .share-card-actions .btn-sm {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
 }
 </style>
