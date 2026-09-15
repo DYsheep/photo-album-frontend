@@ -122,7 +122,7 @@
           </label>
         </div>
 
-        <div v-if="auth.isAdmin" class="form-group">
+        <div v-if="canManageCollections" class="form-group">
           <label>私密状态</label>
           <label class="check-inline">
             <input type="checkbox" v-model="formData.isPrivateBool" />
