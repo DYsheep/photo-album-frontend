@@ -51,7 +51,9 @@
               <button class="action-btn" @click="managePhotos(col)" title="管理照片">
                 <EmojiIcon name="framed-picture" :size="16" />
               </button>
-              <button v-if="canManageCollections" class="action-btn" @click="openMembers(col)" title="协作者">
+              <button class="action-btn" @click="openShareDialog(col)" title="分享">
+                <EmojiIcon name="outbox-tray" :size="16" />
+              </button>              <button v-if="canManageCollections" class="action-btn" @click="openMembers(col)" title="协作者">
                 <EmojiIcon name="people" :size="16" />
               </button>
               <button class="action-btn" @click="openEditDialog(col)" title="编辑">
@@ -86,6 +88,7 @@
           <div class="collection-card-actions">
             <button class="btn-sm btn-secondary" @click="managePhotos(col)">管理照片</button>
             <button v-if="canManageCollections" class="btn-sm btn-secondary" @click="openMembers(col)">协作者</button>
+            <button class="btn-sm btn-secondary" @click="openShareDialog(col)">分享</button>
             <button class="btn-sm btn-secondary" @click="openEditDialog(col)">编辑</button>
             <button class="btn-sm btn-danger" @click="confirmDelete(col)">删除</button>
           </div>
@@ -94,6 +97,49 @@
     </div>
 
     <!-- 新建/编辑弹窗 -->
+    <!-- 分享合集（自研模态：有效期 / 含私密开关 / 可选口令 / 链接复制） -->
+    <div v-if="shareDialogVisible" class="modal-overlay" @click.self="shareDialogVisible = false">
+      <div class="modal-content modal-collection">
+        <h3>分享合集 · {{ shareTarget && shareTarget.name }}</h3>
+
+        <div class="form-group">
+          <label>有效期</label>
+          <select v-model="shareForm.expiry">
+            <option value="permanent">永久有效</option>
+            <option value="7">7 天</option>
+            <option value="30">30 天</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="check-inline">
+            <input type="checkbox" v-model="shareForm.includePrivate" />
+            包含私密照片（以你的可见范围为准，你列入黑名单的照片不会出现）
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>访问口令（可选）</label>
+          <input v-model="shareForm.accessCode" placeholder="留空表示无需口令" maxlength="32" />
+        </div>
+
+        <div v-if="shareResultUrl" class="form-group share-result">
+          <label>分享链接</label>
+          <div class="share-url-row">
+            <input :value="shareResultUrl" readonly @focus="$event.target.select()" />
+            <button class="btn-primary btn-sm" @click="copyShareUrl">复制</button>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="shareDialogVisible = false">关闭</button>
+          <button class="btn-primary" @click="submitShare" :disabled="shareSaving">
+            {{ shareSaving ? '处理中…' : (shareResultUrl ? '更新分享设置' : '生成分享链接') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 新建/编辑合集（自研模态：不依赖 Element Plus 弹窗内部渲染，兼容性更稳） -->
     <div v-if="dialogVisible" class="modal-overlay" @click.self="dialogVisible = false">
       <div class="modal-content modal-collection">
@@ -239,6 +285,7 @@
 </template>
 
 <script setup>
+import { createCollectionShareApi } from '../../api/share'
 import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import {
   getAdminCollectionsApi,
@@ -276,6 +323,63 @@ async function loadCollections() {
 
 // ===== 新建/编辑弹窗 =====
 const dialogVisible = ref(false)
+
+// ===== 分享合集 =====
+const shareDialogVisible = ref(false)
+const shareTarget = ref(null)
+const shareSaving = ref(false)
+const shareResultUrl = ref('')
+const shareForm = reactive({ expiry: 'permanent', includePrivate: false, accessCode: '' })
+
+/** 打开分享弹窗 */
+function openShareDialog(col) {
+  shareTarget.value = col
+  shareResultUrl.value = ''
+  shareForm.expiry = 'permanent'
+  shareForm.includePrivate = false
+  shareForm.accessCode = ''
+  shareDialogVisible.value = true
+}
+
+/** 有效期 → ISO（永久返回 undefined） */
+function shareExpiryIso() {
+  if (shareForm.expiry === 'permanent') return undefined
+  const days = Number(shareForm.expiry)
+  return new Date(Date.now() + days * 24 * 3600 * 1000).toISOString()
+}
+
+/** 提交（生成或更新分享设置） */
+async function submitShare() {
+  if (!shareTarget.value) return
+  shareSaving.value = true
+  try {
+    const res = await createCollectionShareApi(shareTarget.value.id, {
+      expiresAt: shareExpiryIso(),
+      includePrivate: shareForm.includePrivate,
+      accessCode: shareForm.accessCode.trim() || undefined
+    })
+    if (res.code === 200 && res.data && res.data.shareUrl) {
+      shareResultUrl.value = res.data.shareUrl
+      ElMessage.success('分享链接已生成')
+    } else {
+      ElMessage.error(res.message || '生成失败')
+    }
+  } catch (e) {
+    ElMessage.error('生成失败，请稍后重试')
+  } finally {
+    shareSaving.value = false
+  }
+}
+
+/** 复制链接 */
+async function copyShareUrl() {
+  try {
+    await navigator.clipboard.writeText(shareResultUrl.value)
+    ElMessage.success('链接已复制')
+  } catch (e) {
+    ElMessage.warning('复制失败，请手动选择复制')
+  }
+}
 const isEditing = ref(false)
 const editingId = ref(null)
 const saving = ref(false)
@@ -940,5 +1044,23 @@ onMounted(() => {
   width: 16px;
   height: 16px;
   accent-color: var(--color-primary, #378ADD);
+}
+
+/* 分享弹窗：链接展示与复制 */
+.share-url-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.share-url-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--bg-card, #fff);
+  color: var(--text-secondary, #333);
 }
 </style>
