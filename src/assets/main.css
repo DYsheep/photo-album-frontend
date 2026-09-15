@@ -351,12 +351,10 @@ button {
     border-radius: 12px;
   }
 
-  .el-dialog__body {
-    /* 预留标题栏与页脚按钮的高度，其余空间给内容滚动 */
-    max-height: calc(88vh - 120px);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+
+  /* 注：不再对 .el-dialog__body 设置 max-height/overflow —— 这类对组件内部的规则曾导致弹窗表单不可见；
+     弹窗高度问题改用 Element Plus 自身属性处理（见各弹窗的 top/width 配置），避免全局样式侵入组件内部。 */
+
 
   .el-dialog__footer {
     padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
