@@ -337,3 +337,75 @@ button {
 .text-success { color: var(--color-success, #0F6E56); }
 .text-danger { color: var(--color-danger, #E24B4A); }
 .text-muted { color: var(--text-muted, #888); }
+
+/* ========== 弹窗的移动端适配（全局：el-dialog / ElMessageBox / 自研 modal 三类全覆盖） ==========
+   目的：竖屏手机上弹窗不得超出屏幕，且底部操作按钮必须始终可见、可点。
+   做法：限制弹窗高度 + 让内容区（body）自己滚动，头尾固定。 */
+@media (max-width: 768px) {
+  .el-dialog {
+    width: 92vw !important;
+    max-width: 92vw !important;
+    margin: 6vh auto !important;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+  }
+
+  .el-dialog__header {
+    flex-shrink: 0;
+    padding: 14px 16px 8px;
+  }
+
+  .el-dialog__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 16px;
+  }
+
+  .el-dialog__footer {
+    flex-shrink: 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 页脚按钮：触摸热区 ≥44px */
+  .el-dialog__footer .el-button {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  /* 二次确认框（删除确认等）：不超出屏宽，按钮够大 */
+  .el-message-box {
+    width: 88vw !important;
+    max-width: 88vw !important;
+  }
+
+  .el-message-box__btns .el-button {
+    min-height: 40px;
+    padding: 8px 16px;
+  }
+
+  /* 自研弹窗（.modal-overlay/.modal-content）：限高 + 内容滚动 */
+  .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 表单控件在手机上更易点按 */
+  .el-input__wrapper,
+  .el-select__wrapper,
+  .el-textarea__inner {
+    min-height: 40px;
+  }
+}
+
+/* 桌面端也避免"超长弹窗把按钮顶出视口" */
+@media (min-width: 769px) {
+  .modal-content {
+    max-height: 86vh;
+    overflow-y: auto;
+  }
+}
