@@ -11,9 +11,27 @@ export function createShareLinkApi(photoId, options) {
   return request.post(`/share/photo/${photoId}`, options || {})
 }
 
-/** 根据分享码获取分享数据（公开访问，无需 token） */
-export function getShareLinkApi(code) {
-  return request.get(`/share/${code}`)
+/** 根据分享码获取分享数据（公开访问，无需 token）；合集分享可带访问口令 */
+export function getShareLinkApi(code, accessCode) {
+  return request.get(`/share/${code}`, {
+    params: accessCode ? { accessCode } : {}
+  })
+}
+
+/**
+ * 创建（或更新）合集分享链接
+ * options 可选：{ expiresAt, includePrivate, accessCode }
+ * 后端以查询参数接收，故这里用 params 而不是请求体。
+ */
+export function createCollectionShareApi(collectionId, options) {
+  const { expiresAt, includePrivate, accessCode } = options || {}
+  return request.post(`/admin/share/collection/${collectionId}`, null, {
+    params: {
+      ...(expiresAt ? { expiresAt } : {}),
+      ...(includePrivate ? { includePrivate: true } : {}),
+      ...(accessCode ? { accessCode } : {})
+    }
+  })
 }
 
 /** 管理员获取所有分享链接 */
