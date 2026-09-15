@@ -342,32 +342,24 @@ button {
    目的：竖屏手机上弹窗不得超出屏幕，且底部操作按钮必须始终可见、可点。
    做法：限制弹窗高度 + 让内容区（body）自己滚动，头尾固定。 */
 @media (max-width: 768px) {
+  /* 注意：不要改造 el-dialog 的内部布局（改成 flex 会影响部分 Element Plus 版本的渲染，
+     曾导致弹窗内表单项不可见）。这里只做"整体限宽" + "内容区自己滚动"，行为等价且不侵入内部结构。 */
   .el-dialog {
     width: 92vw !important;
     max-width: 92vw !important;
     margin: 6vh auto !important;
-    max-height: 88vh;
-    display: flex;
-    flex-direction: column;
     border-radius: 12px;
   }
 
-  .el-dialog__header {
-    flex-shrink: 0;
-    padding: 14px 16px 8px;
-  }
-
   .el-dialog__body {
-    flex: 1 1 auto;
-    min-height: 0;
+    /* 预留标题栏与页脚按钮的高度，其余空间给内容滚动 */
+    max-height: calc(88vh - 120px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 8px 16px;
   }
 
   .el-dialog__footer {
-    flex-shrink: 0;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   }
 
   /* 页脚按钮：触摸热区 ≥44px */
