@@ -5,6 +5,13 @@
       <router-link to="/" class="back-link">
         <EmojiIcon name="left-arrow" :size="16" class="icon-inline" /> 回到首页
       </router-link>
+      <!-- 分享：卡片图（长按保存发微信）+ 复制链接 + 系统分享 -->
+      <SharePanel
+        class="topbar-share"
+        :url="shareUrl"
+        :title="shareTitle"
+        :description="shareDescription"
+      />
     </header>
 
     <!-- 照片大图 -->
@@ -126,10 +133,17 @@ import { useRoute } from 'vue-router'
 import { getShareLinkApi } from '../api/share'
 import { formatDate } from '../utils/format'
 import EmojiIcon from '../components/EmojiIcon.vue'
+import SharePanel from '../components/SharePanel.vue'
 
 const route = useRoute()
 const shareData = ref(null)
 const loading = ref(true)
+
+/** 分享面板用：地址优先用后端返回的规范链接，标题/描述按合集或照片取 */
+const shareUrl = computed(() => shareData.value?.shareUrl || window.location.href)
+const shareTitle = computed(() => shareData.value?.collectionName || shareData.value?.title || '摄影相册')
+const shareDescription = computed(() =>
+  shareData.value?.collectionDescription || shareData.value?.description || '')
 const imageLoaded = ref(false)
 
 const code = computed(() => route.params.code)
@@ -209,6 +223,10 @@ onMounted(() => {
   padding: 16px 24px;
   display: flex;
   align-items: center;
+}
+
+.topbar-share {
+  margin-left: auto;
 }
 
 .back-link {

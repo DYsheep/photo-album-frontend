@@ -98,6 +98,8 @@
         <ShareButton
           v-if="authStore.isAdmin || authStore.canUpload || authStore.canManage"
           :photo-id="photo.id"
+          :title="photo.title || ''"
+          :description="photo.description || ''"
         />
       </div>
     </div>

@@ -49,6 +49,16 @@
             </div>
             <p class="expiry-hint">{{ expiryText }}</p>
             <p class="expiry-note">照片被设为私密后，该链接对无权限访问者即刻失效。</p>
+
+            <!-- 直接分享：卡片图（长按保存发微信）+ 系统分享面板 -->
+            <SharePanel
+              class="dialog-share-block"
+              block
+              :url="shareUrl"
+              :title="props.title"
+              :description="props.description"
+              label="分享到微信 / 保存卡片"
+            />
           </div>
         </div>
       </div>
@@ -61,10 +71,14 @@ import { ref, computed, nextTick } from 'vue'
 import { createShareLinkApi } from '../api/share'
 import { ElMessage } from 'element-plus'
 import EmojiIcon from './EmojiIcon.vue'
+import SharePanel from './SharePanel.vue'
 
 const props = defineProps({
   photoId: { type: Number, required: true },
-  buttonText: { type: String, default: '分享链接' }
+  buttonText: { type: String, default: '分享链接' },
+  /** 卡片图上的标题与描述（照片标题、照片说明） */
+  title: { type: String, default: '' },
+  description: { type: String, default: '' }
 })
 
 const loading = ref(false)
@@ -339,5 +353,9 @@ async function copyLink() {
   margin: 6px 0 0;
   font-size: 12px;
   color: var(--text-muted, #999);
+}
+
+.dialog-share-block {
+  margin-top: 18px;
 }
 </style>
