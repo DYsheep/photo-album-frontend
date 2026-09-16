@@ -129,15 +129,16 @@
             <input :value="shareResultUrl" readonly @focus="$event.target.select()" />
             <button class="btn-primary btn-sm" @click="copyShareUrl">复制</button>
           </div>
-          <!-- 直接分享：卡片图（长按保存即可发微信）+ 系统分享面板 -->
-          <SharePanel
-            class="mt-md"
-            block
-            :url="shareResultUrl"
-            :title="(shareTarget && shareTarget.name) || ''"
-            :description="(shareTarget && shareTarget.description) || ''"
-            label="分享到微信 / 保存卡片"
-          />
+          <!-- 分享卡片直接嵌在这里：长按保存即可发微信（本弹窗已有复制按钮，故不重复） -->
+          <div class="mt-md">
+            <SharePanel
+              inline
+              :show-copy="false"
+              :url="shareResultUrl"
+              :title="(shareTarget && shareTarget.name) || ''"
+              :description="(shareTarget && shareTarget.description) || ''"
+            />
+          </div>
         </div>
 
         <div class="modal-actions">

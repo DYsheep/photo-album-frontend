@@ -1,13 +1,23 @@
 <template>
-  <button class="share-launch" :class="{ 'share-launch--block': block }" @click="open">
+  <!-- 面板模式：自带触发按钮；内嵌模式（inline）由父级决定何时显示 -->
+  <button
+    v-if="!inline"
+    class="share-launch"
+    :class="{ 'share-launch--block': block }"
+    @click="open"
+  >
     <EmojiIcon name="outbox-tray" :size="16" class="icon-inline" />
     <span>{{ label }}</span>
   </button>
 
-  <Teleport to="body">
-    <div v-if="visible" class="modal-overlay share-overlay" @click.self="close">
-      <div class="modal-content share-panel">
-        <div class="share-head">
+  <Teleport to="body" :disabled="inline">
+    <div
+      v-if="inline || visible"
+      :class="inline ? 'share-inline' : 'modal-overlay share-overlay'"
+      @click.self="close"
+    >
+      <div :class="inline ? 'share-inline-panel' : 'modal-content share-panel'">
+        <div v-if="!inline" class="share-head">
           <h3><EmojiIcon name="outbox-tray" :size="18" class="icon-inline" /> 分享</h3>
           <button class="share-close" title="关闭" @click="close">
             <EmojiIcon name="cross-mark" :size="16" />
@@ -17,7 +27,13 @@
         <p class="share-tip">长按图片保存到相册，即可发到微信聊天或朋友圈</p>
 
         <div class="card-preview">
-          <img v-if="cardDataUrl" :src="cardDataUrl" alt="分享卡片" class="card-image" />
+          <img
+            v-if="cardDataUrl"
+            :src="cardDataUrl"
+            alt="分享卡片"
+            class="card-image"
+            :class="{ 'card-image--inline': inline }"
+          />
           <div v-else class="card-loading">
             {{ failed ? '卡片生成失败，可直接复制链接分享' : '正在生成卡片…' }}
           </div>
@@ -28,14 +44,14 @@
         </p>
 
         <div class="share-buttons">
-          <button class="btn-secondary btn-sm" :disabled="!cardDataUrl" @click="downloadCard">
+          <button class="btn-primary btn-sm" :disabled="!cardDataUrl" @click="downloadCard">
             <EmojiIcon name="floppy-disk" :size="14" class="icon-inline" /> 保存图片
           </button>
-          <button class="btn-secondary btn-sm" @click="copyLink">
+          <button v-if="showCopy" class="btn-secondary btn-sm" @click="copyLink">
             <EmojiIcon name="clipboard" :size="14" class="icon-inline" />
             {{ copied ? '已复制' : '复制链接' }}
           </button>
-          <button v-if="canSystemShare" class="btn-primary btn-sm" @click="systemShare">
+          <button v-if="canSystemShare" class="btn-secondary btn-sm" @click="systemShare">
             <EmojiIcon name="outbox-tray" :size="14" class="icon-inline" /> 分享到…
           </button>
         </div>
@@ -45,7 +61,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import EmojiIcon from './EmojiIcon.vue'
 
@@ -56,10 +72,14 @@ const props = defineProps({
   title: { type: String, default: '' },
   /** 卡片描述 */
   description: { type: String, default: '' },
-  /** 按钮文案 */
+  /** 触发按钮文案（面板模式） */
   label: { type: String, default: '分享' },
-  /** 是否占满一行 */
-  block: { type: Boolean, default: false }
+  /** 触发按钮是否占满一行 */
+  block: { type: Boolean, default: false },
+  /** 内嵌模式：直接显示卡片与按钮，不带触发按钮与遮罩（用于分享弹窗内部） */
+  inline: { type: Boolean, default: false },
+  /** 是否显示"复制链接"（父级已有复制入口时可关掉） */
+  showCopy: { type: Boolean, default: true }
 })
 
 const visible = ref(false)
@@ -77,17 +97,23 @@ const code = computed(() => {
   return matched ? matched[1] : ''
 })
 
+// 链接拿到（新建分享后）就生成卡片：面板模式点开即见，内嵌模式无需再操作
+watch(() => props.url, () => ensureCard(), { immediate: true })
+
+function ensureCard() {
+  if (cardDataUrl.value || failed.value || !code.value) return
+  renderCard().then((data) => {
+    if (data) {
+      cardDataUrl.value = data
+    } else {
+      failed.value = true
+    }
+  })
+}
+
 function open() {
   visible.value = true
-  if (!cardDataUrl.value && !failed.value) {
-    renderCard().then((data) => {
-      if (data) {
-        cardDataUrl.value = data
-      } else {
-        failed.value = true
-      }
-    })
-  }
+  ensureCard()
 }
 
 function close() {
@@ -353,7 +379,7 @@ async function systemShare() {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 .share-buttons .btn-primary,
@@ -374,6 +400,30 @@ async function systemShare() {
   cursor: not-allowed;
 }
 
+/* ===== 内嵌模式：嵌在别的弹窗里，卡片高度收敛，避免弹窗过长 ===== */
+.share-inline {
+  margin-top: 6px;
+}
+
+.share-inline .share-tip {
+  margin: 0 0 8px;
+}
+
+.card-image--inline {
+  width: auto;
+  max-width: 100%;
+  max-height: 300px;
+}
+
+.share-inline .card-preview {
+  padding: 8px;
+  min-height: 120px;
+}
+
+.share-inline .card-loading {
+  padding: 36px 20px;
+}
+
 @media (max-width: 480px) {
   .share-panel {
     width: 92vw;
@@ -387,6 +437,10 @@ async function systemShare() {
   .share-buttons .btn-primary,
   .share-buttons .btn-secondary {
     flex: 1 1 100%;
+  }
+
+  .card-image--inline {
+    max-height: 240px;
   }
 }
 </style>

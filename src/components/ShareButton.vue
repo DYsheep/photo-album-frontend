@@ -50,15 +50,16 @@
             <p class="expiry-hint">{{ expiryText }}</p>
             <p class="expiry-note">照片被设为私密后，该链接对无权限访问者即刻失效。</p>
 
-            <!-- 直接分享：卡片图（长按保存发微信）+ 系统分享面板 -->
-            <SharePanel
-              class="dialog-share-block"
-              block
-              :url="shareUrl"
-              :title="props.title"
-              :description="props.description"
-              label="分享到微信 / 保存卡片"
-            />
+            <!-- 分享卡片直接嵌在这里：长按保存即可发微信（本弹窗已有复制按钮，故不重复） -->
+            <div class="dialog-share-block">
+              <SharePanel
+                inline
+                :show-copy="false"
+                :url="shareUrl"
+                :title="props.title"
+                :description="props.description"
+              />
+            </div>
           </div>
         </div>
       </div>

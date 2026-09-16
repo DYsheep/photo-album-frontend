@@ -6,12 +6,13 @@
         <EmojiIcon name="left-arrow" :size="16" class="icon-inline" /> 回到首页
       </router-link>
       <!-- 分享：卡片图（长按保存发微信）+ 复制链接 + 系统分享 -->
-      <SharePanel
-        class="topbar-share"
-        :url="shareUrl"
-        :title="shareTitle"
-        :description="shareDescription"
-      />
+      <div class="topbar-share">
+        <SharePanel
+          :url="shareUrl"
+          :title="shareTitle"
+          :description="shareDescription"
+        />
+      </div>
     </header>
 
     <!-- 照片大图 -->
