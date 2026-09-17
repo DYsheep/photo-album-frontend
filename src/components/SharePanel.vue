@@ -24,7 +24,7 @@
           </button>
         </div>
 
-        <p class="share-tip">长按图片保存到相册，即可发到微信聊天或朋友圈</p>
+        <p class="share-tip">{{ tipText }}</p>
 
         <div class="card-preview">
           <img
@@ -44,15 +44,16 @@
         </p>
 
         <div class="share-buttons">
-          <button class="btn-primary btn-sm" :disabled="!cardDataUrl" @click="downloadCard">
+          <!-- 支持系统分享时，这一个按钮就能直接把卡片图发进微信 -->
+          <button v-if="canSystemShare" class="btn-primary btn-sm" @click="shareToWechat">
+            <EmojiIcon name="outbox-tray" :size="14" class="icon-inline" /> 分享到微信
+          </button>
+          <button class="btn-secondary btn-sm" :disabled="!cardDataUrl" @click="downloadCard">
             <EmojiIcon name="floppy-disk" :size="14" class="icon-inline" /> 保存图片
           </button>
           <button v-if="showCopy" class="btn-secondary btn-sm" @click="copyLink">
             <EmojiIcon name="clipboard" :size="14" class="icon-inline" />
             {{ copied ? '已复制' : '复制链接' }}
-          </button>
-          <button v-if="canSystemShare" class="btn-secondary btn-sm" @click="systemShare">
-            <EmojiIcon name="outbox-tray" :size="14" class="icon-inline" /> 分享到…
           </button>
         </div>
       </div>
@@ -61,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import EmojiIcon from './EmojiIcon.vue'
 
@@ -90,6 +91,33 @@ const failed = ref(false)
 /** 微信内置浏览器：不支持系统分享，只能引导用右上角菜单 */
 const inWechat = computed(() => /MicroMessenger/i.test(navigator.userAgent))
 const canSystemShare = computed(() => typeof navigator.share === 'function')
+/** 是否支持"把图片当文件分享"（Web Share Level 2）：支持则点一下可直接发图片进微信 */
+const canShareFiles = ref(false)
+
+onMounted(() => {
+  canShareFiles.value = detectFileShare()
+})
+
+const tipText = computed(() => {
+  if (canShareFiles.value) {
+    return '点「分享到微信」可直接把卡片图发给好友，也可长按图片保存'
+  }
+  if (inWechat.value) {
+    return '长按图片保存到相册，或点右上角「···」发送给朋友'
+  }
+  return '长按图片保存到相册，即可发到微信聊天或朋友圈'
+})
+
+/** 探测文件分享能力（用一张极小的假 JPEG 试；不支持的平台会返回 false） */
+function detectFileShare() {
+  if (typeof navigator.canShare !== 'function') return false
+  try {
+    const probe = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'probe.jpg', { type: 'image/jpeg' })
+    return navigator.canShare({ files: [probe] })
+  } catch (err) {
+    return false
+  }
+}
 
 /** 从分享链接里取出分享码（卡片图与二维码都按它取） */
 const code = computed(() => {
@@ -263,7 +291,32 @@ async function copyLink() {
   }
 }
 
-async function systemShare() {
+/**
+ * 分享到微信：调起系统分享面板，用户选微信即可发送
+ *
+ * 优先把**卡片图当文件**分享（微信里收到的直接是图片，带二维码）；
+ * 平台不支持文件分享时退回分享链接（对方打开是带封面的卡片）。
+ * 微信内置浏览器里没有 navigator.share，此时按钮不显示，改由文案引导右上角菜单。
+ */
+async function shareToWechat() {
+  if (!canSystemShare.value) {
+    ElMessage.info('当前环境不支持直接分享，请长按图片保存到相册')
+    return
+  }
+
+  if (canShareFiles.value && cardDataUrl.value) {
+    try {
+      const file = await dataUrlToFile(cardDataUrl.value, `分享卡片-${code.value || 'photo'}.jpg`)
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file] })
+        return
+      }
+    } catch (err) {
+      if (err && err.name === 'AbortError') return
+      console.warn('图片分享未成功，改为分享链接:', err)
+    }
+  }
+
   try {
     await navigator.share({
       title: props.title || '摄影相册',
@@ -271,11 +324,17 @@ async function systemShare() {
       url: props.url
     })
   } catch (err) {
-    // 用户主动取消不算失败
     if (err && err.name !== 'AbortError') {
-      ElMessage.info('当前环境不支持直接分享，请用「保存图片」或「复制链接」')
+      ElMessage.info('当前环境不支持直接分享，请长按图片保存到相册')
     }
   }
+}
+
+/** dataURL → File（系统分享要求传 File 对象） */
+function dataUrlToFile(dataUrl, fileName) {
+  return fetch(dataUrl)
+    .then((res) => res.blob())
+    .then((blob) => new File([blob], fileName, { type: 'image/jpeg' }))
 }
 </script>
 
