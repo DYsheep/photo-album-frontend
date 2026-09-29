@@ -306,7 +306,7 @@ import {
   removePhotoFromCollectionApi,
   getCollectionDetailApi
 } from '../../api/collection'
-import { getPhotoListApi } from '../../api/photo'
+import { getAllPhotoListApi } from '../../api/photo'
 import { reorderCollectionsApi, getCollectionMembersApi, addCollectionMemberApi, removeCollectionMemberApi } from '../../api/collection'
 import { getUsersApi } from '../../api/user'
 import { useAuthStore } from '../../stores/auth'
@@ -527,12 +527,9 @@ async function managePhotos(col) {
     collectionPhotos.value = []
   }
 
-  // 加载全部照片（用于选择器）
+  // 加载全部照片（用于选择器）：后端已启用真实分页，需逐页取全
   try {
-    const res = await getPhotoListApi({ pageSize: 500 })
-    if (res.code === 200 && res.data) {
-      allPhotos.value = res.data.list || []
-    }
+    allPhotos.value = await getAllPhotoListApi()
   } catch {
     allPhotos.value = []
   }

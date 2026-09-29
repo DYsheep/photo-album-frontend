@@ -262,7 +262,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { getUsersApi, createUserApi, updateUserApi, deleteUserApi, getUserPermissionsApi, addUserPermissionApi, removeUserPermissionApi, getAuditLogsApi, getUserPreviewApi } from '../../api/user'
-import { getPhotoListApi } from '../../api/photo'
+import { getAllPhotoListApi } from '../../api/photo'
 import { getCategoryListApi } from '../../api/category'
 import { getAdminTagListApi } from '../../api/admin-tag'
 import { getAdminCollectionsApi } from '../../api/collection'
@@ -406,11 +406,9 @@ async function loadPreview(userId) {
 async function fillPermName(p) {
   try {
     if (p.targetType === 'photo') {
-      const r = await getPhotoListApi({ pageSize: 500 })
-      if (r.code === 200) {
-        const found = (r.data?.list || []).find(ph => ph.id == p.targetId)
-        if (found) { p.targetName = found.title; p.thumbUrl = found.thumbnailUrl || found.url }
-      }
+      const list = await getAllPhotoListApi()
+      const found = list.find(ph => ph.id == p.targetId)
+      if (found) { p.targetName = found.title; p.thumbUrl = found.thumbnailUrl || found.url }
     } else if (p.targetType === 'category') {
       const r = await getCategoryListApi()
       if (r.code === 200) {
@@ -437,8 +435,9 @@ async function openSelector() {
   selectorVisible.value = true
   selectorKeyword.value = ''
   if (newPerm.targetType === 'photo') {
-    const r = await getPhotoListApi({ pageSize: 500 })
-    if (r.code === 200) selectorItems.value = (r.data?.list || []).map(p => ({ id: p.id, name: p.title || p.fileName, thumb: p.thumbnailUrl || p.url }))
+    // 后端已启用真实分页：按 ID 在本地查找目标照片，需取全量
+    selectorItems.value = (await getAllPhotoListApi())
+      .map(p => ({ id: p.id, name: p.title || p.fileName, thumb: p.thumbnailUrl || p.url }))
   } else if (newPerm.targetType === 'category') {
     const r = await getCategoryListApi()
     if (r.code === 200) selectorItems.value = (r.data || []).map(c => ({ id: c.id, name: c.name }))

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { getPhotoListApi } from '../api/photo'
+import { getAllPhotoListApi } from '../api/photo'
 import { getCategoryListApi } from '../api/category'
 import { getTagListApi } from '../api/tag'
 
@@ -106,12 +106,12 @@ export const useAlbumStore = defineStore('album', () => {
   async function loadPhotos(keyword) {
     isLoading.value = true
     try {
-      const params = { pageSize: 100 }
+      const params = {}
       if (keyword) {
         params.keyword = keyword
       }
-      const res = await getPhotoListApi(params)
-      const list = res.data?.list || []
+      // 后端已启用真实分页：首页要按分类/标签在本地筛选，依赖全量照片，故逐页取全
+      const list = await getAllPhotoListApi(params)
       photos.value = list.map(p => ({
         id: p.id,
         title: p.title,

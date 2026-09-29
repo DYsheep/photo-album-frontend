@@ -7,6 +7,35 @@ export function getPhotoListApi(params) {
   return request.get('/photos', { params })
 }
 
+/**
+ * 分页拉取照片列表的全部页（返回照片数组）
+ *
+ * 背景：后端已启用真实分页，且单页条数会被服务端收敛到上限，
+ * 因此"需要全量照片"的场景不能再靠一次大 pageSize 请求拿到全部数据。
+ * 本方法以服务端返回的 total 为准逐页取，并设页数上限兜底，
+ * 避免异常 total 造成无限循环。
+ *
+ * 适用场景：首页照片墙（按分类/标签在本地筛选，依赖全量）、
+ * 后台的照片选择器（需在本地按 ID 查找目标照片）。
+ * 追求单页展示的场景请直接使用 getPhotoListApi 与服务端分页。
+ */
+export async function getAllPhotoListApi(params = {}, { pageSize = 200, maxPages = 25 } = {}) {
+  const all = []
+  for (let pageNum = 1; pageNum <= maxPages; pageNum += 1) {
+    const res = await getPhotoListApi({ ...params, pageNum, pageSize })
+    if (res?.code !== 200) break
+    const list = res.data?.list || []
+    all.push(...list)
+    // ① 返回条数多于单页请求 → 服务端未按页返回（分页未生效）已一次性给全，直接采用
+    //    （兼容后端尚未发布分页修复的部署窗口，避免逐页重复累积）
+    if (list.length > pageSize) break
+    const total = Number(res.data?.total || 0)
+    // ② 本页未满即已到末页；③ 取满 total 也停（防 total 与实际不一致时空转）
+    if (list.length < pageSize || (total > 0 && all.length >= total)) break
+  }
+  return all
+}
+
 /** 获取单张照片详情 */
 export function getPhotoDetailApi(id) {
   return request.get(`/photos/${id}`)
