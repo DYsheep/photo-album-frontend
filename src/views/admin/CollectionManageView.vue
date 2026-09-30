@@ -116,11 +116,18 @@
             <input type="checkbox" v-model="shareForm.includePrivate" />
             包含私密照片（以你的可见范围为准，你列入黑名单的照片不会出现）
           </label>
+          <p v-if="shareForm.includePrivate" class="cell-muted hint-block">
+            含私密照片时必须设置访问口令，且不能选择“永久有效”（最长 90 天，未选择时按 30 天处理）
+          </p>
         </div>
 
         <div class="form-group">
-          <label>访问口令（可选）</label>
-          <input v-model="shareForm.accessCode" placeholder="留空表示无需口令" maxlength="32" />
+          <label>访问口令{{ shareForm.includePrivate ? '（必填）' : '（可选）' }}</label>
+          <input
+            v-model="shareForm.accessCode"
+            placeholder="至少 6 位，不能为纯数字"
+            maxlength="32"
+          />
         </div>
 
         <div v-if="shareResultUrl" class="form-group share-result">
@@ -362,12 +369,28 @@ function shareExpiryIso() {
 /** 提交（生成或更新分享设置） */
 async function submitShare() {
   if (!shareTarget.value) return
+  const accessCode = shareForm.accessCode.trim()
+  // 与后端同规则的前置校验：先指出具体原因，避免只拿到一句笼统的失败提示
+  if (accessCode && (accessCode.length < 6 || /^\d+$/.test(accessCode))) {
+    ElMessage.warning('访问口令至少 6 位，且不能为纯数字')
+    return
+  }
+  if (shareForm.includePrivate) {
+    if (!accessCode) {
+      ElMessage.warning('包含私密照片时必须设置访问口令')
+      return
+    }
+    if (shareForm.expiry === 'permanent') {
+      ElMessage.warning('包含私密照片时不能永久有效，请选择 7 天或 30 天')
+      return
+    }
+  }
   shareSaving.value = true
   try {
     const res = await createCollectionShareApi(shareTarget.value.id, {
       expiresAt: shareExpiryIso(),
       includePrivate: shareForm.includePrivate,
-      accessCode: shareForm.accessCode.trim() || undefined
+      accessCode: accessCode || undefined
     })
     if (res.code === 200 && res.data && res.data.shareUrl) {
       shareResultUrl.value = res.data.shareUrl
