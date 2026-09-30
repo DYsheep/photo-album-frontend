@@ -177,9 +177,20 @@ async function loadShare() {
     }
   } catch (err) {
     // 403 = 需要访问口令（未填写或不正确）
-    if (err?.response?.status === 403) {
+    // 注意：后端把业务状态码放在响应体里（HTTP 200 + code），拦截器以 Error('AUTH') 拒绝，
+    // 因此要同时看 bizCode 与 HTTP 状态码——只判断 err.response.status 会永远不成立，
+    // 表现为"口令输入框从不出现"。
+    const isProtected = err?.bizCode === 403 || err?.response?.status === 403
+    if (isProtected) {
       needCode.value = true
       codeError.value = accessCode.value ? '口令不正确，请重试' : ''
+      shareData.value = null
+      return
+    }
+    // 访问过于频繁：保留口令面板并说明原因，避免用户不明所以
+    if (err?.bizCode === 429) {
+      needCode.value = true
+      codeError.value = err.message || '尝试次数过多，请稍后再试'
       shareData.value = null
       return
     }

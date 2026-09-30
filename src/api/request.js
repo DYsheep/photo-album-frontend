@@ -37,10 +37,16 @@ request.interceptors.response.use(
           ElMessage.warning('登录已过期，请重新登录')
           router.push({ name: 'home' })
         }
-        return Promise.reject(new Error('AUTH'))
+        // 业务状态码挂在错误对象上：后端的鉴权失败是 HTTP 200 + 响应体 code，
+        // 调用方无法用 error.response.status 判断，必须靠这里的 bizCode 区分
+        const authError = new Error('AUTH')
+        authError.bizCode = res.code
+        return Promise.reject(authError)
       }
       ElMessage.error(res.message || '请求失败')
-      return Promise.reject(new Error(res.message || '请求失败'))
+      const bizError = new Error(res.message || '请求失败')
+      bizError.bizCode = res.code
+      return Promise.reject(bizError)
     }
     return res
   },
