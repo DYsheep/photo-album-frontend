@@ -140,16 +140,6 @@ watch(() => route.path, () => { menuOpen.value = false })
   color: #85C1E9;
 }
 
-.logout-btn {
-  background: none;
-  border: 1px solid var(--border-color, #ddd);
-  border-radius: 6px;
-  padding: 4px 12px;
-  font-size: 13px;
-  color: var(--text-muted, #888);
-  cursor: pointer;
-}
-.logout-btn:hover { color: #F56C6C; border-color: #F56C6C; }
 .logout-link { color: #F56C6C; font-size: 16px; cursor: pointer; }
 
 /* 汉堡按钮 - 默认隐藏 */

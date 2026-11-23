@@ -48,18 +48,18 @@
             </td>
             <td>{{ formatDateShort(col.createdAt) }}</td>
             <td class="action-cell">
-              <button class="action-btn" @click="managePhotos(col)" title="管理照片">
+              <button class="icon-btn" @click="managePhotos(col)" title="管理照片">
                 <EmojiIcon name="framed-picture" :size="16" />
               </button>
-              <button class="action-btn" @click="openShareDialog(col)" title="分享">
+              <button class="icon-btn" @click="openShareDialog(col)" title="分享">
                 <EmojiIcon name="outbox-tray" :size="16" />
-              </button>              <button v-if="canManageCollections" class="action-btn" @click="openMembers(col)" title="协作者">
+              </button>              <button v-if="canManageCollections" class="icon-btn" @click="openMembers(col)" title="协作者">
                 <EmojiIcon name="people" :size="16" />
               </button>
-              <button class="action-btn" @click="openEditDialog(col)" title="编辑">
+              <button class="icon-btn" @click="openEditDialog(col)" title="编辑">
                 <EmojiIcon name="pencil" :size="16" />
               </button>
-              <button class="action-btn danger" @click="confirmDelete(col)" title="删除">
+              <button class="icon-btn icon-btn--danger" @click="confirmDelete(col)" title="删除">
                 <EmojiIcon name="wastebasket" :size="16" />
               </button>
             </td>
@@ -788,28 +788,8 @@ onMounted(() => {
   gap: 6px;
 }
 
-.action-btn {
-  width: 32px;
-  height: 32px;
-  border: 0.5px solid var(--border-color, #ddd);
-  border-radius: 6px;
-  background: var(--bg-card, #fff);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
 
-.action-btn:hover {
-  border-color: var(--color-primary, #378ADD);
-  background: var(--color-primary-light, #F5FAFF);
-}
 
-.action-btn.danger:hover {
-  border-color: var(--color-danger, #E24B4A);
-  background: #FDF0F0;
-}
 
 .empty-table {
   text-align: center;

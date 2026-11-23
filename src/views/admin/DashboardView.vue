@@ -33,8 +33,12 @@
     </div>
 
     <!-- 最近上传 -->
-    <section class="recent-section">
-      <h3>最近上传</h3>
+    <section class="panel mt-lg">
+      <div class="panel-header">
+        <h3>最近上传</h3>
+        <router-link to="/admin/photos" class="btn-secondary btn-sm">查看全部</router-link>
+      </div>
+      <div class="panel-body">
       <div class="recent-list" v-if="stats.recentPhotos.length > 0">
         <div v-for="photo in stats.recentPhotos" :key="photo.id" class="recent-item">
           <div class="recent-thumb">
@@ -47,33 +51,42 @@
           </div>
         </div>
       </div>
-      <div v-else class="empty-hint">暂无照片，去上传吧！</div>
+      <div v-else class="empty">暂无照片，去上传吧！</div>
+      </div>
     </section>
 
     <!-- 操作快捷入口 -->
-    <section class="quick-actions">
-      <h3>快捷操作</h3>
+    <section class="panel mt-lg">
+      <div class="panel-header">
+        <h3>快捷操作</h3>
+      </div>
+      <div class="panel-body">
       <div class="action-buttons">
-        <router-link to="/admin/upload" class="action-btn primary">
+        <router-link to="/admin/upload" class="btn-primary cta-btn">
           <EmojiIcon name="outbox-tray" :size="22" class="icon-inline" /> 上传新图片
         </router-link>
-        <router-link to="/admin/photos" class="action-btn">
+        <router-link to="/admin/photos" class="btn-secondary cta-btn">
           <EmojiIcon name="framed-picture" :size="22" class="icon-inline" /> 管理照片
         </router-link>
-        <router-link to="/admin/categories" class="action-btn">
+        <router-link to="/admin/categories" class="btn-secondary cta-btn">
           <EmojiIcon name="file-folder" :size="22" class="icon-inline" /> 管理分类
         </router-link>
+      </div>
       </div>
     </section>
 
     <!-- EXIF 统计分析 -->
-    <section class="exif-section" v-if="hasExifData">
-      <div class="section-header" @click="exifExpanded = !exifExpanded">
+    <section class="panel mt-lg" v-if="hasExifData">
+      <div class="panel-header">
         <h3>EXIF 数据分析</h3>
-        <span class="toggle-icon"><ChevronDown v-if="!exifExpanded" :size="16" /><ChevronUp v-else :size="16" /></span>
+        <button class="btn-secondary btn-sm" @click="exifExpanded = !exifExpanded">
+          {{ exifExpanded ? '收起' : '展开' }}
+          <ChevronUp v-if="exifExpanded" :size="14" />
+          <ChevronDown v-else :size="14" />
+        </button>
       </div>
 
-      <div v-show="exifExpanded" class="exif-grid">
+      <div v-show="exifExpanded" class="panel-body exif-grid">
         <!-- 焦段偏好 -->
         <div class="exif-card" v-if="focalLengthList.length > 0">
           <h4>焦段偏好</h4>
@@ -167,11 +180,13 @@
     </section>
 
     <!-- 无 EXIF 数据提示 -->
-    <section class="exif-section" v-else>
-      <div class="section-header">
+    <section class="panel mt-lg" v-else>
+      <div class="panel-header">
         <h3>EXIF 数据分析</h3>
       </div>
-      <div class="exif-empty">暂无数据</div>
+      <div class="panel-body">
+        <div class="empty">暂无数据</div>
+      </div>
     </section>
   </div>
 </template>
@@ -349,13 +364,6 @@ onMounted(async () => {
 
 /* 最近上传 */
 .recent-section,
-.quick-actions {
-  background: var(--bg-card, #fff);
-  border-radius: 12px;
-  padding: 22px 24px;
-  border: 0.5px solid var(--border-light, #eee);
-  margin-bottom: 20px;
-}
 
 h3 {
   font-size: 16px;
@@ -411,11 +419,6 @@ h3 {
   margin-top: 2px;
 }
 
-.empty-hint {
-  text-align: center;
-  color: var(--text-placeholder, #aaa);
-  padding: 30px 0;
-}
 
 .action-buttons {
   display: flex;
@@ -423,55 +426,13 @@ h3 {
   flex-wrap: wrap;
 }
 
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 22px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border-color, #ddd);
-  font-size: 14px;
-  text-decoration: none;
-  color: var(--text-regular, #555);
-  transition: all 0.2s;
-}
 
-.action-btn:hover {
-  border-color: var(--color-primary, #378ADD);
-  color: var(--color-primary, #378ADD);
-}
 
-.action-btn.primary {
-  background: #378ADD;
-  border-color: #378ADD;
-  color: #fff;
-}
 
 /* EXIF 统计区域 */
-.exif-section {
-  background: var(--bg-card, #fff);
-  border-radius: 12px;
-  padding: 22px 24px;
-  border: 0.5px solid var(--border-light, #eee);
-  margin-bottom: 20px;
-}
 
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  user-select: none;
-}
 
-.section-header h3 {
-  margin-bottom: 0;
-}
 
-.toggle-icon {
-  font-size: 11px;
-  color: var(--text-muted, #999);
-}
 
 .exif-grid {
   display: grid;
@@ -582,12 +543,6 @@ h3 {
   color: var(--text-muted, #888);
 }
 
-.exif-empty {
-  text-align: center;
-  padding: 30px 0;
-  color: var(--text-placeholder, #aaa);
-  font-size: 14px;
-}
 
 /* 环状图 */
 .donut-wrapper {

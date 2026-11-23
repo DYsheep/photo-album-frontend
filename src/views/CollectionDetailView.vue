@@ -116,25 +116,7 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 20px;
-  border: 1.5px solid var(--border-color, #ddd);
-  border-radius: 8px;
-  background: var(--bg-card, #fff);
-  color: var(--text-regular, #555);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
 
-.back-btn:hover {
-  border-color: var(--color-primary, #378ADD);
-  color: var(--color-primary, #378ADD);
-  background: var(--color-primary-light, #F5FAFF);
-}
 
 .collection-header {
   margin-bottom: 32px;

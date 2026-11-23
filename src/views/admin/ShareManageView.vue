@@ -202,18 +202,6 @@ onMounted(() => {
   gap: 8px;
 }
 
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 12px;
-  border: 1px solid var(--border-color, #ddd);
-  border-radius: 6px;
-  background: var(--bg-card, #fff);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
 
 .copy-action {
   color: var(--color-primary, #378ADD);

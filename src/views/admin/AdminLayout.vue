@@ -16,38 +16,45 @@
       </div>
 
       <nav class="sidebar-nav">
-        <router-link to="/admin/dashboard" class="nav-item" active-class="active">
-          <EmojiIcon name="bar-chart" class="nav-icon" :size="22" />
-          <span v-show="!isCollapsed" class="nav-text">数据概览</span>
-        </router-link>
-        <router-link to="/admin/upload" class="nav-item" active-class="active" v-if="canUpload">
-          <EmojiIcon name="outbox-tray" class="nav-icon" :size="22" />
-          <span v-show="!isCollapsed" class="nav-text">上传图片</span>
-        </router-link>
-        <router-link to="/admin/photos" class="nav-item" active-class="active" v-if="canManage">
-          <EmojiIcon name="framed-picture" class="nav-icon" :size="22" />
-          <span v-show="!isCollapsed" class="nav-text">照片管理</span>
-        </router-link>
-        <router-link to="/admin/categories" class="nav-item" active-class="active" v-if="canManage">
-          <EmojiIcon name="file-folder" class="nav-icon" :size="22" />
-          <span v-show="!isCollapsed" class="nav-text">分类管理</span>
-        </router-link>
-        <router-link to="/admin/tags" class="nav-item" active-class="active" v-if="canManage">
-          <EmojiIcon name="label" class="nav-icon" :size="22" />
-          <span v-show="!isCollapsed" class="nav-text">标签管理</span>
-        </router-link>
-        <router-link to="/admin/collections" class="nav-item" active-class="active" v-if="canManage || isCollectionMember">
-          <EmojiIcon name="open-book" class="nav-icon" :size="22" />
-          <span v-show="!isCollapsed" class="nav-text">合集管理</span>
-        </router-link>
-        <router-link to="/admin/share" class="nav-item" active-class="active" v-if="canManage">
-          <EmojiIcon name="link" class="nav-icon" :size="22" />
-          <span v-show="!isCollapsed" class="nav-text">分享管理</span>
-        </router-link>
-        <router-link to="/admin/users" class="nav-item" active-class="active" v-if="isAdmin">
-          <EmojiIcon name="people" class="nav-icon" :size="22" />
-          <span v-show="!isCollapsed" class="nav-text">用户管理</span>
-        </router-link>
+        <div class="nav-group">
+          <div class="nav-group-title">内容</div>
+          <router-link to="/admin/dashboard" class="nav-item" active-class="active">
+            <EmojiIcon name="bar-chart" class="nav-icon" :size="20" />
+            <span v-show="!isCollapsed" class="nav-text">数据概览</span>
+          </router-link>
+          <router-link to="/admin/upload" class="nav-item" active-class="active" v-if="canUpload">
+            <EmojiIcon name="outbox-tray" class="nav-icon" :size="20" />
+            <span v-show="!isCollapsed" class="nav-text">上传图片</span>
+          </router-link>
+          <router-link to="/admin/photos" class="nav-item" active-class="active" v-if="canManage">
+            <EmojiIcon name="framed-picture" class="nav-icon" :size="20" />
+            <span v-show="!isCollapsed" class="nav-text">照片管理</span>
+          </router-link>
+          <router-link to="/admin/categories" class="nav-item" active-class="active" v-if="canManage">
+            <EmojiIcon name="file-folder" class="nav-icon" :size="20" />
+            <span v-show="!isCollapsed" class="nav-text">分类管理</span>
+          </router-link>
+          <router-link to="/admin/tags" class="nav-item" active-class="active" v-if="canManage">
+            <EmojiIcon name="label" class="nav-icon" :size="20" />
+            <span v-show="!isCollapsed" class="nav-text">标签管理</span>
+          </router-link>
+          <router-link to="/admin/collections" class="nav-item" active-class="active" v-if="canManage || isCollectionMember">
+            <EmojiIcon name="open-book" class="nav-icon" :size="20" />
+            <span v-show="!isCollapsed" class="nav-text">合集管理</span>
+          </router-link>
+        </div>
+
+        <div class="nav-group" v-if="canManage || isAdmin">
+          <div class="nav-group-title">系统</div>
+          <router-link to="/admin/share" class="nav-item" active-class="active" v-if="canManage">
+            <EmojiIcon name="link" class="nav-icon" :size="20" />
+            <span v-show="!isCollapsed" class="nav-text">分享管理</span>
+          </router-link>
+          <router-link to="/admin/users" class="nav-item" active-class="active" v-if="isAdmin">
+            <EmojiIcon name="people" class="nav-icon" :size="20" />
+            <span v-show="!isCollapsed" class="nav-text">用户管理</span>
+          </router-link>
+        </div>
       </nav>
 
       <div class="sidebar-footer">
@@ -69,10 +76,13 @@
           <h2>{{ currentTitle }}</h2>
         </div>
         <div class="topbar-right">
-          <span class="user-info">
-            <EmojiIcon name="bust-in-silhouette" :size="15" class="icon-inline" /> {{ authStore.userInfo.nickname || '管理员' }}
+          <span class="topbar-user">
+            <span class="topbar-avatar">
+              <EmojiIcon name="bust-in-silhouette" :size="15" />
+            </span>
+            <span class="topbar-username">{{ authStore.userInfo.nickname || '管理员' }}</span>
           </span>
-          <button class="logout-btn" @click="handleLogout">退出登录</button>
+          <button class="btn-secondary btn-sm" @click="handleLogout">退出登录</button>
         </div>
       </header>
 
@@ -154,12 +164,6 @@ function handleLogout() {
   border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
 }
 
-.sidebar-logo {
-  width: 22px;
-  height: 22px;
-  color: #5DADE2;
-}
-
 .sidebar-title {
   font-size: 15px;
   font-weight: 500;
@@ -193,6 +197,7 @@ function handleLogout() {
 }
 
 .nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -210,9 +215,23 @@ function handleLogout() {
   color: #fff;
 }
 
+/* 选中态：底色 + 左侧指示条（替代原先只有淡底色、层级不明显的问题） */
 .nav-item.active {
   background: rgba(55, 138, 221, 0.2);
   color: #5DADE2;
+  font-weight: 500;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  border-radius: 0 3px 3px 0;
+  background: var(--color-primary, #378ADD);
 }
 
 .nav-icon {
@@ -263,28 +282,37 @@ function handleLogout() {
 .topbar-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
 }
 
-.user-info {
-  font-size: 14px;
-  color: var(--text-regular, #555);
-}
-
-.logout-btn {
-  padding: 6px 16px;
-  border: 1.5px solid var(--border-color, #ddd);
-  border-radius: 6px;
-  background: var(--bg-card, #fff);
-  color: var(--text-regular, #555);
+/* 顶栏用户信息：头像底 + 名称，统一成"胶囊"形态 */
+.topbar-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  background: var(--bg-secondary, #f0f2f5);
   font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
+  color: var(--text-regular, #555);
 }
 
-.logout-btn:hover {
-  border-color: var(--color-danger, #E24B4A);
-  color: var(--color-danger, #E24B4A);
+.topbar-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-card, #fff);
+  color: var(--color-primary, #378ADD);
+}
+
+.topbar-username {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .content-area {

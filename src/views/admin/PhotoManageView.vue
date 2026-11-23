@@ -478,11 +478,6 @@ async function saveBatchEdit() {
   align-items: center;
 }
 
-.btn-secondary {
-  background: #f5f5f5;
-  color: #555;
-  border: 1.5px solid #ddd !important;
-}
 
 /* 表格 */
 .photo-table-wrap {
@@ -558,19 +553,7 @@ async function saveBatchEdit() {
   font-size: 13px;
 }
 
-.action-btn {
-  padding: 4px 10px;
-  margin-right: 6px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: #fff;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
 
-.edit-btn:hover { border-color: #378ADD; color: #378ADD; }
-.del-btn:hover { border-color: #E24B4A; color: #E24B4A; }
 
 .empty-state {
   text-align: center;

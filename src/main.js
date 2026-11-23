@@ -26,6 +26,9 @@ import 'element-plus/dist/index.css'
 
 import './assets/main.css'
 import './assets/theme.css'
+// UI 统一层：按钮/面板/表格/分栏导航的唯一来源。必须放在最后，
+// 以便覆盖 main.css 里早先较松散的共享样式。
+import './assets/ui.css'
 
 const app = createApp(App)
 

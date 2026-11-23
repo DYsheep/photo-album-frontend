@@ -254,8 +254,6 @@ onMounted(async () => {
 .drop-title { font-size: 16px; font-weight: 500; color: var(--text-primary); margin: 0; }
 .drop-sub { font-size: 13px; color: var(--text-muted, #999); margin: 6px 0 0; }
 .drop-hint { font-size: 11px; color: var(--text-muted, #bbb); margin: 8px 0 0; }
-.link-btn { background: none; border: none; color: var(--color-primary, #378ADD); cursor: pointer; padding: 0; font-size: inherit; pointer-events: auto; }
-.link-btn:hover { text-decoration: underline; }
 .file-input-hidden { display: none; }
 
 /* 卡片通用 */
@@ -335,15 +333,6 @@ onMounted(async () => {
 
 /* 操作按钮 */
 .actions { margin-top: 20px; display: flex; gap: 12px; align-items: center; }
-.btn-upload-all {
-  padding: 10px 28px;
-  font-size: 15px;
-  font-weight: 500;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
 
 /* 兜底：文件输入框不使用 display:none（部分移动浏览器不会为它弹出选择器），改为离屏透明 */
 /* 文件输入框：整块覆盖上传区并全透明——点击=原生点击输入框，
@@ -372,9 +361,5 @@ onMounted(async () => {
     touch-action: manipulation;
   }
 
-  .link-btn {
-    min-height: 44px;
-    padding: 6px 8px;
-  }
 }
 </style>

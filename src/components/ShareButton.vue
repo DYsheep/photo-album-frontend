@@ -293,25 +293,7 @@ async function copyLink() {
   border-color: var(--color-primary, #378ADD);
 }
 
-.copy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 10px 18px;
-  background: var(--color-primary, #378ADD);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
 
-.copy-btn:hover {
-  background: var(--color-primary-dark, #2B6EC5);
-}
 
 /* 有效期设置 */
 .expiry-row {

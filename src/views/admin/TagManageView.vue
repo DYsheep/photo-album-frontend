@@ -289,25 +289,9 @@ async function saveMerge() {
   align-items: center;
 }
 
-.btn-primary {
-  background: #378ADD;
-  color: #fff;
-}
 
-.btn-primary:hover {
-  background: #2B6FC4;
-}
 
-.btn-secondary {
-  background: #f5f5f5;
-  color: #555;
-  border: 1.5px solid #ddd !important;
-}
 
-.btn-secondary:hover {
-  border-color: #378ADD !important;
-  color: #378ADD;
-}
 
 /* 标签网格 */
 .tag-grid {

@@ -196,21 +196,6 @@ async function handleDelete(cat) {
   font-weight: 500;
 }
 
-.btn-primary {
-  padding: 9px 20px;
-  border-radius: 6px;
-  background: #378ADD;
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
-}
-.btn-primary:hover { background: #185FA5; }
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 
 /* 分类卡片 */
 .category-grid {
@@ -267,22 +252,7 @@ async function handleDelete(cat) {
   border-top: 0.5px solid #f5f5f5;
 }
 
-.action-btn {
-  padding: 5px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: #fff;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
 
-.edit-btn:hover { border-color: #378ADD; color: #378ADD; }
-.del-btn:hover { border-color: #E24B4A; color: #E24B4A; }
-.del-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
 
 .empty-state {
   grid-column: 1 / -1;
@@ -356,13 +326,4 @@ async function handleDelete(cat) {
   margin-top: 24px;
 }
 
-.btn-secondary {
-  padding: 9px 22px;
-  border-radius: 6px;
-  background: #f0f0f0;
-  color: #555;
-  font-size: 14px;
-  cursor: pointer;
-  border: none;
-}
 </style>
