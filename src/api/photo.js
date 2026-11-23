@@ -19,7 +19,7 @@ export function getPhotoListApi(params) {
  * 后台的照片选择器（需在本地按 ID 查找目标照片）。
  * 追求单页展示的场景请直接使用 getPhotoListApi 与服务端分页。
  */
-export async function getAllPhotoListApi(params = {}, { pageSize = 200, maxPages = 25 } = {}) {
+export async function getAllPhotoListApi(params = {}, { pageSize = 500, maxPages = 25 } = {}) {
   const all = []
   for (let pageNum = 1; pageNum <= maxPages; pageNum += 1) {
     const res = await getPhotoListApi({ ...params, pageNum, pageSize })
