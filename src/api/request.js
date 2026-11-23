@@ -29,16 +29,28 @@ request.interceptors.response.use(
   (response) => {
     const res = response.data
     if (res.code && res.code !== 200) {
-      // 401 / 403 静默处理，由路由守卫负责跳转
-      if (res.code === 401 || res.code === 403) {
+      // 登录接口的 401 是"用户名或口令错误"，不是会话过期：
+      // 此前统一按过期处理，会清掉会话、把用户弹出登录页并提示"登录已过期"，
+      // 真正的失败原因（口令错误）永远显示不出来。
+      const isLoginRequest = (response.config?.url || '').includes('/auth/login')
+
+      if (res.code === 401 && !isLoginRequest) {
         const authStore = useAuthStore()
-        if (res.code === 401) {
-          authStore.logout()
-          ElMessage.warning('登录已过期，请重新登录')
-          router.push({ name: 'home' })
-        }
-        // 业务状态码挂在错误对象上：后端的鉴权失败是 HTTP 200 + 响应体 code，
-        // 调用方无法用 error.response.status 判断，必须靠这里的 bizCode 区分
+        authStore.logout()
+        ElMessage.warning('登录已过期，请重新登录')
+        router.push({ name: 'home' })
+        const authError = new Error('AUTH')
+        authError.bizCode = res.code
+        return Promise.reject(authError)
+      }
+      if (res.code === 401) {
+        const loginError = new Error(res.message || '用户名或密码错误')
+        loginError.bizCode = res.code
+        return Promise.reject(loginError)
+      }
+      if (res.code === 403) {
+        // 403 此前完全静默：页面停在半截、表格为空，用户分不清"无权限"与"没数据"
+        ElMessage.warning(res.message || '无权限执行该操作')
         const authError = new Error('AUTH')
         authError.bizCode = res.code
         return Promise.reject(authError)

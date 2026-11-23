@@ -318,12 +318,17 @@ async function saveEdit() {
   if (!editingPhoto.value) return
   saving.value = true
   try {
-    await updatePhotoApi(editingPhoto.value.id, {
+    const payload = {
       title: editForm.title,
       categoryId: editForm.categoryId,
-      description: editForm.description,
-      isPrivate: editForm.isPrivate ? 1 : 0
-    })
+      description: editForm.description
+    }
+    // 私密标记只有管理员能改。非管理员不要携带该字段：
+    // 后端虽然会静默忽略，但载荷里带上旧值容易在字段语义变化时意外翻转私密状态。
+    if (auth.isAdmin) {
+      payload.isPrivate = editForm.isPrivate ? 1 : 0
+    }
+    await updatePhotoApi(editingPhoto.value.id, payload)
     ElMessage.success('保存成功')
     closeEdit()
     await loadPhotos()

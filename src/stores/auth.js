@@ -5,7 +5,27 @@ import { loginApi as adminLogin, logoutApi } from '../api/auth'
 export const useAuthStore = defineStore('auth', () => {
   // 状态
   const token = ref(localStorage.getItem('admin_token') || '')
-  const userInfo = ref(JSON.parse(localStorage.getItem('admin_user') || '{}'))
+
+  /**
+   * 读取缓存的用户信息
+   *
+   * localStorage 内容可能被历史版本、手工编辑或其他同源脚本写坏，
+   * 直接 JSON.parse 会在 store 初始化（路由守卫第一次执行）时抛异常，
+   * 整个应用白屏且无法自愈。这里解析失败就退化为空对象并清掉脏数据。
+   */
+  function readCachedUser() {
+    const raw = localStorage.getItem('admin_user')
+    if (!raw) return {}
+    try {
+      const parsed = JSON.parse(raw)
+      return parsed && typeof parsed === 'object' ? parsed : {}
+    } catch {
+      localStorage.removeItem('admin_user')
+      return {}
+    }
+  }
+
+  const userInfo = ref(readCachedUser())
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => userInfo.value?.role === 'admin')
   const canUpload = computed(() => isAdmin.value || userInfo.value?.canUpload === 1)

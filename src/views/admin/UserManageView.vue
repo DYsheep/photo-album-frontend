@@ -267,6 +267,9 @@ import { getCategoryListApi } from '../../api/category'
 import { getAdminTagListApi } from '../../api/admin-tag'
 import { getAdminCollectionsApi } from '../../api/collection'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useAuthStore } from '../../stores/auth'
+
+const authStore = useAuthStore()
 
 const users = ref([])
 const dialogVisible = ref(false)
@@ -353,11 +356,25 @@ function openEdit(u) {
 }
 async function handleSave() {
   saving.value = true
+  // 能力位统一用数字 0/1：后端按 Integer 接收，此前传字符串 '1'/'0'，
+  // 与读取端 `=== 1` 的严格比较不一致，容易出现"保存成功但徽标不显示"
   const data = { nickname: form.nickname, role: form.role, password: form.password || undefined,
-    canUpload: form.canUpload ? '1' : '0', canManage: form.canManage ? '1' : '0',
-    canViewPrivate: form.canViewPrivate ? '1' : '0' }
+    canUpload: form.canUpload ? 1 : 0, canManage: form.canManage ? 1 : 0,
+    canViewPrivate: form.canViewPrivate ? 1 : 0 }
   try {
     if (editingUser.value) {
+      // 防止管理员把自己降级后失去后台入口（后端只拦"最后一个管理员"）
+      const editingSelf = editingUser.value.id === authStore.userInfo?.id
+      if (editingSelf && authStore.isAdmin && data.role !== 'admin') {
+        try {
+          await ElMessageBox.confirm(
+            '你正在把自己降级为非管理员，提交后可能无法再进入后台（若这是唯一管理员，后端会拒绝）。确认继续？',
+            '确认降级', { type: 'warning' })
+        } catch {
+          saving.value = false
+          return
+        }
+      }
       await updateUserApi(editingUser.value.id, data)
       ElMessage.success('用户已更新')
     } else {
@@ -468,12 +485,25 @@ async function addPerm() {
 
 /** 添加"全局"授权（白名单=全部私密内容可见） */
 async function addGlobalPerm() {
-  await addUserPermissionApi(permUser.value.id, {
-    permType: newPerm.type, targetType: 'global'
-  })
-  ElMessage.success('已添加')
-  openPermissions(permUser.value)
-  loadAuditLogs()
+  // 这是本页影响面最大的操作（一次授予全站私密内容可见权），必须有二次确认
+  const tip = newPerm.type === 'W'
+    ? '将授予该账号【全部私密照片】的可见权限，确认添加？'
+    : '将把该账号从【全部私密照片】的可见范围内排除，确认添加？'
+  try {
+    await ElMessageBox.confirm(tip, '确认授权', { type: 'warning' })
+  } catch {
+    return
+  }
+  try {
+    await addUserPermissionApi(permUser.value.id, {
+      permType: newPerm.type, targetType: 'global'
+    })
+    ElMessage.success('已添加')
+    openPermissions(permUser.value)
+    loadAuditLogs()
+  } catch {
+    // request.js 已弹出具体错误（如"该授权条目已存在"），这里不再重复提示
+  }
 }
 
 /** 授权条目展示文案 */
@@ -485,10 +515,21 @@ function permLabel(p) {
 }
 
 async function removePerm(permId) {
-  await removeUserPermissionApi(permUser.value.id, permId)
-  ElMessage.success('已删除')
-  openPermissions(permUser.value)
-  loadAuditLogs()
+  // 撤销授权会直接改变该账号对私密内容的可见范围，同样需要确认
+  try {
+    await ElMessageBox.confirm('撤销这条授权后，该账号将立即失去对应范围的访问权限，确认？',
+      '确认撤销', { type: 'warning' })
+  } catch {
+    return
+  }
+  try {
+    await removeUserPermissionApi(permUser.value.id, permId)
+    ElMessage.success('已删除')
+    openPermissions(permUser.value)
+    loadAuditLogs()
+  } catch {
+    // 错误提示已由请求拦截器统一弹出
+  }
 }
 
 onMounted(() => {

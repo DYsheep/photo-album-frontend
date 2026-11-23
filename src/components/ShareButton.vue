@@ -88,8 +88,11 @@ const shareUrl = ref('')
 const copied = ref(false)
 const linkInputRef = ref(null)
 
-/** 有效期选择：permanent | '7' | '30' | 'custom' */
-const expiryChoice = ref('permanent')
+/** 有效期选择：7 天 | '30' | 'permanent' | 'custom'
+ * 默认 7 天而不是永久：此前默认永久，且点一下就先生成链接，
+ * 用户还在选有效期时，一条永久公开链接已经生效了。
+ */
+const expiryChoice = ref('7')
 const customDate = ref('')
 const expiresAt = ref(null)
 
