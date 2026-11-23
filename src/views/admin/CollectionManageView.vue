@@ -1,7 +1,6 @@
 <template>
   <div class="collection-manage">
-    <div class="page-header">
-      <h2>合集管理</h2>
+    <div class="toolbar toolbar-end">
       <div class="row-actions">
         <button v-if="dragChanged" class="btn-secondary btn-sm" @click="saveOrder" :disabled="savingOrder">
           {{ savingOrder ? '保存中...' : '保存排序' }}
@@ -54,7 +53,7 @@
               <button class="icon-btn" @click="openShareDialog(col)" title="分享">
                 <EmojiIcon name="outbox-tray" :size="16" />
               </button>              <button v-if="canManageCollections" class="icon-btn" @click="openMembers(col)" title="协作者">
-                <EmojiIcon name="people" :size="16" />
+                <EmojiIcon name="busts-in-silhouette" :size="16" />
               </button>
               <button class="icon-btn" @click="openEditDialog(col)" title="编辑">
                 <EmojiIcon name="pencil" :size="16" />

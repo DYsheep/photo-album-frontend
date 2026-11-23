@@ -68,8 +68,10 @@
             <td><span class="cat-tag">{{ photo.categoryName }}</span></td>
             <td class="desc-cell">{{ photo.description || '-' }}</td>
             <td>
-              <button class="action-btn edit-btn" @click="openEdit(photo)"><EmojiIcon name="pencil" :size="14" class="icon-inline" /> 编辑</button>
-              <button class="action-btn del-btn" @click="handleDelete(photo.id)"><EmojiIcon name="wastebasket" :size="14" class="icon-inline" /></button>
+              <div class="row-actions">
+                <button class="btn-secondary btn-sm" @click="openEdit(photo)"><EmojiIcon name="pencil" :size="14" class="icon-inline" /> 编辑</button>
+                <button class="btn-danger btn-sm" @click="handleDelete(photo.id)"><EmojiIcon name="wastebasket" :size="14" class="icon-inline" /> 删除</button>
+              </div>
             </td>
           </tr>
         </tbody>

@@ -101,12 +101,12 @@
                 <path :d="arc.path" :fill="arc.color" stroke="#fff" stroke-width="1.5" />
                 <template v-if="arc.showLabel && hoveredIndex !== i">
                   <polyline :points="arc.labelLine" fill="none" :stroke="arc.color" stroke-width="1.2" />
-                  <text :x="arc.labelX" :y="arc.labelY" text-anchor="middle" font-size="10" fill="var(--text-regular, #555)" font-weight="500">{{ arc.name }}mm</text>
+                  <text :x="arc.labelX" :y="arc.labelY" text-anchor="middle" font-size="10" fill="var(--text-regular, #555)" font-weight="500">{{ focalLabel(arc.name) }}</text>
                 </template>
               </g>
               <circle cx="120" cy="100" r="50" fill="var(--bg-card, #fff)" />
               <text x="120" y="95" text-anchor="middle" font-size="12" fill="var(--text-muted, #888)">最多焦段</text>
-              <text x="120" y="113" text-anchor="middle" font-size="15" fill="var(--color-primary, #378ADD)" font-weight="600">{{ topFocalLength }}mm</text>
+              <text x="120" y="113" text-anchor="middle" font-size="15" fill="var(--color-primary, #378ADD)" font-weight="600">{{ focalLabel(topFocalLength) }}</text>
             </svg>
             <!-- 鼠标跟随 tooltip —— HTML div，图层最高 -->
             <div
@@ -114,7 +114,7 @@
               class="donut-tooltip"
               :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }"
             >
-              {{ currentArc.name }}mm · {{ currentArc.count }} 张
+              {{ focalLabel(currentArc.name) }} · {{ currentArc.count }} 张
             </div>
           </div>
         </div>
@@ -196,6 +196,15 @@ import { reactive, ref, computed, onMounted } from 'vue'
 import { getDashboardStatsApi } from '../../api/photo'
 import EmojiIcon from '../../components/EmojiIcon.vue'
 import { ChevronDown, ChevronUp } from 'lucide-vue-next'
+
+/**
+ * 焦距标签：后端已把 EXIF 焦距格式化成带单位的 "50.0mm"，
+ * 模板里再拼一次 "mm" 会显示成 "50.0mmmm"，这里先去掉自带单位再补齐。
+ */
+function focalLabel(name) {
+  if (!name) return ''
+  return String(name).replace(/\s*mm$/i, '') + 'mm'
+}
 
 // 统计数据（从后端 API 获取）
 const stats = reactive({

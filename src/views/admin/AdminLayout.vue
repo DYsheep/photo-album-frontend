@@ -51,7 +51,7 @@
             <span v-show="!isCollapsed" class="nav-text">分享管理</span>
           </router-link>
           <router-link to="/admin/users" class="nav-item" active-class="active" v-if="isAdmin">
-            <EmojiIcon name="people" class="nav-icon" :size="20" />
+            <EmojiIcon name="busts-in-silhouette" class="nav-icon" :size="20" />
             <span v-show="!isCollapsed" class="nav-text">用户管理</span>
           </router-link>
         </div>

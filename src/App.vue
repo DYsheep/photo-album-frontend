@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <header class="app-header">
+    <header v-if="!isAdminArea" class="app-header">
       <nav class="nav-container">
         <router-link to="/" class="logo" @click.prevent="goHome">
           <EmojiIcon name="camera" :size="24" />
@@ -28,7 +28,7 @@
 
     <!-- 手机侧滑菜单 -->
     <Transition name="slide">
-      <div v-if="menuOpen" class="mobile-overlay" @click="menuOpen = false">
+      <div v-if="!isAdminArea && menuOpen" class="mobile-overlay" @click="menuOpen = false">
         <nav class="mobile-menu" @click.stop>
           <router-link to="/" @click="menuOpen = false">首页</router-link>
           <router-link to="/collections" @click="menuOpen = false">合集</router-link>
@@ -42,7 +42,7 @@
       </div>
     </Transition>
 
-    <main class="main-content">
+    <main class="main-content" :class="{ 'main-content--admin': isAdminArea }">
       <router-view />
     </main>
   </div>
@@ -59,6 +59,12 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const menuOpen = ref(false)
+
+/**
+ * 后台区域使用独立布局（AdminLayout 自带侧边栏与顶栏），
+ * 不能再叠加公开站点的顶栏与内容边距——否则会出现"双顶栏 + 两个退出按钮"。
+ */
+const isAdminArea = computed(() => route.path.startsWith('/admin'))
 
 function handleLogout() {
   authStore.logout()
@@ -221,6 +227,12 @@ watch(() => route.path, () => { menuOpen.value = false })
   max-width: 1200px;
   margin: 0 auto;
   padding: 32px 24px;
+}
+
+/* 后台：去掉公开站点的宽度限制与内边距，交给 AdminLayout 自己排布 */
+.main-content--admin {
+  max-width: none;
+  padding: 0;
 }
 
 /* 手机 */

@@ -1,12 +1,8 @@
 <template>
   <div class="share-manage">
-    <div class="page-header">
-      <h3><EmojiIcon name="link" :size="18" class="icon-inline" /> 分享管理</h3>
-      <span class="header-desc">管理所有照片的分享链接</span>
-    </div>
-
     <!-- 表格 -->
-    <div class="table-card">
+    <div class="panel">
+      <div class="panel-body table-wrap">
       <el-table :data="list" v-loading="loading" stripe size="default" empty-text="暂无分享链接" class="share-table-desktop">
         <el-table-column prop="code" label="分享码" min-width="140">
           <template #default="{ row }">
@@ -77,6 +73,7 @@
       <div v-if="!loading && list.length === 0" class="empty-state">
         <EmojiIcon name="link" :size="40" />
         <p>暂无分享链接</p>
+      </div>
       </div>
     </div>
   </div>

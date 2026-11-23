@@ -58,13 +58,22 @@ function getSizeClass(count) {
 }
 
 .tag-cloud-header {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
   user-select: none;
-  padding: 6px 0;
+  padding: 8px 14px;
   margin-bottom: 8px;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border-light, #eee);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.18s ease;
+}
+
+.tag-cloud-header:hover {
+  border-color: var(--color-primary, #378ADD);
 }
 
 .tag-cloud-title {
@@ -74,6 +83,9 @@ function getSizeClass(count) {
 }
 
 .tag-cloud-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
   font-size: 11px;
   color: var(--text-muted, #999);
 }
@@ -82,6 +94,7 @@ function getSizeClass(count) {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 12px;
 }
 
 .tag-item {

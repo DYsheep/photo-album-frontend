@@ -114,15 +114,16 @@
   background: var(--color-danger-light);
 }
 
-/* 实心危险（确认删除等主操作场景） */
+/* 危险操作：统一描边红（实心红太抢眼，且列表里一堆实心红会盖过主操作） */
 .btn-danger {
-  background: var(--color-danger);
+  background: var(--bg-card);
   border-color: var(--color-danger);
-  color: #fff;
+  color: var(--color-danger);
 }
 .btn-danger:hover:not(:disabled) {
-  background: var(--color-danger-hover);
+  background: var(--color-danger-light);
   border-color: var(--color-danger-hover);
+  color: var(--color-danger-hover);
 }
 
 /* 尺寸修饰 */
@@ -218,6 +219,45 @@
 /* ============================================================
    2. 面板 / 区块
    ============================================================ */
+
+/* 页面第一行：操作/筛选工具栏（页面标题统一由后台顶栏承担，页面内不再重复放 h1） */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.toolbar-end {
+  justify-content: flex-end;
+}
+
+/* 工具栏里的控件统一成同一高度，避免"搜索按钮比输入框矮一截" */
+.toolbar input:not([type='checkbox']):not([type='radio']),
+.toolbar select,
+.toolbar .btn-primary,
+.toolbar .btn-secondary,
+.toolbar .btn-danger,
+.toolbar .btn-sm {
+  min-height: var(--control-h);
+  height: var(--control-h);
+}
+
+/* 表格行内操作：横排、不换行（此前两个按钮会在窄列里被挤成上下两行） */
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: nowrap;
+}
+
+/* 表格横向滚动容器：列较多的表格在窄屏/小窗口下不再被裁切 */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
 
 .panel {
   background: var(--bg-card);

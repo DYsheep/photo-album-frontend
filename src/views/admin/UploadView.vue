@@ -1,10 +1,5 @@
 <template>
   <div class="upload-page">
-    <div class="page-header">
-      <h2>上传照片</h2>
-      <span class="page-desc">拖拽或点击选取，批量上传并预设分类、合集和标签</span>
-    </div>
-
     <!-- 拖拽区域 -->
     <div
       class="drop-zone"

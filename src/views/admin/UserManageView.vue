@@ -1,15 +1,12 @@
 <template>
   <div class="user-manage">
-    <div class="page-header">
-      <div>
-        <h2>用户管理</h2>
-        <p class="page-subtitle">共 {{ users.length }} 个账号 · 角色仅作标识，实际权限由下方能力位与授权条目决定</p>
-      </div>
+    <div class="toolbar">
+      <p class="hint">共 {{ users.length }} 个账号 · 角色仅作标识，实际权限由下方能力位与授权条目决定</p>
       <button class="btn-primary btn-sm" @click="openCreate">新建用户</button>
     </div>
 
     <!-- 用户列表：与同页审计表统一使用 Element Plus 表格（其暗色变量已在 theme.css 中映射） -->
-    <div class="card-panel">
+    <div class="card-panel table-wrap">
       <el-table v-if="users.length" :data="users" class="table-full user-table">
         <el-table-column prop="username" label="用户名" min-width="130" />
         <el-table-column label="昵称" min-width="120">
