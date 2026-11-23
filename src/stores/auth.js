@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { loginApi as adminLogin, logoutApi } from '../api/auth'
+import { loginApi as adminLogin, logoutApi, getUserInfoApi } from '../api/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   // 状态
@@ -47,6 +47,8 @@ export const useAuthStore = defineStore('auth', () => {
       userInfo.value = realUser
       localStorage.setItem('admin_token', realToken)
       localStorage.setItem('admin_user', JSON.stringify(realUser))
+      // 刚登录，视为已校验，避免紧接着的导航再打一次 /auth/userinfo
+      lastVerifiedAt = Date.now()
 
       return { code: 200, message: '登录成功', data: realUser }
     } catch (error) {
@@ -79,6 +81,32 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('admin_user', JSON.stringify(info))
   }
 
+  /**
+   * 主动校验会话是否仍然有效
+   *
+   * 本地令牌可能已过期（默认 24 小时）或被服务端吊销，但界面仍显示已登录，
+   * 表现为"后台能打开、所有操作 403"。进入后台路由前调用本方法；
+   * 60 秒内只校验一次，避免每次跳转都多打一个请求。
+   */
+  let lastVerifiedAt = 0
+  async function verifySession(force = false) {
+    if (!token.value) return false
+    if (!force && Date.now() - lastVerifiedAt < 60_000) return true
+    try {
+      const res = await getUserInfoApi()
+      if (res && res.data) {
+        userInfo.value = res.data
+        localStorage.setItem('admin_user', JSON.stringify(res.data))
+      }
+      lastVerifiedAt = Date.now()
+      return true
+    } catch (e) {
+      // 401 已由拦截器清理会话并跳转登录；网络抖动不当作登出
+      if (e && (e.bizCode === 401 || (e.response && e.response.status === 401))) return false
+      return true
+    }
+  }
+
   return {
     token,
     userInfo,
@@ -87,6 +115,7 @@ export const useAuthStore = defineStore('auth', () => {
     canUpload,
     canManage,
     canViewPrivate,
+    verifySession,
     isCollectionMember,
     login,
     logout,

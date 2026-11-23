@@ -184,7 +184,8 @@ function describeUploadError(err) {
   if (!err) return '上传失败'
   if (err.code === 'ECONNABORTED') return '上传超时（网络较慢或文件过大），可重试'
   if (err.bizCode === 429) return '上传过于频繁，请等待约 10 分钟后再试'
-  if (err.bizCode === 401 || err.bizCode === 403) return '无上传权限，请重新登录或联系管理员'
+  if (err.bizCode === 401) return '登录已过期，请重新登录后重试'
+  if (err.bizCode === 403) return '没有上传权限（账号缺少该能力或会话已失效），请重新登录或联系管理员'
   if (err.bizCode) return err.message || '上传失败'
   if (err.response?.status === 413) return '文件超过服务器允许的大小上限'
   if (err.response?.data?.message) return err.response.data.message

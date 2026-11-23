@@ -65,13 +65,32 @@ request.interceptors.response.use(
   (error) => {
     if (error.response) {
       const status = error.response.status
+      const body = error.response.data
       switch (status) {
-        case 401:
-          useAuthStore().logout()
-          ElMessage.warning('登录已过期，请重新登录')
-          router.push({ name: 'home' })
+        case 401: {
+          // 后端现在用 401 表示"未登录/令牌过期"，与 403（权限不足）区分开。
+          // 只有确实持有本地令牌时才提示并跳登录，避免游客访问公开接口被误提示。
+          const authStore = useAuthStore()
+          const hadToken = !!authStore.token
+          authStore.logout()
+          error.bizCode = 401
+          if (hadToken) {
+            ElMessage.warning('登录已过期，请重新登录')
+            const current = router.currentRoute.value
+            if (current.name !== 'adminLogin') {
+              router.push({ name: 'adminLogin', query: { redirect: current.fullPath } })
+            }
+          }
           break
+        }
         case 403:
+          // 此前这里完全静默，上传失败只能看到 "Request failed with status code 403"
+          ElMessage.warning((body && body.message) || '没有权限执行该操作')
+          error.bizCode = 403
+          break
+        case 413:
+          ElMessage.error('文件超过服务器允许的大小上限')
+          error.bizCode = 413
           break
         case 500:
           ElMessage.error('服务器错误')

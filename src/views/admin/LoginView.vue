@@ -50,10 +50,11 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const form = reactive({
@@ -75,7 +76,10 @@ async function handleLogin() {
   try {
     const res = await authStore.login(form)
     if (res.code === 200) {
-      router.push('/admin/dashboard')
+      // 会话过期被踢回登录页时，登录后回到原来想去的页面（仅允许站内路径）
+      const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+      const safe = redirect.startsWith('/') && !redirect.startsWith('//')
+      router.push(safe ? redirect : '/admin/dashboard')
     } else {
       errorMsg.value = res.message || '登录失败'
     }

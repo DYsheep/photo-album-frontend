@@ -124,13 +124,22 @@ const router = createRouter({
 
 // ===== 路由守卫 =====
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
   // 需要登录的后台页面
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-    next({ name: 'adminLogin' })
+    next({ name: 'adminLogin', query: { redirect: to.fullPath } })
     return
+  }
+
+  // 令牌可能已在服务端过期/被吊销：进入后台前主动校验一次（60 秒内复用结果）
+  if (to.meta.requiresAuth) {
+    const valid = await authStore.verifySession()
+    if (!valid) {
+      next({ name: 'adminLogin', query: { redirect: to.fullPath } })
+      return
+    }
   }
 
   // 按页面所需能力校验，与后端权限标记保持同一口径
