@@ -41,9 +41,16 @@ export function getPhotoDetailApi(id) {
   return request.get(`/photos/${id}`)
 }
 
-/** 上传照片（multipart/form-data） */
-export function uploadPhotoApi(formData, onProgress) {
+/**
+ * 上传照片（multipart/form-data）
+ *
+ * 超时单独放宽到 10 分钟：全局默认 120 秒对上行带宽较慢（或单张图较大）的场景不够用，
+ * 会在"其实还在传"的时候被前端主动中断，表现为一批照片里只有一部分成功。
+ * 后端与 Nginx 都没有单请求的总时长限制，只要数据还在传就不会被切断。
+ */
+export function uploadPhotoApi(formData, onProgress, { timeout = 600000 } = {}) {
   return request.post('/photos/upload', formData, {
+    timeout,
     headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: (progressEvent) => {
       if (onProgress && progressEvent.total) {

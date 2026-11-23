@@ -179,6 +179,25 @@ function handleFileSelect(e) { addFiles(e.target.files); e.target.value = '' }
 function removeFile(i) { URL.revokeObjectURL(files.value[i].preview); files.value.splice(i, 1) }
 function clearFiles() { files.value.forEach(f => URL.revokeObjectURL(f.preview)); files.value = [] }
 
+/**
+ * 把上传失败转成可读原因
+ *
+ * 后端业务错误是 HTTP 200 + 响应体 code，err.response 永远是 undefined，
+ * 所以此前这里只能显示兜底的"上传失败"。真实原因在 err.message / err.bizCode 上。
+ */
+function describeUploadError(err) {
+  if (!err) return '上传失败'
+  if (err.code === 'ECONNABORTED') return '上传超时（网络较慢或文件过大），可重试'
+  if (err.bizCode === 429) return '上传过于频繁，请等待约 10 分钟后再试'
+  if (err.bizCode === 401 || err.bizCode === 403) return '无上传权限，请重新登录或联系管理员'
+  if (err.bizCode) return err.message || '上传失败'
+  if (err.response?.status === 413) return '文件超过服务器允许的大小上限'
+  if (err.response?.data?.message) return err.response.data.message
+  if (err.message && err.message !== 'AUTH' && err.message !== 'Network Error') return err.message
+  if (err.message === 'Network Error') return '网络异常，请检查连接后重试'
+  return '上传失败'
+}
+
 async function uploadAll() {
   uploading.value = true
   for (const f of files.value) {
@@ -193,10 +212,10 @@ async function uploadAll() {
       if (preset.isPrivate) fd.append('isPrivate', '1')
       if (preset.collectionId) fd.append('collectionId', preset.collectionId)
       await uploadPhotoApi(fd, (e) => { f.progress = Math.round((e.loaded / e.total) * 100) })
-      f.status = 'done'; f.progress = 100
+      f.status = 'done'; f.progress = 100; f.error = ''
     } catch (err) {
       f.status = 'fail'
-      f.error = err.response?.data?.message || '上传失败'
+      f.error = describeUploadError(err)
     }
   }
   uploading.value = false
