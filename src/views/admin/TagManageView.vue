@@ -19,7 +19,7 @@
           合并标签
         </button>
         <button class="btn-secondary btn-sm" @click="loadTags">
-          <EmojiIcon name="arrows-counterclockwise" :size="15" class="icon-inline" /> 刷新
+          <EmojiIcon name="counterclockwise-arrows-button" :size="15" class="icon-inline" /> 刷新
         </button>
       </div>
     </div>

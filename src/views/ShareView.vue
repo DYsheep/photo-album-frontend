@@ -102,7 +102,7 @@
 
   <!-- 需要访问口令（合集分享设置了口令时） -->
   <div v-else-if="needCode" class="share-loading code-panel">
-    <EmojiIcon name="lock" :size="36" />
+    <EmojiIcon name="locked" :size="36" />
     <h2>需要访问口令</h2>
     <input
       v-model="accessCodeInput"

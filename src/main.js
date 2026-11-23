@@ -2,6 +2,8 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
+// 注册本地图标子集：必须在任何组件渲染前执行（替代 iconify 的在线按需拉取）
+import './plugins/icons'
 
 // ===== Element Plus 按需引入 =====
 // 全站只用到 7 个组件 + v-loading 指令 + 两个消息 API：
