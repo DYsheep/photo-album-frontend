@@ -98,6 +98,22 @@
               <button class="modal-close" @click="closeExif" aria-label="关闭">✕</button>
             </div>
             <div class="modal-body">
+              <!-- 年度海报入口 -->
+              <div class="poster-entry" v-if="posterYears.length">
+                <div class="poster-entry-text">
+                  <h4>年度摄影小结</h4>
+                  <p class="hint">选一个年份生成海报：拍了几张、最早与最晚的拍摄时刻、最常用的设备与焦段。</p>
+                </div>
+                <div class="poster-entry-actions">
+                  <select v-model.number="posterYear" class="poster-year">
+                    <option v-for="y in posterYears" :key="y" :value="y">{{ y }} 年</option>
+                  </select>
+                  <button class="btn-primary btn-sm" :disabled="posterLoading" @click="generatePoster">
+                    {{ posterLoading ? '生成中…' : '生成海报' }}
+                  </button>
+                </div>
+              </div>
+
               <div class="exif-grid">
         <!-- 焦段偏好 -->
         <div class="exif-card" v-if="focalLengthList.length > 0">
@@ -195,6 +211,28 @@
       </Transition>
     </Teleport>
 
+    <!-- 年度海报预览 -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="posterOpen" class="modal-overlay poster-overlay" @click.self="posterOpen = false">
+          <div class="poster-modal">
+            <div class="modal-head">
+              <h3>{{ posterYear }} 年度小结</h3>
+              <button class="modal-close" @click="posterOpen = false" aria-label="关闭">✕</button>
+            </div>
+            <div class="poster-body">
+              <canvas ref="posterCanvasRef" class="poster-canvas"></canvas>
+            </div>
+            <div class="poster-actions">
+              <button class="btn-secondary" @click="posterOpen = false">关闭</button>
+              <button class="btn-secondary" @click="sharePoster">分享</button>
+              <button class="btn-primary" @click="downloadPoster">下载图片</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- 无 EXIF 数据提示 -->
     <section class="panel mt-lg" v-if="!hasExifData">
       <div class="panel-header">
@@ -208,8 +246,10 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { getDashboardStatsApi } from '../../api/photo'
+import { reactive, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { getDashboardStatsApi, getYearlyStatsApi } from '../../api/photo'
+import { drawYearPoster, posterToBlob } from '../../utils/poster'
+import { ElMessage } from 'element-plus/es/components/message/index'
 import EmojiIcon from '../../components/EmojiIcon.vue'
 import { ChevronRight } from 'lucide-vue-next'
 
@@ -235,16 +275,95 @@ const stats = reactive({
 /* EXIF 分析弹窗：内容在弹窗内滚动，不再把整页撑长 */
 const exifOpen = ref(false)
 
+/* ---------- 年度海报 ---------- */
+const posterYears = ref([])
+const posterYear = ref(new Date().getFullYear())
+const posterOpen = ref(false)
+const posterLoading = ref(false)
+const posterCanvasRef = ref(null)
+
 function openExif() {
   exifOpen.value = true
+  loadPosterYears()
+}
+
+/** 取可选年份（不带 year 参数时后端返回最近一年） */
+async function loadPosterYears() {
+  if (posterYears.value.length) return
+  try {
+    const res = await getYearlyStatsApi()
+    if (res.code === 200 && res.data) {
+      posterYears.value = res.data.availableYears || []
+      if (res.data.year) posterYear.value = res.data.year
+    }
+  } catch {
+    /* 年份列表拉取失败不影响图表展示 */
+  }
+}
+
+async function generatePoster() {
+  if (posterLoading.value) return
+  posterLoading.value = true
+  try {
+    const res = await getYearlyStatsApi(posterYear.value)
+    if (res.code !== 200 || !res.data) {
+      ElMessage.error('生成失败，请稍后重试')
+      return
+    }
+    if (!res.data.year) {
+      ElMessage.warning('还没有带拍摄时间的照片，无法生成小结')
+      return
+    }
+    posterOpen.value = true
+    await nextTick()
+    if (posterCanvasRef.value) {
+      drawYearPoster(posterCanvasRef.value, res.data)
+    }
+  } catch {
+    ElMessage.error('生成失败，请稍后重试')
+  } finally {
+    posterLoading.value = false
+  }
+}
+
+async function downloadPoster() {
+  const canvas = posterCanvasRef.value
+  if (!canvas) return
+  const blob = await posterToBlob(canvas)
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `摄影小结-${posterYear.value}.png`
+  link.click()
+  window.setTimeout(() => URL.revokeObjectURL(url), 2000)
+}
+
+async function sharePoster() {
+  const canvas = posterCanvasRef.value
+  if (!canvas) return
+  const blob = await posterToBlob(canvas)
+  const file = new File([blob], `摄影小结-${posterYear.value}.png`, { type: 'image/png' })
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: `${posterYear.value} 我的摄影小结` })
+    } catch {
+      /* 用户取消分享，无需处理 */
+    }
+  } else {
+    // 桌面浏览器多数不支持分享文件，退化为下载
+    await downloadPoster()
+  }
 }
 
 function closeExif() {
   exifOpen.value = false
+  posterOpen.value = false
 }
 
 function onExifKeydown(e) {
-  if (e.key === 'Escape') closeExif()
+  if (e.key !== 'Escape') return
+  if (posterOpen.value) { posterOpen.value = false; return }
+  closeExif()
 }
 
 // 打开时锁定背景滚动，关闭/离开页面时恢复
@@ -419,8 +538,7 @@ onMounted(async () => {
 }
 
 /* 手机上两列排布时，数字与标签不再折行（此前"18.4 MB"、"总照片数"会被拆成两行） */
-@media (max-width: 768px) {
-  .stat-cards {
+@media (max-width: 768px) {  .stat-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
@@ -663,5 +781,99 @@ h3 {
 @keyframes tooltipIn {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ 年度海报 ============ */
+.poster-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border-light, #eee);
+  border-radius: 12px;
+  background: var(--bg-secondary, #f7f8fa);
+}
+
+.poster-entry h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary, #333);
+}
+
+.poster-entry .hint {
+  margin: 0;
+  max-width: 520px;
+}
+
+.poster-entry-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.poster-year {
+  height: var(--control-h, 34px);
+  padding: 0 12px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  background: var(--bg-card, #fff);
+  color: var(--text-secondary, #333);
+  font-size: 13px;
+  outline: none;
+}
+
+.poster-overlay {
+  z-index: 1100;
+  padding: 16px;
+}
+
+.poster-modal {
+  width: 460px;
+  max-width: 94vw;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card, #fff);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.poster-body {
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.poster-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+}
+
+.poster-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 0 16px 16px;
+}
+
+@media (max-width: 768px) {
+  .poster-entry {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .poster-entry-actions {
+    justify-content: space-between;
+  }
+  .poster-year {
+    flex: 1;
+  }
 }
 </style>

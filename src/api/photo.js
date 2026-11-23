@@ -86,6 +86,14 @@ export function getDashboardStatsApi() {
   return request.get('/photos/stats')
 }
 
+/**
+ * 按年聚合的拍摄小结（年度海报数据）
+ * @param {number|string} [year] 省略时取最近有照片的一年
+ */
+export function getYearlyStatsApi(year) {
+  return request.get('/photos/stats/yearly', { params: year ? { year } : {} })
+}
+
 /** 批量编辑照片 */
 export function batchUpdatePhotosApi(data) {
   return request.put('/photos/batch', data)
