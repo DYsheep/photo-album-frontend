@@ -1,28 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
-// 前台页面
-import HomeView from '../views/HomeView.vue'
-import AboutView from '../views/AboutView.vue'
-import PhotoDetailView from '../views/PhotoDetailView.vue'
-import CollectionListView from '../views/CollectionListView.vue'
-import CollectionDetailView from '../views/CollectionDetailView.vue'
-import MapView from '../views/MapView.vue'
-
-// 管理后台页面
-import LoginView from '../views/admin/LoginView.vue'
-import AdminLayout from '../views/admin/AdminLayout.vue'
-import DashboardView from '../views/admin/DashboardView.vue'
-import UploadView from '../views/admin/UploadView.vue'
-import PhotoManageView from '../views/admin/PhotoManageView.vue'
-import CategoryView from '../views/admin/CategoryView.vue'
-import TagManageView from '../views/admin/TagManageView.vue'
-import CollectionManageView from '../views/admin/CollectionManageView.vue'
-import ShareManageView from '../views/admin/ShareManageView.vue'
-import UserManageView from '../views/admin/UserManageView.vue'
-
-// 公开分享页面
-import ShareView from '../views/ShareView.vue'
+// 说明：所有页面改为按路由懒加载（() => import(...)）。
+// 此前 16 个视图全部静态 import，会被打进同一个首包——访客只看首页，
+// 却要同时下载后台管理、地图、灯箱等全部页面代码。
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,37 +12,37 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView
+      component: () => import('../views/HomeView.vue')
     },
     {
       path: '/about',
       name: 'about',
-      component: AboutView
+      component: () => import('../views/AboutView.vue')
     },
     {
       path: '/photo/:id',
       name: 'photoDetail',
-      component: PhotoDetailView
+      component: () => import('../views/PhotoDetailView.vue')
     },
     {
       path: '/collections',
       name: 'collections',
-      component: CollectionListView
+      component: () => import('../views/CollectionListView.vue')
     },
     {
       path: '/collections/:id',
       name: 'collectionDetail',
-      component: CollectionDetailView
+      component: () => import('../views/CollectionDetailView.vue')
     },
     {
       path: '/map',
       name: 'map',
-      component: MapView
+      component: () => import('../views/MapView.vue')
     },
     {
       path: '/share/:code',
       name: 'shareView',
-      component: ShareView
+      component: () => import('../views/ShareView.vue')
     },
 
     // ===== 管理员路由 =====
@@ -72,62 +53,62 @@ const router = createRouter({
     {
       path: '/admin/login',
       name: 'adminLogin',
-      component: LoginView,
+      component: () => import('../views/admin/LoginView.vue'),
       meta: { requiresGuest: true }
     },
     {
       path: '/admin',
-      component: AdminLayout,
+      component: () => import('../views/admin/AdminLayout.vue'),
       meta: { requiresAuth: true },
       redirect: '/admin/dashboard',
       children: [
         {
           path: 'dashboard',
           name: 'dashboard',
-          component: DashboardView,
+          component: () => import('../views/admin/DashboardView.vue'),
           meta: { title: '数据概览' }
         },
         {
           path: 'upload',
           name: 'upload',
-          component: UploadView,
+          component: () => import('../views/admin/UploadView.vue'),
           meta: { title: '上传图片', requiresAuth: true, requires: 'upload' }
         },
         {
           path: 'photos',
           name: 'photos',
-          component: PhotoManageView,
+          component: () => import('../views/admin/PhotoManageView.vue'),
           meta: { title: '照片管理', requiresAuth: true, requires: 'manage' }
         },
         {
           path: 'categories',
           name: 'categories',
-          component: CategoryView,
+          component: () => import('../views/admin/CategoryView.vue'),
           meta: { title: '分类管理', requiresAuth: true, requires: 'manage' }
         },
         {
           path: 'tags',
           name: 'tags',
-          component: TagManageView,
+          component: () => import('../views/admin/TagManageView.vue'),
           meta: { title: '标签管理', requiresAuth: true, requires: 'manage' }
         },
         {
           path: 'collections',
           name: 'adminCollections',
-          component: CollectionManageView,
+          component: () => import('../views/admin/CollectionManageView.vue'),
           // 合集管理：具备管理权限，或为某个合集的协作者（只能看到被指派的合集）
           meta: { title: '合集管理', requiresAuth: true, requires: 'collect' }
         },
         {
           path: 'share',
           name: 'adminShare',
-          component: ShareManageView,
+          component: () => import('../views/admin/ShareManageView.vue'),
           meta: { title: '分享管理', requiresAuth: true, requires: 'manage' }
         },
         {
           path: 'users',
           name: 'adminUsers',
-          component: UserManageView,
+          component: () => import('../views/admin/UserManageView.vue'),
           meta: { title: '用户管理', requiresAuth: true, requires: 'admin' }
         }
       ]

@@ -85,7 +85,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getShareLinksApi, deleteShareLinkApi } from '../../api/share'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus/es/components/message/index'
+import { ElMessageBox } from 'element-plus/es/components/message-box/index'
 import EmojiIcon from '../../components/EmojiIcon.vue'
 
 const list = ref([])

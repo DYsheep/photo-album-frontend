@@ -67,7 +67,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { getCategoryListApi, createCategoryApi, updateCategoryApi, deleteCategoryApi } from '../../api/category'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus/es/components/message/index'
+import { ElMessageBox } from 'element-plus/es/components/message-box/index'
 import EmojiIcon from '../../components/EmojiIcon.vue'
 
 const categories = ref([])

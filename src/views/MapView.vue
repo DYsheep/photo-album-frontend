@@ -33,6 +33,16 @@ const mapContainer = ref(null)
 const photos = ref([])
 const loading = ref(true)
 
+// Leaflet 默认图标路径在打包后失效，这里改为显式 CDN 地址。
+// 该修正原先放在 main.js，导致每个页面都会因此引入整个 Leaflet（约 180KB）；
+// 只有地图页需要它，移到本组件后其余页面不再加载 Leaflet。
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+})
+
 let map = null
 let markerClusterGroup = null
 

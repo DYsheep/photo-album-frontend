@@ -63,7 +63,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus/es/components/message/index'
 import EmojiIcon from './EmojiIcon.vue'
 
 const props = defineProps({

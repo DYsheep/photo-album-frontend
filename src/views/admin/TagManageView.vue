@@ -97,7 +97,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getAdminTagListApi, renameTagApi, deleteTagApi, mergeTagsApi } from '../../api/admin-tag'
 import EmojiIcon from '../../components/EmojiIcon.vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus/es/components/message/index'
+import { ElMessageBox } from 'element-plus/es/components/message-box/index'
 
 const tags = ref([])
 const isLoading = ref(false)

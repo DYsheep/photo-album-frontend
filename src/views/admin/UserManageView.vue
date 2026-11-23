@@ -266,7 +266,8 @@ import { getAllPhotoListApi } from '../../api/photo'
 import { getCategoryListApi } from '../../api/category'
 import { getAdminTagListApi } from '../../api/admin-tag'
 import { getAdminCollectionsApi } from '../../api/collection'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus/es/components/message/index'
+import { ElMessageBox } from 'element-plus/es/components/message-box/index'
 import { useAuthStore } from '../../stores/auth'
 
 const authStore = useAuthStore()

@@ -70,7 +70,7 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 import { createShareLinkApi } from '../api/share'
-import { ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus/es/components/message/index'
 import EmojiIcon from './EmojiIcon.vue'
 import SharePanel from './SharePanel.vue'
 

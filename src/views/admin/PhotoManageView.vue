@@ -190,7 +190,8 @@ import { getPhotoListApi, updatePhotoApi, deletePhotoApi, batchDeletePhotosApi, 
 import EmojiIcon from '../../components/EmojiIcon.vue'
 import { getCategoryListApi } from '../../api/category'
 import { getAdminCollectionsApi, addPhotoToCollectionApi } from '../../api/collection'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus/es/components/message/index'
+import { ElMessageBox } from 'element-plus/es/components/message-box/index'
 
 // 搜索和筛选
 const searchText = ref('')
