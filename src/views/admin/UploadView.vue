@@ -130,6 +130,7 @@ import EmojiIcon from '../../components/EmojiIcon.vue'
 import { getCategoryListApi } from '../../api/category'
 import { getAdminCollectionsApi } from '../../api/collection'
 import { uploadPhotoApi } from '../../api/photo'
+import { ElMessage } from 'element-plus/es/components/message/index'
 
 const router = useRouter()
 const fileInput = ref(null)
@@ -217,7 +218,14 @@ async function uploadAll() {
   uploading.value = false
 }
 
-function goManage() { router.push({ name: 'adminPhotos' }) }
+// 注意：路由名是 'photos'（早期写成 'adminPhotos' 时 router.push 会抛错并被吞掉，
+// 表现为"点了没反应"）。这里保留 catch，把跳转失败暴露成可见提示而不是静默。
+function goManage() {
+  router.push({ name: 'photos' }).catch((err) => {
+    console.error('跳转到照片管理失败', err)
+    ElMessage.error('页面跳转失败，请点左侧「照片管理」进入')
+  })
+}
 
 onMounted(async () => {
   try { const r = await getCategoryListApi(); if (r.code === 200) categories.value = r.data || [] } catch {}
