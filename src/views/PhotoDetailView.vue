@@ -2,7 +2,7 @@
   <div class="photo-detail" v-if="photo">
     <!-- 返回按钮 -->
     <div class="back-bar">
-      <button class="back-btn" @click="goBack"><EmojiIcon name="left-arrow" :size="16" class="icon-inline" /> 返回首页</button>
+      <button class="back-btn" @click="goBack"><EmojiIcon name="left-arrow" :size="16" class="icon-inline" /> {{ backLabel }}</button>
     </div>
 
     <!-- 主体：左图右信息 -->
@@ -118,7 +118,7 @@
   <!-- 错误状态 -->
   <div v-else class="detail-error">
     <p><EmojiIcon name="warning" :size="18" class="icon-inline" /> 照片不存在或已被删除</p>
-    <router-link to="/" class="back-link">返回首页</router-link>
+    <router-link :to="backTarget" class="back-link">{{ backLabel }}</router-link>
   </div>
 
   <!-- 全屏灯箱 -->
@@ -143,6 +143,17 @@ const authStore = useAuthStore()
 const isAdmin = computed(() => authStore.isAdmin)
 const collectionCtx = computed(() => route.query.collection || null)
 
+/**
+ * 返回目标：从合集中进入详情时返回该合集（用户此时通常想继续翻看同合集的其他照片），
+ * 否则返回首页并带上 scrollTo 恢复滚动位置。
+ */
+const backTarget = computed(() =>
+  collectionCtx.value
+    ? { name: 'collectionDetail', params: { id: collectionCtx.value } }
+    : { path: '/', query: { scrollTo: currentId.value } }
+)
+const backLabel = computed(() => (collectionCtx.value ? '返回合集' : '返回首页'))
+
 const photo = ref(null)
 const loading = ref(true)
 const imageLoaded = ref(false)
@@ -163,7 +174,7 @@ function openLightbox() {
 }
 
 function goBack() {
-  router.push({ path: '/', query: { scrollTo: currentId.value } })
+  router.push(backTarget.value)
 }
 
 // 标签列表
