@@ -83,8 +83,11 @@ function fitText(ctx, text, maxWidth) {
  * 绘制海报
  * @param {HTMLCanvasElement} canvas 目标画布（函数内部会设置尺寸）
  * @param {object} data 后端 /photos/stats/yearly 返回的数据
+ * @param {object} [options] 可选：{ backgroundImage, copy }
+ *        backgroundImage：AI 生成的背景图（HTMLImageElement，已加载完成）
+ *        copy：AI 一句话文案（纯文本，渲染绝对准确）
  */
-export function drawYearPoster(canvas, data) {
+export function drawYearPoster(canvas, data, options = {}) {
   const scale = 1
   canvas.width = POSTER_WIDTH * scale
   canvas.height = POSTER_HEIGHT * scale
@@ -96,18 +99,34 @@ export function drawYearPoster(canvas, data) {
   const PAD = 80
 
   // ---------- 背景 ----------
-  const bg = ctx.createLinearGradient(0, 0, W * 0.4, POSTER_HEIGHT)
-  bg.addColorStop(0, COLORS.bgTop)
-  bg.addColorStop(1, COLORS.bgBottom)
-  ctx.fillStyle = bg
-  ctx.fillRect(0, 0, W, POSTER_HEIGHT)
+  if (options.backgroundImage) {
+    // AI 背景：等比裁切铺满，再压一层暗色渐变保证文字可读
+    const img = options.backgroundImage
+    const ratio = Math.max(W / img.width, POSTER_HEIGHT / img.height)
+    const drawW = img.width * ratio
+    const drawH = img.height * ratio
+    ctx.drawImage(img, (W - drawW) / 2, (POSTER_HEIGHT - drawH) / 2, drawW, drawH)
 
-  // 右上角光晕
-  const glow = ctx.createRadialGradient(W * 0.82, 120, 0, W * 0.82, 120, 620)
-  glow.addColorStop(0, COLORS.glow)
-  glow.addColorStop(1, 'rgba(0, 0, 0, 0)')
-  ctx.fillStyle = glow
-  ctx.fillRect(0, 0, W, POSTER_HEIGHT)
+    const scrim = ctx.createLinearGradient(0, 0, 0, POSTER_HEIGHT)
+    scrim.addColorStop(0, 'rgba(6, 10, 20, 0.56)')
+    scrim.addColorStop(0.55, 'rgba(6, 10, 20, 0.38)')
+    scrim.addColorStop(1, 'rgba(6, 10, 20, 0.74)')
+    ctx.fillStyle = scrim
+    ctx.fillRect(0, 0, W, POSTER_HEIGHT)
+  } else {
+    const bg = ctx.createLinearGradient(0, 0, W * 0.4, POSTER_HEIGHT)
+    bg.addColorStop(0, COLORS.bgTop)
+    bg.addColorStop(1, COLORS.bgBottom)
+    ctx.fillStyle = bg
+    ctx.fillRect(0, 0, W, POSTER_HEIGHT)
+
+    // 右上角光晕
+    const glow = ctx.createRadialGradient(W * 0.82, 120, 0, W * 0.82, 120, 620)
+    glow.addColorStop(0, COLORS.glow)
+    glow.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(0, 0, W, POSTER_HEIGHT)
+  }
 
   // 内描边
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
@@ -129,6 +148,14 @@ export function drawYearPoster(canvas, data) {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.72)'
   ctx.font = `500 34px ${FONT_STACK}`
   ctx.fillText('我的摄影小结', PAD, 344)
+
+  // AI 文案（DeepSeek 生成的一句话）：纯文本，渲染绝对准确
+  if (options.copy) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.86)'
+    ctx.font = `500 30px ${FONT_STACK}`
+    const line = fitText(ctx, `「${options.copy}」`, W - PAD * 2)
+    ctx.fillText(line, PAD, 404)
+  }
 
   // ---------- 主数字 ----------
   ctx.fillStyle = COLORS.text
