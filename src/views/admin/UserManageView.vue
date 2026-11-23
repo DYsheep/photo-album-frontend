@@ -545,8 +545,8 @@ onMounted(() => {
 .user-manage { max-width: 960px; }
 
 /* ---------- 角色与能力标签 ---------- */
-.role-admin { color: var(--color-danger, #E24B4A); font-weight: 500; }
-.role-viewer { color: var(--color-primary, #378ADD); font-weight: 500; }
+.role-admin { color: var(--color-primary, #378ADD); font-weight: 600; }
+.role-viewer { color: var(--color-success, #0F6E56); font-weight: 500; }
 .role-user { color: var(--text-muted, #888); }
 
 .cap-badge {
@@ -559,7 +559,7 @@ onMounted(() => {
   white-space: nowrap;
 }
 .cap-all { background: var(--color-primary-light, #E6F1FB); color: var(--color-primary-dark, #185FA5); }
-.cap-private { background: var(--color-danger-light, #FCEBEB); color: var(--color-danger, #E24B4A); }
+.cap-private { background: var(--color-warning-light, #FAEEDA); color: var(--color-warning, #854F0B); }
 .cap-upload { background: var(--color-success-light, #E1F5EE); color: var(--color-success, #0F6E56); }
 .cap-manage { background: var(--color-warning-light, #FAEEDA); color: var(--color-warning, #854F0B); }
 .cap-none { font-size: 12px; color: var(--text-muted, #999); }

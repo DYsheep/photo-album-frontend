@@ -4,12 +4,12 @@
     <div class="panel">
       <div class="panel-body table-wrap">
       <el-table :data="list" v-loading="loading" stripe size="default" empty-text="暂无分享链接" class="share-table-desktop">
-        <el-table-column prop="code" label="分享码" min-width="140">
+        <el-table-column prop="code" label="分享码" min-width="130">
           <template #default="{ row }">
             <code class="share-code">{{ row.code }}</code>
           </template>
         </el-table-column>
-        <el-table-column prop="photoTitle" label="关联对象" min-width="200">
+        <el-table-column prop="photoTitle" label="关联对象" min-width="180">
           <template #default="{ row }">
             <span class="photo-title-cell">
                 {{ row.targetType === 'collection'
@@ -31,7 +31,7 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="210" fixed="right">
           <template #default="{ row }">
             <div class="action-btns">
               <button class="action-btn copy-action" @click="copyLink(row)">

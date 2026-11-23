@@ -2,8 +2,8 @@
   <div class="category-manage">
     <!-- 工具栏 -->
     <div class="toolbar">
-      <h3>分类列表</h3>
-      <button class="btn-primary" @click="openAdd">+ 新建分类</button>
+      <p class="hint">共 {{ categories.length }} 个分类 · 分类用于给照片分组</p>
+      <button class="btn-primary btn-sm" @click="openAdd">新建分类</button>
     </div>
 
     <!-- 分类卡片网格 -->
@@ -19,9 +19,9 @@
         </div>
         <p class="cat-desc">{{ cat.description || '暂无描述' }}</p>
         <div class="card-actions">
-          <button class="action-btn edit-btn" @click="openEdit(cat)"><EmojiIcon name="pencil" :size="14" class="icon-inline" /> 编辑</button>
+          <button class="btn-secondary btn-sm" @click="openEdit(cat)"><EmojiIcon name="pencil" :size="14" class="icon-inline" /> 编辑</button>
           <button
-            class="action-btn del-btn"
+            class="btn-danger btn-sm"
             :disabled="(cat.photoCount ?? 0) > 0"
             @click="handleDelete(cat)"
           >

@@ -42,8 +42,8 @@
         <div class="tag-card-name">{{ tag.name }}</div>
         <div class="tag-card-count">{{ tag.count }} 张</div>
         <div class="tag-card-actions" @click.stop>
-          <button class="tag-action-btn" @click="openRename(tag)" title="重命名"><EmojiIcon name="pencil" :size="14" /></button>
-          <button class="tag-action-btn del" @click="handleDelete(tag)" title="删除"><EmojiIcon name="wastebasket" :size="14" /></button>
+          <button class="btn-secondary btn-sm" @click="openRename(tag)"><EmojiIcon name="pencil" :size="14" class="icon-inline" /> 编辑</button>
+          <button class="btn-danger btn-sm" @click="handleDelete(tag)"><EmojiIcon name="wastebasket" :size="14" class="icon-inline" /> 删除</button>
         </div>
       </div>
     </div>
@@ -278,16 +278,6 @@ async function saveMerge() {
   gap: 10px;
 }
 
-.btn-sm {
-  padding: 8px 18px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-}
 
 
 
@@ -355,29 +345,8 @@ async function saveMerge() {
   gap: 8px;
 }
 
-.tag-action-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  transition: all 0.2s;
-}
 
-.tag-action-btn:hover {
-  border-color: #378ADD;
-  color: #378ADD;
-}
 
-.tag-action-btn.del:hover {
-  border-color: #E24B4A;
-  color: #E24B4A;
-}
 
 /* 弹窗 */
 .modal-content.modal-sm {

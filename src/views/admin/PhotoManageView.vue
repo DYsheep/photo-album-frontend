@@ -468,17 +468,6 @@ async function saveBatchEdit() {
   gap: 10px;
 }
 
-.btn-sm {
-  padding: 8px 18px;
-  border-radius: 6px;
-  font-size: 13px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-}
 
 
 /* 表格 */
