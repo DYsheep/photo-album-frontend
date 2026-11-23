@@ -11,27 +11,31 @@ export function createShareLinkApi(photoId, options) {
   return request.post(`/share/photo/${photoId}`, options || {})
 }
 
-/** 根据分享码获取分享数据（公开访问，无需 token）；合集分享可带访问口令 */
+/**
+ * 根据分享码获取分享数据（公开访问，无需 token）；合集分享可带访问口令
+ *
+ * 口令走请求头而不是查询参数：查询串会进访问日志、浏览器历史与中间代理，
+ * 而口令是这类分享唯一的访问门槛。
+ */
 export function getShareLinkApi(code, accessCode) {
   return request.get(`/share/${code}`, {
-    params: accessCode ? { accessCode } : {}
+    headers: accessCode ? { 'X-Share-Access-Code': accessCode } : {}
   })
 }
 
 /**
  * 创建（或更新）合集分享链接
  * options 可选：{ expiresAt, includePrivate, accessCode }
- * 后端以查询参数接收，故这里用 params 而不是请求体。
+ * 口令与有效期走请求体，避免口令落进 URL 与访问日志。
  */
 export function createCollectionShareApi(collectionId, options) {
   const { expiresAt, includePrivate, accessCode } = options || {}
-  return request.post(`/admin/share/collection/${collectionId}`, null, {
-    params: {
-      ...(expiresAt ? { expiresAt } : {}),
-      ...(includePrivate ? { includePrivate: true } : {}),
-      ...(accessCode ? { accessCode } : {})
-    }
-  })
+  const body = {
+    ...(expiresAt ? { expiresAt } : {}),
+    ...(includePrivate ? { includePrivate: true } : {}),
+    ...(accessCode ? { accessCode } : {})
+  }
+  return request.post(`/admin/share/collection/${collectionId}`, body)
 }
 
 /** 管理员获取所有分享链接 */

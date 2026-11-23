@@ -86,22 +86,42 @@ function initMap() {
     const lng = photo.gpsLongitude
     bounds.push([lat, lng])
 
-    // 构建弹窗 HTML
-    const popupHtml = `
-      <div class="map-popup">
-        <div class="popup-image-wrapper">
-          <img src="${photo.thumbnailUrl || photo.url || ''}" alt="${escapeHtml(photo.title || '')}" class="popup-img" />
-        </div>
-        <div class="popup-info">
-          <h4>${escapeHtml(photo.title || '未命名')}</h4>
-          ${photo.categoryName ? `<span class="popup-category">${escapeHtml(photo.categoryName)}</span>` : ''}
-        </div>
-        <a href="/photo/${photo.id}" class="popup-link">查看详情 &rarr;</a>
-      </div>
-    `
+    // 构建弹窗：一律用 DOM API（textContent / setAttribute），不拼 HTML 字符串。
+    // 照片标题等字段由上传者控制（未填标题时取原始文件名），若拼进 innerHTML
+    // 可在属性上下文中闭合引号注入脚本（存储型 XSS），因此这里不允许出现字符串 HTML。
+    const popup = document.createElement('div')
+    popup.className = 'map-popup'
+
+    const imageWrapper = document.createElement('div')
+    imageWrapper.className = 'popup-image-wrapper'
+    const img = document.createElement('img')
+    img.className = 'popup-img'
+    img.setAttribute('src', photo.thumbnailUrl || photo.url || '')
+    img.setAttribute('alt', photo.title || '')
+    imageWrapper.appendChild(img)
+    popup.appendChild(imageWrapper)
+
+    const info = document.createElement('div')
+    info.className = 'popup-info'
+    const heading = document.createElement('h4')
+    heading.textContent = photo.title || '未命名'
+    info.appendChild(heading)
+    if (photo.categoryName) {
+      const category = document.createElement('span')
+      category.className = 'popup-category'
+      category.textContent = photo.categoryName
+      info.appendChild(category)
+    }
+    popup.appendChild(info)
+
+    const detailLink = document.createElement('a')
+    detailLink.className = 'popup-link'
+    detailLink.setAttribute('href', `/photo/${photo.id}`)
+    detailLink.textContent = '查看详情 →'
+    popup.appendChild(detailLink)
 
     const marker = L.marker([lat, lng])
-    marker.bindPopup(popupHtml, {
+    marker.bindPopup(popup, {
       maxWidth: 260,
       className: 'custom-popup'
     })
@@ -115,13 +135,6 @@ function initMap() {
   if (bounds.length > 0) {
     map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 })
   }
-}
-
-function escapeHtml(str) {
-  if (!str) return ''
-  const div = document.createElement('div')
-  div.textContent = str
-  return div.innerHTML
 }
 
 function destroyMap() {
