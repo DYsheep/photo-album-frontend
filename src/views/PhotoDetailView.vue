@@ -53,7 +53,7 @@
             </tr>
             <tr v-if="photo.aperture">
               <td class="exif-label">光圈</td>
-              <td class="exif-value">f/{{ photo.aperture }}</td>
+              <td class="exif-value">{{ formatAperture(photo.aperture) }}</td>
             </tr>
             <tr v-if="photo.shutterSpeed">
               <td class="exif-label">快门</td>
@@ -132,7 +132,7 @@ import { getPhotoDetailApi, getAdjacentPhotosApi, updatePhotoApi, likePhotoApi }
 import { getCollectionAdjacentApi } from '../api/collection'
 import { useAuthStore } from '../stores/auth'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
-import { formatDate, formatFileSize } from '../utils/format'
+import { formatDate, formatFileSize, formatAperture } from '../utils/format'
 import EmojiIcon from '../components/EmojiIcon.vue'
 import Lightbox from '../components/Lightbox.vue'
 import ShareButton from '../components/ShareButton.vue'

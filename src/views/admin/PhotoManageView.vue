@@ -95,7 +95,6 @@
             </span>
           </div>
           <div class="photo-card-meta">
-            <span>{{ photo.categoryName || '未分类' }}</span>
             <span class="photo-card-desc">{{ photo.description || '暂无描述' }}</span>
           </div>
           <div class="photo-card-tags">
@@ -466,6 +465,26 @@ async function saveBatchEdit() {
 .toolbar-right {
   display: flex;
   gap: 10px;
+}
+
+/* 手机上"搜索框 + 分类 + 搜索按钮"总宽超过屏幕，搜索按钮被挤出可视区 */
+@media (max-width: 768px) {
+  .toolbar-left {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .search-input {
+    flex: 1 1 140px;
+    width: auto;
+    min-width: 0;
+  }
+  .filter-select {
+    flex: 0 0 auto;
+  }
+  .toolbar-right {
+    width: 100%;
+    flex-wrap: wrap;
+  }
 }
 
 

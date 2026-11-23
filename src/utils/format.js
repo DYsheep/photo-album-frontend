@@ -32,3 +32,25 @@ export function formatDateShort(dateStr) {
   if (dateStr.length >= 10) return dateStr.substring(0, 10)
   return dateStr
 }
+
+/**
+ * 格式化光圈
+ *
+ * 后端 EXIF 解析后存的就是带前缀的 "f/2.8"，模板里再拼一次会显示成 "f/f/2.8"。
+ * 这里兼容两种存储形态，统一输出一份带前缀的结果。
+ */
+export function formatAperture(value) {
+  if (!value) return ''
+  const text = String(value).trim()
+  return /^f\/?/i.test(text) ? text.replace(/^f\/?/i, 'f/') : `f/${text}`
+}
+
+/**
+ * 格式化焦距
+ *
+ * 同理，后端存的是 "50.0mm"，模板拼单位会变成 "50.0mmmm"。
+ */
+export function formatFocalLength(value) {
+  if (!value) return ''
+  return String(value).replace(/\s*mm$/i, '') + 'mm'
+}

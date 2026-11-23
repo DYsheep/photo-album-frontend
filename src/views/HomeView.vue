@@ -283,12 +283,34 @@ onMounted(async () => {
 }
 
 @media (max-width: 1024px) {
+  /* 平板宽度放得下 3 列；此前降到 2 列，页面长度翻倍（首页 1959px → 4218px） */
+  .photo-grid { column-count: 3; }
+}
+
+@media (max-width: 768px) {
   .photo-grid { column-count: 2; }
 }
 
+/* 手机上搜索框固定 360px 会把"搜索"按钮挤出屏幕（文字被压成竖排），
+   改为输入框弹性收缩、按钮不换行 */
 @media (max-width: 600px) {
   .photo-grid { column-count: 2; column-gap: 8px; }
   .photo-grid > * { margin-bottom: 8px; }
+
+  .search-bar {
+    width: 100%;
+    padding: 0 16px;
+    box-sizing: border-box;
+  }
+  .search-input {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .search-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
 }
 
 .empty-hint {
