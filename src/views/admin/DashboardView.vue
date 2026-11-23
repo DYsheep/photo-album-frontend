@@ -75,18 +75,30 @@
       </div>
     </section>
 
-    <!-- EXIF 统计分析 -->
+    <!-- EXIF 统计分析：内容改为在弹窗里滚动，避免把整页拉得很长 -->
     <section class="panel mt-lg" v-if="hasExifData">
       <div class="panel-header">
         <h3>EXIF 数据分析</h3>
-        <button class="btn-secondary btn-sm" @click="exifExpanded = !exifExpanded">
-          {{ exifExpanded ? '收起' : '展开' }}
-          <ChevronUp v-if="exifExpanded" :size="14" />
-          <ChevronDown v-else :size="14" />
+        <button class="btn-secondary btn-sm" @click="openExif">
+          查看分析
+          <ChevronRight :size="14" />
         </button>
       </div>
+      <div class="panel-body">
+        <p class="hint">按焦段、相机、ISO 与拍摄年份统计。点击右上角「查看分析」，在弹窗内滑动查看。</p>
+      </div>
+    </section>
 
-      <div v-show="exifExpanded" class="panel-body exif-grid">
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="exifOpen" class="modal-overlay" @click.self="closeExif">
+          <div class="modal-content modal-content--xl">
+            <div class="modal-head">
+              <h3>EXIF 数据分析</h3>
+              <button class="modal-close" @click="closeExif" aria-label="关闭">✕</button>
+            </div>
+            <div class="modal-body">
+              <div class="exif-grid">
         <!-- 焦段偏好 -->
         <div class="exif-card" v-if="focalLengthList.length > 0">
           <h4>焦段偏好</h4>
@@ -176,11 +188,15 @@
             </div>
           </div>
         </div>
-      </div>
-    </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- 无 EXIF 数据提示 -->
-    <section class="panel mt-lg" v-else>
+    <section class="panel mt-lg" v-if="!hasExifData">
       <div class="panel-header">
         <h3>EXIF 数据分析</h3>
       </div>
@@ -192,10 +208,10 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { getDashboardStatsApi } from '../../api/photo'
 import EmojiIcon from '../../components/EmojiIcon.vue'
-import { ChevronDown, ChevronUp } from 'lucide-vue-next'
+import { ChevronRight } from 'lucide-vue-next'
 
 /**
  * 焦距标签：后端已把 EXIF 焦距格式化成带单位的 "50.0mm"，
@@ -216,7 +232,36 @@ const stats = reactive({
   exifStats: null
 })
 
-const exifExpanded = ref(false)
+/* EXIF 分析弹窗：内容在弹窗内滚动，不再把整页撑长 */
+const exifOpen = ref(false)
+
+function openExif() {
+  exifOpen.value = true
+}
+
+function closeExif() {
+  exifOpen.value = false
+}
+
+function onExifKeydown(e) {
+  if (e.key === 'Escape') closeExif()
+}
+
+// 打开时锁定背景滚动，关闭/离开页面时恢复
+watch(exifOpen, (open) => {
+  if (open) {
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onExifKeydown)
+  } else {
+    document.body.style.overflow = ''
+    window.removeEventListener('keydown', onExifKeydown)
+  }
+})
+
+onBeforeUnmount(() => {
+  document.body.style.overflow = ''
+  window.removeEventListener('keydown', onExifKeydown)
+})
 
 // EXIF 数据是否存在
 const hasExifData = computed(() => {
