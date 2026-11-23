@@ -363,12 +363,36 @@ onMounted(async () => {
   font-size: 26px;
   font-weight: 500;
   color: var(--text-primary, #1a1a2e);
+  white-space: nowrap;
 }
 
 .stat-label {
   font-size: 13px;
   color: var(--text-muted, #888);
   margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* 手机上两列排布时，数字与标签不再折行（此前"18.4 MB"、"总照片数"会被拆成两行） */
+@media (max-width: 768px) {
+  .stat-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 14px 12px;
+    gap: 8px;
+  }
+  .stat-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .stat-number {
+    font-size: 20px;
+  }
+  .stat-label {
+    font-size: 12px;
+  }
 }
 
 /* 最近上传 */

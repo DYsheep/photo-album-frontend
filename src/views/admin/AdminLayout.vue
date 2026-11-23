@@ -7,8 +7,10 @@
     <!-- 侧边栏 -->
     <aside class="sidebar" :class="{ collapsed: isCollapsed, 'mobile-open': mobileMenuOpen }">
       <div class="sidebar-header">
-        <EmojiIcon name="camera" :size="22" />
-        <span v-show="!isCollapsed" class="sidebar-title">相册管理</span>
+        <a href="/" class="sidebar-brand" title="返回前台首页">
+          <EmojiIcon name="camera" :size="22" />
+          <span v-show="!isCollapsed" class="sidebar-title">相册管理</span>
+        </a>
         <button class="collapse-btn" @click="isCollapsed = !isCollapsed">
           <ChevronRight v-if="isCollapsed" :size="14" />
           <ChevronLeft v-else :size="14" />
@@ -76,6 +78,9 @@
           <h2>{{ currentTitle }}</h2>
         </div>
         <div class="topbar-right">
+          <a href="/" class="btn-secondary btn-sm topbar-preview" title="返回前台首页">
+            <EmojiIcon name="house" :size="14" class="icon-inline" /> 查看网站
+          </a>
           <span class="topbar-user">
             <span class="topbar-avatar">
               <EmojiIcon name="bust-in-silhouette" :size="15" />
@@ -170,6 +175,20 @@ function handleLogout() {
   color: #fff;
   margin-left: 8px;
   white-space: nowrap;
+}
+
+/* 侧边栏品牌区可点击回前台首页（此前只有底部"预览网站"，不够显眼） */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sidebar-brand:hover .sidebar-title {
+  color: #5DADE2;
 }
 
 .collapse-btn {
@@ -355,6 +374,8 @@ function handleLogout() {
 /* 手机适配 */
 @media (max-width: 768px) {
   .mobile-menu-btn { display: flex; }
+  /* 手机上顶栏空间有限，回首页走侧边栏底部的"预览网站" */
+  .topbar-preview { display: none; }
   .sidebar {
     position: fixed;
     top: 0;
