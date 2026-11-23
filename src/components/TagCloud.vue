@@ -55,6 +55,10 @@ function getSizeClass(count) {
 <style scoped>
 .tag-cloud {
   margin-bottom: 24px;
+  /* 折叠入口与首页标题、搜索框对齐到同一中轴；展开后的标签仍左对齐铺满 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .tag-cloud-header {
@@ -95,6 +99,8 @@ function getSizeClass(count) {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
+  align-self: stretch;
+  justify-content: flex-start;
 }
 
 .tag-item {

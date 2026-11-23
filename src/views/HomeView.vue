@@ -247,6 +247,8 @@ onMounted(async () => {
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+  /* 与上方居中的标题、搜索框对齐到同一条中轴（此前是左对齐，看起来"歪"） */
+  justify-content: center;
 }
 
 .category-filter button {
@@ -289,6 +291,28 @@ onMounted(async () => {
 
 @media (max-width: 768px) {
   .photo-grid { column-count: 2; }
+
+  /* 手机上精选合集改为横向滑动条：此前 3 个全宽大卡要滑过约 1300px 才看到照片墙。
+     用 .featured-collections 提权：基础 .collection-row 规则写在文件后面，
+     同权重会被它的 display:grid 覆盖。不加负边距（手机内边距 8px，
+     负边距会让整页产生横向滚动）。 */
+  .featured-collections .collection-row {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px;
+    scrollbar-width: none;
+  }
+  .featured-collections .collection-row::-webkit-scrollbar { display: none; }
+
+  .featured-collections .collection-mini-card {
+    flex: 0 0 74%;
+    max-width: 280px;
+    scroll-snap-align: start;
+  }
 }
 
 /* 手机上搜索框固定 360px 会把"搜索"按钮挤出屏幕（文字被压成竖排），

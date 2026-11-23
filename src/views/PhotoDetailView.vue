@@ -43,31 +43,31 @@
           </button>
         </div>
 
-        <!-- EXIF 结构化面板 -->
+        <!-- EXIF 结构化面板（两列紧凑网格，手机上比逐行表格短很多） -->
         <div class="exif-panel" v-if="hasExif">
           <h3 class="section-title">拍摄信息</h3>
-          <table class="exif-table">
-            <tr v-if="photo.cameraModel">
-              <td class="exif-label">相机型号</td>
-              <td class="exif-value">{{ photo.cameraModel }}</td>
-            </tr>
-            <tr v-if="photo.aperture">
-              <td class="exif-label">光圈</td>
-              <td class="exif-value">{{ formatAperture(photo.aperture) }}</td>
-            </tr>
-            <tr v-if="photo.shutterSpeed">
-              <td class="exif-label">快门</td>
-              <td class="exif-value">{{ photo.shutterSpeed }}</td>
-            </tr>
-            <tr v-if="photo.iso">
-              <td class="exif-label">ISO</td>
-              <td class="exif-value">{{ photo.iso }}</td>
-            </tr>
-            <tr v-if="photo.focalLength">
-              <td class="exif-label">焦距</td>
-              <td class="exif-value">{{ photo.focalLength }}</td>
-            </tr>
-          </table>
+          <div class="exif-grid-2">
+            <div class="exif-item exif-item--wide" v-if="photo.cameraModel">
+              <span class="exif-label">相机型号</span>
+              <span class="exif-value">{{ photo.cameraModel }}</span>
+            </div>
+            <div class="exif-item" v-if="photo.aperture">
+              <span class="exif-label">光圈</span>
+              <span class="exif-value">{{ formatAperture(photo.aperture) }}</span>
+            </div>
+            <div class="exif-item" v-if="photo.shutterSpeed">
+              <span class="exif-label">快门</span>
+              <span class="exif-value">{{ photo.shutterSpeed }}</span>
+            </div>
+            <div class="exif-item" v-if="photo.iso">
+              <span class="exif-label">ISO</span>
+              <span class="exif-value">{{ photo.iso }}</span>
+            </div>
+            <div class="exif-item" v-if="photo.focalLength">
+              <span class="exif-label">焦距</span>
+              <span class="exif-value">{{ formatFocalLength(photo.focalLength) }}</span>
+            </div>
+          </div>
         </div>
 
         <!-- 标签列表 -->
@@ -132,7 +132,7 @@ import { getPhotoDetailApi, getAdjacentPhotosApi, updatePhotoApi, likePhotoApi }
 import { getCollectionAdjacentApi } from '../api/collection'
 import { useAuthStore } from '../stores/auth'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
-import { formatDate, formatFileSize, formatAperture } from '../utils/format'
+import { formatDate, formatFileSize, formatAperture, formatFocalLength } from '../utils/format'
 import EmojiIcon from '../components/EmojiIcon.vue'
 import Lightbox from '../components/Lightbox.vue'
 import ShareButton from '../components/ShareButton.vue'
@@ -472,27 +472,49 @@ onMounted(() => {
   border-bottom: 1px solid var(--border-lighter, #f0f0f0);
 }
 
-.exif-table {
-  width: 100%;
-  border-collapse: collapse;
+/* 拍摄信息：两列紧凑网格（相机型号占满一行），手机上比逐行表格短约 40% */
+.exif-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 10px;
 }
 
-.exif-table tr {
-  border-bottom: 0.5px solid var(--border-lighter, #f5f5f5);
+.exif-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--bg-secondary, #f7f7f7);
+  min-width: 0;
 }
 
-.exif-table td {
-  padding: 7px 0;
-  font-size: 13px;
-}
-
-.exif-label {
+.exif-item .exif-label {
+  font-size: 11px;
+  line-height: 1.3;
   color: var(--text-muted, #888);
-  width: 80px;
 }
 
-.exif-value {
+.exif-item .exif-value {
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--text-secondary, #333);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 相机型号较长，独占一行并左右排布 */
+.exif-item--wide {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.exif-item--wide .exif-value {
+  text-align: right;
 }
 
 /* 标签 */
