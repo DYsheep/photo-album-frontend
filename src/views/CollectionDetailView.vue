@@ -33,7 +33,11 @@
           :id="'photo-' + photo.id"
           :class="{ 'is-highlight': highlightId === photo.id }"
         >
-          <PhotoCard :photo="photo" :route-query="{ collection: collectionId }" />
+          <PhotoCard
+            :photo="photo"
+            :route-query="{ collection: collectionId }"
+            @click="rememberScrollPosition"
+          />
         </div>
       </div>
 
@@ -52,6 +56,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { getCollectionDetailApi, getCollectionsApi } from '../api/collection'
 import EmojiIcon from '../components/EmojiIcon.vue'
 import PhotoCard from '../components/PhotoCard.vue'
+import { alignElementStable, restoreScrollYStable } from '../utils/scroll'
 
 const route = useRoute()
 const router = useRouter()
@@ -109,25 +114,47 @@ function goBack() {
 }
 
 /**
- * 从详情页返回时，定位到刚才看的那张照片
+ * 从详情页返回时定位
  *
- * 详情页的返回按钮会带上 ?scrollTo=<照片 id>。等照片渲染完再滚动，
- * 并用高亮提示是哪一张（滚动是平滑的，用户需要视觉落点）。
+ * 两种返回方式都要覆盖：
+ *  1) 页面上的"返回合集"按钮 → URL 带 ?scrollTo=<照片 id>，定位到该照片并高亮；
+ *  2) 浏览器后退 → 没有 query，用点进详情前记下的滚动高度恢复。
+ * 合集是多列瀑布流且图片未预留高度，所以都交给 *Stable 系列函数在布局
+ * 稳定前持续校正。
  */
-async function scrollToReturnedPhoto() {
-  const targetId = route.query.scrollTo
-  if (!targetId) return
+function rememberScrollPosition() {
+  try {
+    sessionStorage.setItem('collectionScroll:' + collectionId.value, String(window.scrollY))
+  } catch {
+    /* 隐私模式下 sessionStorage 可能不可用，忽略即可 */
+  }
+}
+
+async function restoreCollectionPosition() {
   await nextTick()
-  const el = document.getElementById('photo-' + targetId)
-  if (!el) return
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  highlightId.value = Number(targetId)
-  window.setTimeout(() => { highlightId.value = null }, 1800)
+
+  const targetId = route.query.scrollTo
+  if (targetId) {
+    const el = document.getElementById('photo-' + targetId)
+    if (el) {
+      highlightId.value = Number(targetId)
+      alignElementStable(el)
+      window.setTimeout(() => { highlightId.value = null }, 1800)
+      return
+    }
+  }
+
+  try {
+    const saved = Number(sessionStorage.getItem('collectionScroll:' + collectionId.value) || 0)
+    if (saved > 0) restoreScrollYStable(saved)
+  } catch {
+    /* ignore */
+  }
 }
 
 onMounted(async () => {
   await loadDetail()
-  scrollToReturnedPhoto()
+  restoreCollectionPosition()
 })
 </script>
 

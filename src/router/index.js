@@ -7,6 +7,22 @@ import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  /**
+   * 滚动行为
+   *
+   * 默认 vue-router 不处理滚动，导致 SPA 内浏览器"后退"会丢失原来的阅读位置。
+   * - 有 savedPosition（浏览器前进/后退）→ 恢复原位
+   * - 目标带 scrollTo（从详情返回合集/首页并定位到某张）→ 交给页面自己处理，
+   *   这里返回 false，避免先跳到顶部再滚过去
+   * - 有 hash → 滚到锚点
+   * - 其余 → 回到顶部
+   */
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    if (to.query && to.query.scrollTo) return false
+    if (to.hash) return { el: to.hash, behavior: 'smooth' }
+    return { top: 0 }
+  },
   routes: [
     // ===== 前台路由 =====
     {
