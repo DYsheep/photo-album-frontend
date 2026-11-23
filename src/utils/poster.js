@@ -184,8 +184,8 @@ export function drawYearPoster(canvas, data) {
 
   // ---------- 月度分布 ----------
   const months = Array.isArray(data.months) && data.months.length === 12 ? data.months : new Array(12).fill(0)
-  const chartTop = 930
-  const chartH = 96
+  const chartTop = 940
+  const chartH = 130
   const barW = (W - PAD * 2 - 11 * 10) / 12
   const maxMonth = Math.max(1, ...months)
 
@@ -217,7 +217,7 @@ export function drawYearPoster(canvas, data) {
     { label: '最常用焦段', value: data.topFocalLength ? data.topFocalLength.name : '—', sub: data.topFocalLength ? `${data.topFocalLength.count} 张` : '' },
     { label: '最常用 ISO', value: data.topIso ? data.topIso.name : '—', sub: data.topIso ? `${data.topIso.count} 张` : '' }
   ]
-  const cardY = 1085
+  const cardY = 1150
   const cardH = 150
   const cardGap = 18
   const cardW = (W - PAD * 2 - cardGap * 2) / 3
@@ -251,44 +251,6 @@ export function drawYearPoster(canvas, data) {
       ctx.fillText(card.sub, x + 22, cardY + 128)
     }
   })
-
-  // ---------- 地点统计 ----------
-  const places = Array.isArray(data.places) ? data.places : []
-  const locY = 1285
-  const hasGeo = data.geoEnabled !== false
-
-  if (hasGeo && places.length) {
-    // 定位图钉
-    ctx.fillStyle = COLORS.accent
-    ctx.beginPath()
-    ctx.arc(PAD + 12, locY - 10, 9, Math.PI, 0)
-    ctx.lineTo(PAD + 12, locY + 4)
-    ctx.closePath()
-    ctx.fill()
-    ctx.beginPath()
-    ctx.arc(PAD + 12, locY - 10, 4, 0, Math.PI * 2)
-    ctx.fillStyle = '#0d1524'
-    ctx.fill()
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.82)'
-    ctx.font = `500 26px ${FONT_STACK}`
-    const placeText = data.placeCount > 0 ? `去过 ${data.placeCount} 个地方` : `有 ${data.gpsPhotoCount || 0} 张带位置的照片`
-    ctx.fillText(placeText, PAD + 36, locY)
-
-    const top = data.topPlace
-    if (top && top.name && top.name !== '未识别地点') {
-      const text = `拍得最多：${top.name} · ${top.count} 张`
-      ctx.fillStyle = COLORS.accent
-      ctx.font = `500 24px ${FONT_STACK}`
-      ctx.textAlign = 'right'
-      ctx.fillText(fitText(ctx, text, W - PAD * 2 - 260), W - PAD, locY)
-      ctx.textAlign = 'left'
-    }
-  } else if (!hasGeo && data.gpsPhotoCount > 0) {
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)'
-    ctx.font = `400 24px ${FONT_STACK}`
-    ctx.fillText(`有 ${data.gpsPhotoCount} 张带位置的照片（地点统计未启用）`, PAD, locY)
-  }
 
   // ---------- 页脚 ----------
   ctx.fillStyle = 'rgba(255, 255, 255, 0.38)'
