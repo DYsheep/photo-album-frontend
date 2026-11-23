@@ -149,7 +149,12 @@ const collectionCtx = computed(() => route.query.collection || null)
  */
 const backTarget = computed(() =>
   collectionCtx.value
-    ? { name: 'collectionDetail', params: { id: collectionCtx.value } }
+    ? {
+        name: 'collectionDetail',
+        params: { id: collectionCtx.value },
+        // 带上照片 id，合集页据此滚动到刚才那张并短暂高亮
+        query: { scrollTo: currentId.value }
+      }
     : { path: '/', query: { scrollTo: currentId.value } }
 )
 const backLabel = computed(() => (collectionCtx.value ? '返回合集' : '返回首页'))

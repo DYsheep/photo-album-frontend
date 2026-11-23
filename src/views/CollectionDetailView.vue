@@ -27,7 +27,12 @@
 
       <!-- 照片网格 -->
       <div class="photo-grid" v-if="photos.length > 0">
-        <div v-for="photo in photos" :key="photo.id">
+        <div
+          v-for="photo in photos"
+          :key="photo.id"
+          :id="'photo-' + photo.id"
+          :class="{ 'is-highlight': highlightId === photo.id }"
+        >
           <PhotoCard :photo="photo" :route-query="{ collection: collectionId }" />
         </div>
       </div>
@@ -42,7 +47,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCollectionDetailApi, getCollectionsApi } from '../api/collection'
 import EmojiIcon from '../components/EmojiIcon.vue'
@@ -57,6 +62,8 @@ const errorMsg = ref('')
 const collectionName = ref('')
 const collectionDesc = ref('')
 const photos = ref([])
+/** 从详情页返回时高亮的照片 id（1.8 秒后自动清除） */
+const highlightId = ref(null)
 
 async function loadDetail() {
   loading.value = true
@@ -101,8 +108,26 @@ function goBack() {
   router.push('/collections')
 }
 
-onMounted(() => {
-  loadDetail()
+/**
+ * 从详情页返回时，定位到刚才看的那张照片
+ *
+ * 详情页的返回按钮会带上 ?scrollTo=<照片 id>。等照片渲染完再滚动，
+ * 并用高亮提示是哪一张（滚动是平滑的，用户需要视觉落点）。
+ */
+async function scrollToReturnedPhoto() {
+  const targetId = route.query.scrollTo
+  if (!targetId) return
+  await nextTick()
+  const el = document.getElementById('photo-' + targetId)
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  highlightId.value = Number(targetId)
+  window.setTimeout(() => { highlightId.value = null }, 1800)
+}
+
+onMounted(async () => {
+  await loadDetail()
+  scrollToReturnedPhoto()
 })
 </script>
 
@@ -150,6 +175,18 @@ onMounted(() => {
 .photo-grid > div {
   break-inside: avoid;
   margin-bottom: 20px;
+}
+
+/* 从详情页返回时定位到刚才那张：滚动到位后短暂高亮，避免"跳过去但看不出是哪张" */
+.photo-grid > div.is-highlight {
+  border-radius: 12px;
+  animation: return-highlight 1.8s ease-out 1;
+}
+
+@keyframes return-highlight {
+  0% { box-shadow: 0 0 0 3px var(--color-primary, #378ADD); }
+  70% { box-shadow: 0 0 0 3px var(--color-primary, #378ADD); }
+  100% { box-shadow: 0 0 0 3px transparent; }
 }
 
 @media (max-width: 900px) {
