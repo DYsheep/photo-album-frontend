@@ -14,6 +14,10 @@
  *   www.dyframe.art
  */
 
+import { paintBackdrop, POSTER_VARIANT } from './poster-backdrop'
+
+export { POSTER_VARIANT }
+
 export const POSTER_WIDTH = 1080
 export const POSTER_HEIGHT = 1440
 
@@ -98,35 +102,11 @@ export function drawYearPoster(canvas, data, options = {}) {
   const W = POSTER_WIDTH
   const PAD = 80
 
-  // ---------- 背景 ----------
-  if (options.backgroundImage) {
-    // AI 背景：等比裁切铺满，再压一层暗色渐变保证文字可读
-    const img = options.backgroundImage
-    const ratio = Math.max(W / img.width, POSTER_HEIGHT / img.height)
-    const drawW = img.width * ratio
-    const drawH = img.height * ratio
-    ctx.drawImage(img, (W - drawW) / 2, (POSTER_HEIGHT - drawH) / 2, drawW, drawH)
-
-    const scrim = ctx.createLinearGradient(0, 0, 0, POSTER_HEIGHT)
-    scrim.addColorStop(0, 'rgba(6, 10, 20, 0.56)')
-    scrim.addColorStop(0.55, 'rgba(6, 10, 20, 0.38)')
-    scrim.addColorStop(1, 'rgba(6, 10, 20, 0.74)')
-    ctx.fillStyle = scrim
-    ctx.fillRect(0, 0, W, POSTER_HEIGHT)
-  } else {
-    const bg = ctx.createLinearGradient(0, 0, W * 0.4, POSTER_HEIGHT)
-    bg.addColorStop(0, COLORS.bgTop)
-    bg.addColorStop(1, COLORS.bgBottom)
-    ctx.fillStyle = bg
-    ctx.fillRect(0, 0, W, POSTER_HEIGHT)
-
-    // 右上角光晕
-    const glow = ctx.createRadialGradient(W * 0.82, 120, 0, W * 0.82, 120, 620)
-    glow.addColorStop(0, COLORS.glow)
-    glow.addColorStop(1, 'rgba(0, 0, 0, 0)')
-    ctx.fillStyle = glow
-    ctx.fillRect(0, 0, W, POSTER_HEIGHT)
-  }
+  // ---------- 背景（程序化绘制，三档风格） ----------
+  paintBackdrop(ctx, W, POSTER_HEIGHT, {
+    variant: options.variant || POSTER_VARIANT,
+    seed: Number(data.year) || 2026
+  })
 
   // 内描边
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
@@ -149,13 +129,7 @@ export function drawYearPoster(canvas, data, options = {}) {
   ctx.font = `500 34px ${FONT_STACK}`
   ctx.fillText('我的摄影小结', PAD, 344)
 
-  // AI 文案（DeepSeek 生成的一句话）：纯文本，渲染绝对准确
-  if (options.copy) {
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.86)'
-    ctx.font = `500 30px ${FONT_STACK}`
-    const line = fitText(ctx, `「${options.copy}」`, W - PAD * 2)
-    ctx.fillText(line, PAD, 404)
-  }
+
 
   // ---------- 主数字 ----------
   ctx.fillStyle = COLORS.text

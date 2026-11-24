@@ -94,19 +94,6 @@ export function getYearlyStatsApi(year) {
   return request.get('/photos/stats/yearly', { params: year ? { year } : {} })
 }
 
-/** 读取已缓存的年度海报 AI 素材（背景图 + 文案），不触发生成 */
-export function getPosterAiApi(year) {
-  return request.get('/admin/poster/ai', { params: year ? { year } : {} })
-}
-
-/**
- * 生成年度海报 AI 素材
- * @param {number} year 年份
- * @param {'all'|'background'|'copy'} part 生成哪部分
- */
-export function generatePosterAiApi(year, part = 'all') {
-  return request.post('/admin/poster/ai', null, { params: { year, part } })
-}
 
 /** 批量编辑照片 */
 export function batchUpdatePhotosApi(data) {

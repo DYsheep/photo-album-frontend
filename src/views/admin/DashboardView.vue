@@ -224,22 +224,6 @@
               <canvas ref="posterCanvasRef" class="poster-canvas"></canvas>
             </div>
             <div class="poster-actions">
-              <button
-                v-if="aiCapabilities.image"
-                class="btn-secondary"
-                :disabled="aiBusy"
-                @click="generateAiAssets(aiCopy ? 'background' : 'all')"
-              >
-                {{ aiBusy ? 'AI 生成中…' : (aiBackgroundUrl ? '换个 AI 背景' : 'AI 背景') }}
-              </button>
-              <button
-                v-else-if="aiCapabilities.copy"
-                class="btn-secondary"
-                :disabled="aiBusy"
-                @click="generateAiAssets('copy')"
-              >
-                {{ aiBusy ? '生成中…' : (aiCopy ? '换个 AI 文案' : 'AI 文案') }}
-              </button>
               <button class="btn-secondary" @click="posterOpen = false">关闭</button>
               <button class="btn-secondary" @click="sharePoster">分享</button>
               <button class="btn-primary" @click="downloadPoster">下载图片</button>
@@ -263,7 +247,7 @@
 
 <script setup>
 import { reactive, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
-import { getDashboardStatsApi, getYearlyStatsApi, getPosterAiApi, generatePosterAiApi } from '../../api/photo'
+import { getDashboardStatsApi, getYearlyStatsApi } from '../../api/photo'
 import { drawYearPoster, posterToBlob } from '../../utils/poster'
 import { ElMessage } from 'element-plus/es/components/message/index'
 import EmojiIcon from '../../components/EmojiIcon.vue'
@@ -334,79 +318,13 @@ async function generatePoster() {
     posterData.value = res.data
     posterOpen.value = true
     await nextTick()
-    // 已有 AI 素材就先作为底图，没有则用纯 Canvas 版本
-    await loadAiAssets()
-    renderPoster()
+    if (posterCanvasRef.value) {
+      drawYearPoster(posterCanvasRef.value, res.data)
+    }
   } catch {
     ElMessage.error('生成失败，请稍后重试')
   } finally {
     posterLoading.value = false
-  }
-}
-
-/* ---------- AI 素材（A：背景，C：文案） ---------- */
-const aiCapabilities = ref({ image: false, copy: false })
-const aiBackgroundUrl = ref(null)
-const aiCopy = ref('')
-const aiBusy = ref(false)
-const aiImage = ref(null)
-
-/** 拉取已缓存的 AI 素材并预加载背景图 */
-async function loadAiAssets() {
-  try {
-    const res = await getPosterAiApi(posterYear.value)
-    if (res.code === 200 && res.data) {
-      aiCapabilities.value = res.data.capabilities || { image: false, copy: false }
-      aiBackgroundUrl.value = res.data.backgroundUrl || null
-      aiCopy.value = res.data.copyText || ''
-      if (aiBackgroundUrl.value) await preloadBackground(aiBackgroundUrl.value)
-    }
-  } catch {
-    /* 未配置或读取失败都按"没有 AI 素材"处理 */
-  }
-}
-
-/** 背景图必须带 crossOrigin，否则画布被污染后无法导出 PNG（需要 COS 配置 CORS） */
-function preloadBackground(url) {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => { aiImage.value = img; resolve(true) }
-    img.onerror = () => { aiImage.value = null; resolve(false) }
-    img.src = url
-  })
-}
-
-function renderPoster() {
-  if (!posterCanvasRef.value || !posterData.value) return
-  drawYearPoster(posterCanvasRef.value, posterData.value, {
-    backgroundImage: aiImage.value,
-    copy: aiCopy.value
-  })
-}
-
-/** 生成（或重新生成）AI 素材 */
-async function generateAiAssets(part) {
-  if (aiBusy.value) return
-  aiBusy.value = true
-  try {
-    const res = await generatePosterAiApi(posterYear.value, part)
-    if (res.code === 200 && res.data) {
-      aiCapabilities.value = res.data.capabilities || aiCapabilities.value
-      if (res.data.backgroundUrl) {
-        aiBackgroundUrl.value = res.data.backgroundUrl
-        await preloadBackground(res.data.backgroundUrl)
-      }
-      if (res.data.copyText) aiCopy.value = res.data.copyText
-      renderPoster()
-      if (!res.data.backgroundUrl && part !== 'copy') {
-        ElMessage.warning('背景生成失败，已保留纯色版本（可查看后端日志）')
-      }
-    }
-  } catch {
-    ElMessage.error('AI 生成失败，请稍后重试')
-  } finally {
-    aiBusy.value = false
   }
 }
 
