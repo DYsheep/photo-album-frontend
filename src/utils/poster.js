@@ -14,9 +14,9 @@
  *   www.dyframe.art
  */
 
-import { paintBackdrop, POSTER_VARIANT } from './poster-backdrop'
+import { paintBackdrop, deriveTheme } from './poster-backdrop'
 
-export { POSTER_VARIANT }
+export { deriveTheme }
 
 export const POSTER_WIDTH = 1080
 export const POSTER_HEIGHT = 1440
@@ -102,11 +102,9 @@ export function drawYearPoster(canvas, data, options = {}) {
   const W = POSTER_WIDTH
   const PAD = 80
 
-  // ---------- 背景（程序化绘制，三档风格） ----------
-  paintBackdrop(ctx, W, POSTER_HEIGHT, {
-    variant: options.variant || POSTER_VARIANT,
-    seed: Number(data.year) || 2026
-  })
+  // ---------- 背景（四季 × 时段的程序化插画） ----------
+  const theme = options.theme || deriveTheme(data)
+  paintBackdrop(ctx, W, POSTER_HEIGHT, { theme, seed: Number(data.year) || 2026 })
 
   // 内描边
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
@@ -118,7 +116,13 @@ export function drawYearPoster(canvas, data, options = {}) {
   ctx.textBaseline = 'alphabetic'
   ctx.fillStyle = COLORS.muted
   ctx.font = `600 22px ${FONT_STACK}`
-  drawSpacedText(ctx, 'PHOTOGRAPHY YEARBOOK', PAD, 150, 7)
+  const headEnd = drawSpacedText(ctx, 'PHOTOGRAPHY YEARBOOK', PAD, 150, 7)
+  // 主题标签：由数据推导（例如「春 · 凌晨」），让读者一眼看出这是哪类一年
+  if (theme.label) {
+    ctx.fillStyle = COLORS.accent
+    ctx.font = `600 22px ${FONT_STACK}`
+    ctx.fillText(`· ${theme.label}`, headEnd + 18, 150)
+  }
 
   ctx.fillStyle = COLORS.text
   ctx.font = `800 132px ${FONT_STACK}`
